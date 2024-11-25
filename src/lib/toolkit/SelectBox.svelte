@@ -6,7 +6,7 @@
 	export let options;
 	export let selectedIndex;
 	export let nameEditable;
-	export let contentCreatable;
+	export let variantCreatable;
 	export let editNameEl = false;
 	export let isActive = false;
 	let initialized = false;
@@ -24,7 +24,7 @@
 
 	function confirmHandler(e) {
 		editNameEl = false;
-		dispatch('contentChanged', [options[selectedIndex], 'name'])
+		dispatch('nameChanged', [options[selectedIndex], 'name'])
 	}
 
 	function handleOptionSelect(index) {
@@ -34,14 +34,14 @@
 	}
 
 	function createNewOption() {
-		options.push('New element');
+		options.push('New variant');
 		options = options;
 
 		console.log('Newly options: ', options);
 
 		// handleOptionSelect(options.length - 1);
 		let optLength = options.length - 1;
-		dispatch('newOptionCreated', [optLength]);
+		dispatch('variantCreated', [optLength]);
 		// let namePos = options[0].name.lastIndexOf(' ');
 		// let newName = options[0].name.slice(0, namePos);
 		// let idPos = options[0].id.lastIndexOf('-');
@@ -116,7 +116,7 @@
 		</div>
 		{/if}
 
-		<ul class="select-options" class:shrunk={nameEditable}>
+		<ul class="select-options">
 			{#each options as option, _index}
 			<li class="select-option" class:active={selectedIndex === _index} on:click={(e) => {handleOptionSelect(_index)}}>
 				{option}
@@ -124,9 +124,9 @@
 			</li>
 			{/each}
 			
-			{#if contentCreatable}
+			{#if variantCreatable}
 			<li class="select-option" on:click={(e) => {createNewOption()}}>
-				Create New
+				Create New Variant
 				<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" class="s-Z_UndjDak36a"><path d="M10 3L4.5 8.5L2 6" stroke="white" stroke-linecap="round" stroke-linejoin="round" class="s-Z_UndjDak36a"></path></svg>
 			</li>
 			{/if}
@@ -149,20 +149,18 @@
 
 	.outer-box .elements {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
+		gap: 1.4rem;
 
-		width: 100%;
-
-		padding: 1.4rem 1.4rem 1.4rem 1.6rem;
-
-		background-color: #141921;
-		border: .1rem solid var(--color-dark);
+		background-color: #0D121A;
+		border: .1rem solid #383C42;
 		border-radius: .8rem;
-
+		
+		padding: 1rem 1.2rem;
+		
+		width: max-content;
+		
 		cursor: pointer;
-
-		transition: all .3s ease-in-out;
 	}
 
 	.outer-box.active .elements {

@@ -137,8 +137,6 @@
         let count = parseInt(target.value, 10);
         let value = valueTemplate.repeat(count).trim();
 
-        console.log('Count change: ', prop, value);
-
         alterStylingProperty(prop, value);
     }
 

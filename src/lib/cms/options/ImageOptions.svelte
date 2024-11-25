@@ -26,7 +26,6 @@
     ];
     let selectedLoadingTypeIndex = 2;
 
-    console.log('Image selected: ', $selectedInstance);
     let widthAttr = '';
     let heightAttr = '';
     let altAttr = '';
@@ -38,7 +37,6 @@
         widthAttr = $selectedInstance.attributes.find((attr) => attr.name === 'width')?.value || '';
         heightAttr = $selectedInstance.attributes.find((attr) => attr.name === 'height')?.value || '';
         altAttr = $selectedInstance.attributes.find((attr) => attr.name === 'alt')?.value || '';
-        console.log('Img props: ', $selectedInstance);
 
         if (srcAttr) {
             try {
@@ -46,8 +44,6 @@
                 const assetsRes = await assetsReq.json();
                 
                 assetMetadata = assetsRes.data[0];
-
-                console.log('Asset metadata: ', assetMetadata);
             } catch (error) {
                 console.error('Error fetching instances:', error);
             }
@@ -83,7 +79,7 @@
             </div>
         </div>
 
-        <div class="replace" on:click={(e) => {$selectedCMSTabIndex = 2}}>
+        <div class="replace" on:click={(e) => {$selectedCMSTabIndex = 3}}>
             Replace Image...
         </div>
     </div>                        

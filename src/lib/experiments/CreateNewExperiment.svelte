@@ -144,6 +144,7 @@
 				return;
 			} else {
 				activeStep = step;
+				console.log('Experiment: ', $experiment);
 			};
 		};
 	};

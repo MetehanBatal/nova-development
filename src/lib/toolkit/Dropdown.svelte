@@ -1,4 +1,5 @@
 <script>
+	import { page } from '$app/stores';
 	export let options;
 	export let selectedStatusIndex;
 	export let position;
@@ -6,39 +7,36 @@
 	export let type;
 	export let from;
 	export let placeholder
-	export let handleOption
 
 	let dropdownOpened = false;
 	let searchTerm = '';
 
-	if ((selection === 'multiple' || selection === 'single') && selectedStatusIndex === null) {
-		selectedStatusIndex = [];
-	} 
+	if (selection === 'multiple' && selectedStatusIndex === null) {
+		selectedStatusIndex = []; } 
 
 	function handleCheckboxChange(target) {
 		console.log(target);
 	}
 
 	function handleOptionSelect(event, option) {
-		handleOption && handleOption() // the function is used on layer.svelte
 		if (selection === 'multiple') {
-			selectedStatusIndex.includes(option.index)
-				? selectedStatusIndex = selectedStatusIndex.filter(index => index !== option.index)
-				: selectedStatusIndex = [...selectedStatusIndex, option.index]
-			
-		} else if(selection === 'single') {
-			selectedStatusIndex = [option.index]
+			selectedStatusIndex.includes(option.index) ? selectedStatusIndex = selectedStatusIndex.filter(index => index !== option.index) : selectedStatusIndex = [...selectedStatusIndex, option.index]
 		} else {
 			selectedStatusIndex = option.index;
+			if (!selectedStatusIndex || selectedStatusIndex == undefined) {
+				selectedStatusIndex = options.findIndex((o) => o.id === option.id);
+			}
 			dropdownOpened = !dropdownOpened
 		}
 
 		selectedStatusIndex = selectedStatusIndex;
 	}
 
-	$: filteredData = selection !== "input-text" && options.filter(option =>
+	$: filteredData = options.filter(option =>
 		option.name.toLowerCase().includes(searchTerm.toLowerCase())
 	);
+
+	console.log('D options: ', options, selectedStatusIndex, options.selectedStatusIndex?.icon);
 </script>
 
 <!-- 
@@ -49,54 +47,47 @@ Receives an array of objects for the options and an active index
 
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class={`dropdown-box ${type}`}>
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<div class="dropdown-selection" class:opened={dropdownOpened} on:click={(e) => { options.length == 0 ? dropdownOpened = false : dropdownOpened = !dropdownOpened }}>
+		<div class="option-content">
+			{#if selectedStatusIndex !== null && options[selectedStatusIndex]?.icon}
+				<!-- <img width="16" height="16" src={options[selectedStatusIndex]['icon']} alt={options[selectedStatusIndex]['name']}>-->
 
-<div class={`dropdown-box ${type} ${$$restProps.class || ''}`}>
-	{#if selection == 'input-text'}
-		<input class="input-text" type="text" placeholder="type here..." bind:value={selectedStatusIndex}>
-	{:else}
-		<div class="dropdown-selection" class:opened={dropdownOpened} on:click={(e) => { options.length == 0 ? dropdownOpened = false : dropdownOpened = !dropdownOpened }}>
-			<div class="option-content">
-				{#if selectedStatusIndex !== null && options.selectedStatusIndex?.icon}
-					<img width="16" height="16" src={options[selectedStatusIndex]['icon']} alt={options[selectedStatusIndex]['name']}>
-				{/if}
+				{@html options[selectedStatusIndex]?.icon}
+			{/if}
 
-				{#if typeof(selectedStatusIndex) === 'object' && selectedStatusIndex !== null}
-					<!-- {JSON.stringify(selectedStatusIndex)} -->
-					<p>{
-						selectedStatusIndex.length < 1
-						? placeholder
-						: selection === "single"
-						? options[selectedStatusIndex[0]]?.name
-						: `${options[selectedStatusIndex[0]]?.name}, ${selectedStatusIndex.length - 1} more...`}</p>
-				{:else}
-					<p class:sm={from === 'dashboard'} class:muted={selectedStatusIndex === null}>
-						{
-							from == "breakdown" && selectedStatusIndex !== null
-							? options[selectedStatusIndex-1]?.name
-							: selectedStatusIndex !== null
-							? options[selectedStatusIndex]?.name
-							: placeholder
-						}
-					</p>
-				{/if}
-				{#if from === 'dashboard'}
-				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-				{/if}
-			</div>
+			{#if typeof(selectedStatusIndex) === 'object' && selectedStatusIndex !== null}
+				<!-- {JSON.stringify(selectedStatusIndex)} -->
+				<p>{selectedStatusIndex.length < 1 ? placeholder : `${options[selectedStatusIndex[0]]?.name}, ${selectedStatusIndex.length - 1} more...`}</p>
+			{:else}
+				<p class:sm={from === 'dashboard'} class:muted={selectedStatusIndex === null}>
+					{
+						from == "breakdown" && selectedStatusIndex !== null
+						? options[selectedStatusIndex-1]?.name
+						: selectedStatusIndex !== null
+						? options[selectedStatusIndex]?.name
+						: placeholder
+					}
+				</p>
+			{/if}
+			
 
-			{#if type !== 'plain' && type !== 'eventLabel'}
-			<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-				<path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
-			</svg>
+			{#if from === 'dashboard'}
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
 			{/if}
 		</div>
-	{/if}
+
+		{#if type !== 'plain' && type !== 'eventLabel'}
+		<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+		</svg>
+		{/if}
+	</div>
 
 	{#if dropdownOpened}
-	<div class={`dropdown custom-bar ${position} ${selection}`} >
-		{#if selection === 'multiple' || selection === 'single'}
+	<div class={`dropdown ${position} ${selection}`}>
+		{#if selection === 'multiple'}
 		<div class="search-field">
 			<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
 				<path d="M6.41667 11.0833C8.994 11.0833 11.0833 8.994 11.0833 6.41667C11.0833 3.83934 8.994 1.75 6.41667 1.75C3.83934 1.75 1.75 3.83934 1.75 6.41667C1.75 8.994 3.83934 11.0833 6.41667 11.0833Z" stroke="#88888A" stroke-width="0.875" stroke-linecap="round" stroke-linejoin="round"/>
@@ -108,53 +99,42 @@ Receives an array of objects for the options and an active index
 		</div>
 		{/if}
 		
-		{#if selection !== 'input-text'}
-			{#each filteredData as option, _index}
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<!-- svelte-ignore a11y-no-static-element-interactions -->
-			{#if option.header && option.header != ""}
-				<div class="dropdown-option dropdown-header">{option.header}</div>
-			{/if}
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<div class='dropdown-option'  class:selected={(selection === 'multiple' || selection === 'single' ) ? selectedStatusIndex.includes(option.index) : option.index === selectedStatusIndex} on:click={(e) => handleOptionSelect(e, option)}>
-				<div class="option-content">
-					{#if selection === 'multiple' || selection === 'single'}
-						<input
-							type="checkbox"
-							class="checkmark"
-							checked={selectedStatusIndex.includes(option.index)}
-							on:change={(event) => handleCheckboxChange(event.target)}
-						/>
-					{/if}
-
-					{#if option["icon"]}
-						<img width="16" height="16" src={option['icon']} alt={option['name']}>
-					{/if}
-
-					<p>{option['name']}</p>
-				</div>
-				{#if selection !== 'multiple' || selection !== 'single'}
-					<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M10 3L4.5 8.5L2 6" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
+		{#each filteredData as option, _index}
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		 {#if option.header && option.header != ""}
+			<div class="dropdown-option dropdown-header">{option.header}</div>
+		 {/if}
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<div class='dropdown-option' class:selected={selection === 'multiple' ? selectedStatusIndex.includes(option.index) : option.index === selectedStatusIndex} on:click={(e) => handleOptionSelect(e, option)}>
+			<div class="option-content">
+				{#if selection === 'multiple'}
+					<input 
+						type="checkbox" 
+						class="checkmark"
+						checked={selectedStatusIndex.includes(option.index)}
+						on:change={(event) => handleCheckboxChange(event.target)}
+					/>
 				{/if}
+
+				{#if option["icon"]}
+					<!-- <img width="16" height="16" src={option['icon']} alt={option['name']}> -->
+					{@html option["icon"]}
+				{/if}	
+
+				<p>{option['name']}</p>
 			</div>
-			{/each}
-		{/if}
+
+			<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<path d="M10 3L4.5 8.5L2 6" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+		</div>
+		{/each}
 	</div>
 	{/if}
 </div>
 
 <style>
-	.input-text {
-		font-family: "Nunito";
-		padding: 1rem;
-		border: .1rem solid #212830;
-		border-radius: .8rem;
-		font-size: 1.1rem;
-		background-color: #0D121A;
-		color: #FFF;
-	}
 	.dropdown-box {
 		position: relative;
 
@@ -263,7 +243,7 @@ Receives an array of objects for the options and an active index
 		opacity: 1;
 	}
 
-	.dropdown.multiple p, .dropdown.single p  {
+	.dropdown.multiple p {
 		margin-left: 2rem;
 	}
 
@@ -321,8 +301,8 @@ Receives an array of objects for the options and an active index
 	}
 
 	.checkmark {
-		min-width: auto;
-		max-width: auto;
+		min-width: none;
+		max-width: none;
 			width: 0;
 			height: 0;
 

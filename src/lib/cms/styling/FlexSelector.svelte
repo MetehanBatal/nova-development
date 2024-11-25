@@ -124,7 +124,6 @@
             $selectedInstance.styling['justify-content'] = justifyContentOptions[selectedJustifyContentOptionIndex];
 
             alterStylingProperty('justify-content', justifyContentOptions[selectedJustifyContentOptionIndex].value);
-            // console.log($selectedInstance, $instances, $styleSheet);
         }
     }
 
@@ -133,7 +132,6 @@
             $selectedInstance.styling['align-items'] = alignItemsOptions[selectedAlignItemsOptionIndex];
 
             alterStylingProperty('align-items', alignItemsOptions[selectedAlignItemsOptionIndex].value);
-            // console.log($selectedInstance, $instances, $styleSheet);
         }
     }
 

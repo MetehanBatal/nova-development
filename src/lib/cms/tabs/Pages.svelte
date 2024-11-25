@@ -54,8 +54,6 @@
 
         // Step 3: Group the sorted pages by folder
         groupedPages = groupPagesByFolder(sortedPages);
-
-        console.log('G: ', groupedPages, sortedPages, expandedFolders);
     }
 
     // Function to toggle folder expansion
@@ -70,6 +68,12 @@
             return newFolders;
         });
     };
+
+    function selectPage(id) {
+        $pages.selectedPageIndex = $pages.pages.findIndex((p) => p.pageId === id);
+
+        console.log('page index changed: ', $pages);
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -89,7 +93,7 @@
             
             {#if $expandedFolders.has(group.folder)}
             {#each group.pages as page (page.pageId)}
-                <li class="cms-line" class:selected={$pages.pages[$pages.selectedPageIndex].pageId === page.pageId}>
+                <li on:click={() => {selectPage(page.pageId)}} class="cms-line" class:selected={$pages.pages[$pages.selectedPageIndex].pageId === page.pageId}>
                     <div class="depth"></div>
 
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 3C3 2.44772 3.44772 2 4 2H8.70711L13 6.29289V13C13 13.5523 12.5523 14 12 14H4C3.44772 14 3 13.5523 3 13V3ZM8.29289 3H4V13H12V6.70711L8.29289 3Z" fill="currentColor"></path></svg>
@@ -104,7 +108,7 @@
             {/if}
         {:else}
             {#each group.pages as page (page.pageId)}
-                <li class="cms-line" class:selected={$pages.pages[$pages.selectedPageIndex].pageId === page.pageId}>
+                <li on:click={() => {selectPage(page.pageId)}} class="cms-line" class:selected={$pages.pages[$pages.selectedPageIndex].pageId === page.pageId}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 3C3 2.44772 3.44772 2 4 2H8.70711L13 6.29289V13C13 13.5523 12.5523 14 12 14H4C3.44772 14 3 13.5523 3 13V3ZM8.29289 3H4V13H12V6.70711L8.29289 3Z" fill="currentColor"></path></svg>
 
                     <p>{page.pageName}</p>

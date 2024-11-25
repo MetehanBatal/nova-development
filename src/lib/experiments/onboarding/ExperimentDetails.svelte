@@ -11,243 +11,210 @@
 	let isVariantActive = false;
 	export let variantDropdownRef;
 	export let selectedOptions;
-
-	let components = [
-		{
-			name: 'Headline Copy (Advertorial)',
-			on: [
-				'https://www.manvsevil.com/a/s6-reasons'
-			],
-			variants: [
-				{
-					name: 'Headline I',
-					component: 'HeadlineI'
-				},
-				{
-					name: 'Headline II',
-					component: 'HeadlineII'
-				},
-				{
-					name: 'Headline III',
-					component: 'HeadlineIII'
-				},
-				{
-					name: 'Headline IV',
-					component: 'HeadlineIV'
-				}
-			],
-			selectable: true
-		},
-		{
-			name: 'Hero Image Change (Advertorial)',
-			on: [
-				'https://www.manvsevil.com/a/s6-reasons'
-			],
-			variants: [
-				{
-					name: 'Image I',
-					component: 'ImageI'
-				},
-				{
-					name: 'Image II',
-					component: 'ImageII'
-				},
-				{
-					name: 'Image III',
-					component: 'ImageIII'
-				}
-			],
-			selectable: true
-		},
-		{
-			name: 'Free Gift',
-			on: [ 'https://www.manvsevil.com/kit/ksp' ],
-			variants: [
-				{
-					name: 'On',
-					component: 'On'
-				},
-				{
-					name: 'Off',
-					component: 'Off'
-				}
-			],
-			selectable: true
-		},
-		{
-			name: 'Pricing Bundles',
-			on: [ 'https://www.manvsevil.com/kit/ksp' ],
-			variants: [
-				{
-					name: '6-month',
-					component: '6-month'
-				},
-				{
-					name: '4-month',
-					component: '4-month'
-				},
-				{
-					name: '2-month',
-					component: '2-month'
-				}
-			],
-			selectable: true
-		},
-		{
-			name: 'Subscription+One time',
-			on: [ 'https://www.manvsevil.com/kit/ksp' ],
-			variants: [
-				{
-					name: 'On',
-					component: 'On'
-				},
-				{
-					name: 'Off',
-					component: 'Off'
-				}
-			],
-			selectable: true
-		},
-		{
-			name: 'Post-purchase Popup Visibility',
-			on: [ 'https://www.manvsevil.com/kit/ksp' ],
-			variants: [
-				{
-					name: 'On',
-					component: 'On'
-				},
-				{
-					name: 'Off',
-					component: 'Off'
-				}
-			],
-			selectable: true
-		},
-		{
-			name: 'Selectable Products',
-			on: [ 'https://www.manvsevil.com/kit/ksp' ],
-			variants: [
-				{
-					name: 'On',
-					component: 'On'
-				},
-				{
-					name: 'Off',
-					component: 'Off'
-				}
-			],
-			selectable: true
-		},
-		{
-			name: 'Reviews Order',
-			on: [ 'https://www.manvsevil.com/checkout/secure' ],
-			variants: [
-				{
-					name: 'Cameron',
-					component: 'cameron'
-				},
-				{
-					name: 'Scott',
-					component: 'scott'
-				}
-			],
-			selectable: true
-		},
-		{
-			name: 'Banner Coupon',
-			on: [ 
-				'https://www.manvsevil.com/a/s6-reasons',
-				'https://www.manvsevil.com/kit/ksp',
-				'https://www.manvsevil.com/checkout/secure'
-			],
-			variants: [
-				{
-					name: 'AutoApplied',
-					component: 'AutoApplied'
-				},
-				{
-					name: 'LevelUp',
-					component: 'LevelUp'
-				},
-				{
-					name: 'LevelUp10',
-					component: 'LevelUp10'
-				}
-			],
-			selectable: true
-		},
-		{
-			name: 'Advertorial Traffic Split (Advertorial)',
-			on: [
-				'https://www.manvsevil.com/a/s6-reasons'
-			],
-			variants: [
-				{
-					name: 'Advertorial',
-					component: 'Advertorial'
-				},
-				{
-					name: 'Direct to Lander',
-					component: 'DirectToLander'
-				}
-			],
-			selectable: true
-		},
-		{
-			name: 'Headline Copy Change',
-			on: [
-				'https://www.manvsevil.com/kit/ksp'
-			],
-			variants: [
-				{
-					name: 'Limiting Testosterones',
-					component: 'LimitingTestosterones'
-				},
-				{
-					name: 'Unleash Masculanity',
-					component: 'UnleashMasculanity'
-				}
-			],
-			selectable: true
-		}
-	];
+	
+	// let components = [
+	// 	{
+	// 		name: 'Headline Copy (Advertorial)',
+	// 		on: [
+	// 			'https://www.manvsevil.com/a/s6-reasons'
+	// 		],
+	// 		variants: [
+	// 			{
+	// 				name: 'Headline I',
+	// 				component: 'HeadlineI'
+	// 			},
+	// 			{
+	// 				name: 'Headline II',
+	// 				component: 'HeadlineII'
+	// 			},
+	// 			{
+	// 				name: 'Headline III',
+	// 				component: 'HeadlineIII'
+	// 			},
+	// 			{
+	// 				name: 'Headline IV',
+	// 				component: 'HeadlineIV'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	},
+	// 	{
+	// 		name: 'Hero Image Change (Advertorial)',
+	// 		on: [
+	// 			'https://www.manvsevil.com/a/s6-reasons'
+	// 		],
+	// 		variants: [
+	// 			{
+	// 				name: 'Image I',
+	// 				component: 'ImageI'
+	// 			},
+	// 			{
+	// 				name: 'Image II',
+	// 				component: 'ImageII'
+	// 			},
+	// 			{
+	// 				name: 'Image III',
+	// 				component: 'ImageIII'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	},
+	// 	{
+	// 		name: 'Free Gift',
+	// 		on: [ 'https://www.manvsevil.com/kit/ksp' ],
+	// 		variants: [
+	// 			{
+	// 				name: 'On',
+	// 				component: 'On'
+	// 			},
+	// 			{
+	// 				name: 'Off',
+	// 				component: 'Off'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	},
+	// 	{
+	// 		name: 'Pricing Bundles',
+	// 		on: [ 'https://www.manvsevil.com/kit/ksp' ],
+	// 		variants: [
+	// 			{
+	// 				name: '6-month',
+	// 				component: '6-month'
+	// 			},
+	// 			{
+	// 				name: '4-month',
+	// 				component: '4-month'
+	// 			},
+	// 			{
+	// 				name: '2-month',
+	// 				component: '2-month'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	},
+	// 	{
+	// 		name: 'Subscription+One time',
+	// 		on: [ 'https://www.manvsevil.com/kit/ksp' ],
+	// 		variants: [
+	// 			{
+	// 				name: 'On',
+	// 				component: 'On'
+	// 			},
+	// 			{
+	// 				name: 'Off',
+	// 				component: 'Off'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	},
+	// 	{
+	// 		name: 'Post-purchase Popup Visibility',
+	// 		on: [ 'https://www.manvsevil.com/kit/ksp' ],
+	// 		variants: [
+	// 			{
+	// 				name: 'On',
+	// 				component: 'On'
+	// 			},
+	// 			{
+	// 				name: 'Off',
+	// 				component: 'Off'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	},
+	// 	{
+	// 		name: 'Selectable Products',
+	// 		on: [ 'https://www.manvsevil.com/kit/ksp' ],
+	// 		variants: [
+	// 			{
+	// 				name: 'On',
+	// 				component: 'On'
+	// 			},
+	// 			{
+	// 				name: 'Off',
+	// 				component: 'Off'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	},
+	// 	{
+	// 		name: 'Reviews Order',
+	// 		on: [ 'https://www.manvsevil.com/checkout/secure' ],
+	// 		variants: [
+	// 			{
+	// 				name: 'Cameron',
+	// 				component: 'cameron'
+	// 			},
+	// 			{
+	// 				name: 'Scott',
+	// 				component: 'scott'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	},
+	// 	{
+	// 		name: 'Banner Coupon',
+	// 		on: [ 
+	// 			'https://www.manvsevil.com/a/s6-reasons',
+	// 			'https://www.manvsevil.com/kit/ksp',
+	// 			'https://www.manvsevil.com/checkout/secure'
+	// 		],
+	// 		variants: [
+	// 			{
+	// 				name: 'AutoApplied',
+	// 				component: 'AutoApplied'
+	// 			},
+	// 			{
+	// 				name: 'LevelUp',
+	// 				component: 'LevelUp'
+	// 			},
+	// 			{
+	// 				name: 'LevelUp10',
+	// 				component: 'LevelUp10'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	},
+	// 	{
+	// 		name: 'Advertorial Traffic Split (Advertorial)',
+	// 		on: [
+	// 			'https://www.manvsevil.com/a/s6-reasons'
+	// 		],
+	// 		variants: [
+	// 			{
+	// 				name: 'Advertorial',
+	// 				component: 'Advertorial'
+	// 			},
+	// 			{
+	// 				name: 'Direct to Lander',
+	// 				component: 'DirectToLander'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	},
+	// 	{
+	// 		name: 'Headline Copy Change',
+	// 		on: [
+	// 			'https://www.manvsevil.com/kit/ksp'
+	// 		],
+	// 		variants: [
+	// 			{
+	// 				name: 'Limiting Testosterones',
+	// 				component: 'LimitingTestosterones'
+	// 			},
+	// 			{
+	// 				name: 'Unleash Masculanity',
+	// 				component: 'UnleashMasculanity'
+	// 			}
+	// 		],
+	// 		selectable: true
+	// 	}
+	// ];
 
 	let selectedComponents = {};
 
-	let pages = [
-		{
-			name: 'Kit - Advertorial',
-			slug: 'https://www.manvsevil.com/a/s6-reasons'
-		},
-		{
-			name: 'Kit - KSP',
-			slug: 'https://www.manvsevil.com/kit/ksp',
-		},
-		{
-			name: 'Kit - Checkout',
-			slug: 'https://www.manvsevil.com/checkout/secure',
-		},
-		{
-			name: 'Kit - Upsell 1a',
-			slug: 'https://www.manvsevil.com/up/1a'
-		},
-		{
-			name: 'Kit - Upsell 2a',
-			slug: 'https://www.manvsevil.com/up/2a'
-		},
-		{
-			name: 'Receipt',
-			slug: 'https://www.manvsevil.com/receipt'
-		},
-		{
-			name: 'Privacy Policy',
-			slug: 'https://www.manvsevil.com/privacy-policy'
-		},
-		{
-			name: 'Terms of Service',
-			slug: 'https://www.manvsevil.com/terms-of-service'
-		},
-	];
+	// let pages = [];
 
 	let experimentOptions = [
 		{
@@ -268,7 +235,64 @@
 		},
 	];
 
-	onMount(() => {
+	let pages = [];
+    let components = [];
+    let variants = [];
+
+    onMount(async () => {
+        try {
+            const [pagesResponse, componentsResponse, variantsResponse] = await Promise.all([
+                fetch('http://localhost:3030/staging/pages/view?limit=100&offset=0'),
+                fetch('http://localhost:3030/staging/components/view?limit=100&offset=0'),
+                fetch('http://localhost:3030/staging/variants/view?limit=100&offset=0')
+            ]);
+
+            // Check all responses for success
+            if (!pagesResponse.ok || !componentsResponse.ok || !variantsResponse.ok) {
+                throw new Error('One or more requests failed.');
+            }
+
+            // Parse JSON responses
+            const [pagesData, componentsData, variantsData] = await Promise.all([
+                pagesResponse.json(),
+                componentsResponse.json(),
+                variantsResponse.json()
+            ]);
+
+            // Assign the data to variables
+            pages = pagesData.data.docs;
+			components = componentsData.data.docs.map(component => {
+				// Get the slugs of pages where the component occurs
+				const on = component.occurrences
+					.map(occurrence => {
+					const page = pages.find(p => p.pageId === occurrence.pageId);
+					return page ? page.slug : null;
+					})
+					.filter(slug => slug !== null);
+
+				// Get the variants of this component
+				const componentVariants = variantsData.data.docs
+					.filter(variant => variant.componentId === component.componentId)
+					.map(variant => ({
+						name: variant.name,
+						component: variant.name.replace(/\s+/g, ''),
+						id: variant.variantId
+					}));
+
+				// Return the transformed object
+				return {
+					name: component.name,
+					on: on,
+					variants: componentVariants
+				};
+			});
+            variants = variantsData.data.docs;
+
+			console.log(pages, components, variants);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+
 		if (browser) {
 			document.addEventListener("click", (event) => {
 				if (dropdownRef && !dropdownRef.contains(event.target)) {
@@ -380,7 +404,7 @@
 				<div class="dropdown-content">
 					{#each pages as page}
 						<div class="dropdown-item" class:selected={$experiment.baseURLs.includes(page.slug)} on:click={(e) => {$experiment.baseURLs = $experiment.baseURLs.includes(page.slug) ? $experiment.baseURLs.filter(item => item !== page.slug) : [...$experiment.baseURLs, page.slug]}}>
-							<p>{page.name}</p>
+							<p>{page.pageName}</p>
 							<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
 								<path d="M10 3L4.5 8.5L2 6" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
 							</svg>

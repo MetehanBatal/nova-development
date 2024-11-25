@@ -7,6 +7,7 @@
     import { instances } from '../../stores/cms/instances';
     import { styleSheet } from '../../stores/cms/styleSheet';
     import { selectedBreakpoint } from '../../stores/cms/selectedBreakpoint';
+    import { cmsMode } from '../../stores/cms/cmsMode';
 
     import { nodeTags } from '../../stores/cms/nodeTags';
     import { handleElementAppend, handleKeyDown, postMessage, dbActions } from '../../stores/cms/functions';
@@ -36,25 +37,13 @@
 
     let baseFrameURL = dev ? 'http://localhost:5174' : 'https://preview-preconvert.vercel.app';
 
-    $pages.selectedPageIndex = 2;
+    $pages.selectedPageIndex = 0;
 
     let selectedElementDetails = {};
     let hoveredElementDetails = {};
 
     onMount(async() => {
-        // Fetch instances
-        //
-        try {
-            const instanceReq = await fetch(`https://preconvert.novus.studio/staging/instances/view?pageId=${$pages.pages[$pages.selectedPageIndex].pageId}`);
-            const instanceRes = await instanceReq.json();
-            
-            $instances = instanceRes.data;
-
-            console.log('Instances: ', $instances);
-            console.log(data);
-        } catch (error) {
-            console.error('Error fetching instances:', error);
-        }
+        // let pInstances = fetchInstances();
 
         // Create a ResizeObserver to watch the canvas size
         //
@@ -88,7 +77,6 @@
             }
 
             if (message.data.action === 'elementClicked') {
-                console.log('Click details received: ', message.data);
                 selectedElementDetails.id = message.data.data.target;
                 selectedElementDetails.width = message.data.data.width;
                 selectedElementDetails.height = message.data.data.height;
@@ -122,9 +110,9 @@
 
         // until finding a 
         // **working** way of listening iframe load
-        setTimeout(() => {
-            iframeLoaded();
-        }, 1800);
+        // setTimeout(() => {
+        //     iframeLoaded();
+        // }, 1800);
 
         // Cleanup observer on component unmount
         return () => {
@@ -139,19 +127,17 @@
     function iframeLoaded() {
         initialized = true;
 
-        console.log($instances);
-
         postMessage('initialization', {page: $pages.pages[$pages.selectedPageIndex], components, instances: $instances, styleSheet: $styleSheet});
     }
 
     function checkInstanceDetails() {
-        console.log('Sel: ', $selectedInstance);
         if (initialized && $selectedInstance.instanceId.length < 1) {
             selectedElementDetails = {};
         }
     }
 
     $: $selectedInstance, checkInstanceDetails();
+    $: $cmsMode, console.log('CMS M: ', $cmsMode);
 </script>
 
 <svelte:window bind:innerWidth={innerWidth} bind:innerHeight={innerHeight}></svelte:window>
@@ -163,21 +149,21 @@
     <ElementsManager on:elementAppended={handleElementAppend} bind:elementsTabRevealed={elementsTabRevealed} />
     {/if}
 
-    {#if $instances.length > 0}
-    <Navigator bind:elementsTabRevealed={elementsTabRevealed} bind:navigatorFixed={navigatorFixed} { components } on:selectionChanged={postMessage('selectionChanged', $selectedInstance.instanceId)} />
-    {/if}
+    <!-- {#if $instances.length > 0} -->
+    <Navigator bind:elementsTabRevealed={elementsTabRevealed} bind:navigatorFixed={navigatorFixed} on:selectionChanged={postMessage('selectionChanged', $selectedInstance.instanceId)} />
+    <!-- {/if} -->
 
-    <div class="iframe-holder">
+    <div class="iframe-holder" style={`height: ${$cmsMode === 'component' ? `${innerHeight - 64}px` : ''};`}>
         <iframe
             bind:this={canvas}
-            style={`height: ${innerHeight - 64}px; width: ${$selectedBreakpoint === 'tablet' ? '768px' : $selectedBreakpoint === 'mobile' ? '468px' : '100%'}`}
+            style={`height: ${$cmsMode === 'component' ? 'auto' : `${innerHeight - 64}px`}; width: ${$selectedBreakpoint === 'tablet' ? '768px' : $selectedBreakpoint === 'mobile' ? '468px' : '100%'}`}
             src={`${baseFrameURL}/preview?editMode=true`}
             frameborder="0"
             title="Main frame"
         ></iframe>
     </div>
 
-    <div class="iframe-controller" style={`height: ${innerHeight - 64}px; left: ${canvas?.offsetLeft}px; width: ${canvasWidth}px; top: ${canvas?.offsetTop}px;`}>
+    <div class="iframe-controller" style={`height: ${$cmsMode === 'component' ? 'auto' : `${innerHeight - 64}px`}; left: ${canvas?.offsetLeft}px; width: ${canvasWidth}px; top: ${canvas?.offsetTop}px;`}>
         {#if selectedElementDetails.id}
         <div class="element-outliner" style={`width: ${selectedElementDetails.width}px; height: ${selectedElementDetails.height}px; transform: translate3d(${selectedElementDetails.offsetLeft}px, ${selectedElementDetails.offsetTop}px, 0); z-index: 2;`}>
             <div class="breadcrumb active" style={`transform: translateY(${selectedElementDetails.offsetTop < 26 ? '0%' : '-100%'})`}>
@@ -206,7 +192,7 @@
     </div>
 
     {#if settingsRevealed}
-    <SettingsPopover x={selectedElementDetails.offsetLeft} y={selectedElementDetails.offsetTop} bind:settingsRevealed={settingsRevealed} />
+    <SettingsPopover x={selectedElementDetails.offsetLeft} y={selectedElementDetails.offsetTop} canvasX={canvas?.offsetLeft || 0} bind:settingsRevealed={settingsRevealed} />
     {/if}
 
     <StylingManager />
@@ -252,9 +238,12 @@
     .iframe-holder {
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
         
         width: 100%;
+
+        background-image: url(/assets/icons/cms-bg.png);
+        background-repeat: repeat;
     }
 
     .iframe-controller {

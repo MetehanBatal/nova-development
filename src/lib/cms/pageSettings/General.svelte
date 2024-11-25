@@ -6,7 +6,7 @@
     
     let dropdownOpened = true;
 
-    console.log('PPPPPP: ', $pages);
+    console.log('SElected page: ', selectedPage);
 
     // let selectedPage = $pages.pages.find((page) => page.pageId === pageId);
 </script>
@@ -32,6 +32,12 @@
             <p class="label">Page Slug</p>
 
             <input type="text" bind:value={selectedPage.slug}>
+        </div>
+
+        <div class="input-holder">
+            <p class="label">Folder</p>
+
+            <input type="text" bind:value={selectedPage.folder}>
         </div>
     </div>
     {/if}

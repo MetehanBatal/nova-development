@@ -1,4 +1,5 @@
 <script>
+    import { selectedInstance } from "../../../stores/cms/selectedInstance";
     import Switch from "$lib/toolkit/Switch.svelte";
 
     let tagTypes =  [

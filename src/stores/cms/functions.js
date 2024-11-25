@@ -1,6 +1,7 @@
 import { page } from '$app/stores';
 import { selectedInstance } from './selectedInstance';
 import { selectedBreakpoint } from './selectedBreakpoint';
+import { cmsMode } from './cmsMode';
 import { visibleIds } from './visibleIds';
 import { instances } from './instances';
 import { styleSheet } from './styleSheet';  // Import styleSheet as a store
@@ -11,9 +12,14 @@ let selectedInstanceClass = '';
 let breakpoint = '';
 let instanceMap;
 let dVisibleIds;
+let dCMSMode;
 let order = 0;
 let pageData;
 let baseFrameURL = dev ? 'http://localhost:5174' : 'https://preview-preconvert.vercel.app';
+
+cmsMode.subscribe((value) => {
+    dCMSMode = value;
+});
 
 selectedBreakpoint.subscribe((value) => {
     breakpoint = value;
@@ -43,7 +49,7 @@ styleSheet.subscribe((value) => {
 
 const dbActions = async function (data, endpoint, action) {
     try {
-        const response = await fetch(`https://preconvert.novus.studio/staging/${endpoint}/${action}`, {
+        const response = await fetch(`http://localhost:3030/staging/${endpoint}/${action}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -56,9 +62,13 @@ const dbActions = async function (data, endpoint, action) {
         }
 
         const result = await response.json();
-        console.log('Upsert result:', result);
+
+        return result;  // Return the parsed response
+
     } catch (error) {
         console.error('Error during upsert:', error);
+        
+        return { error };
     }
 }
 
@@ -144,7 +154,6 @@ const handleElementAppend = async function (event, overwrites) {
 
     let instancesToUpdate = [sibling, currentInstance, schema].filter(instance => instance !== undefined);
 
-    console.log('Element appended compute orders and draw instances');
     let newVisibleIds = drawInstances();
     visibleIds.set(newVisibleIds);
     computeOrders();
@@ -271,7 +280,6 @@ const compareInstances = () => {
     }
 
     if (currentStylingString !== stylingHolder) {
-        console.log('No matching styling sire: ', currentStylingString, stylingHolder);
         stylingHolder = currentStylingString;
 
         postMessage('stylingChanged', { styleSheet });
@@ -305,44 +313,95 @@ const alterStyling = () => {
 };
 
 // Function to inject class
-async function injectClass(data) {
+async function injectClass(data, classList, from) {
+    if (!data || data === 'undefined') {
+        return; }
     // Add class name to instance within the store
     let selectedInstanceToUpdate = currentInstances.find((i) => i.instanceId === selectedInstanceId);
 
-    console.log('Selected Instance for class inj.: ', selectedInstanceToUpdate);
     if (selectedInstanceToUpdate) {
-        let hasClassAttr = selectedInstanceToUpdate.attributes.some((attr) => attr.value === data && attr.name === 'class');
+        let hasClassAttr = selectedInstanceToUpdate.attributes.find((attr) => attr.name === 'class');
+        if (hasClassAttr && hasClassAttr.value.includes(data)) {
+            console.warn('Same class found.');
+            return; }
         if (!hasClassAttr) {
             selectedInstanceToUpdate.attributes.push({ name: 'class', value: data });
-            
-            // Update the instances store after modifying the instance attributes
-            instances.set([...currentInstances]);
+        } else {
+            selectedInstanceToUpdate.attributes.find((attr) => attr.name === 'class').value += ` ${data}`;
         }
 
-        // Initialize empty CSS data in styleSheet store
-        currentStyleSheet.push({
-            "name": data,
+        // Update the instances store after modifying the instance attributes
+        instances.set([...currentInstances]);
+        selectedInstanceClass = classList.length > 1 ? classList : data;
+
+        const cssSchema = {
+            "name": classList.length > 1 ? classList : data,
             breakpoint: breakpoint,
             "attributes": {},
             "combos": [],
             "type": "class"
-        });
+        };
+
+        // Initialize empty CSS data in styleSheet store
+        currentStyleSheet.push(cssSchema);
 
         // Update the styleSheet store with the new class
         styleSheet.set([...currentStyleSheet]);
 
-        if (!hasClassAttr) {
+        // Update instance in DB
+        await dbActions(selectedInstanceToUpdate, 'instances', 'upsert');
+        
+        // Notify iframe about the change
+        postMessage('classChanged', { target: selectedInstanceId, className: data });
+
+        // Update the stylesheet in DB
+        await dbActions(cssSchema, 'style', 'upsert');
+    }
+}
+
+// Function to remove class
+async function removeClass(classToRemove) {
+    // Find the instance in the current instances
+    let selectedInstanceToUpdate = currentInstances.find((i) => i.instanceId === selectedInstanceId);
+
+    if (selectedInstanceToUpdate) {
+        // Find the class attribute
+        let classAttr = selectedInstanceToUpdate.attributes.find((attr) => attr.name === 'class');
+        
+        if (classAttr) {
+            // Split classes into array, remove the specified class, and rejoin
+            let classes = classAttr.value.split(' ');
+            classes = classes.filter(c => c !== classToRemove);
+            
+            if (classes.length === 0) {
+                // If no classes left, remove the class attribute entirely
+                selectedInstanceToUpdate.attributes = selectedInstanceToUpdate.attributes.filter(
+                    attr => attr.name !== 'class'
+                );
+            } else {
+                // Update the class attribute with remaining classes
+                classAttr.value = classes.join(' ');
+            }
+
+            // Update the instances store
+            instances.set([...currentInstances]);
+
+            // Remove the class from styleSheet if it exists
+            styleSheet.update(sheet => {
+                return sheet.filter(style => style.name !== classToRemove);
+            });
+
             // Update instance in DB
             await dbActions(selectedInstanceToUpdate, 'instances', 'upsert');
 
             // Notify iframe about the change
-            postMessage('classChanged', { target: selectedInstanceId, className: data });
+            postMessage('classChanged', { target: selectedInstanceId, className: classToRemove });
         }
     }
 }
 
 // Function to alter a styling property
-const alterStylingProperty = async function (prop, value) {
+const alterStylingProperty = async function (prop, value, from) {
     if (prop.length < 1 || value.length < 1) {
         return; }
 
@@ -352,11 +411,9 @@ const alterStylingProperty = async function (prop, value) {
         let selectedInstanceToUpdate = currentInstances.find((i) => i.instanceId === selectedInstanceId);
         if (selectedInstanceToUpdate) {
             selectedInstanceClass = `${selectedInstanceToUpdate.nodeName.toLowerCase()}-${generateRandomNumber(6)}`;
-            await injectClass(selectedInstanceClass); // Ensure that the class is injected
+            await injectClass(selectedInstanceClass, [], 'first alter'); // Ensure that the class is injected
         }
     }
-
-    console.log(currentStyleSheet);
 
     // Find matching CSS object within styleSheet and update its styling property
     let styleToUpdate = currentStyleSheet.find((ss) => ss.name === selectedInstanceClass && ss.breakpoint === breakpoint);
@@ -371,7 +428,7 @@ const alterStylingProperty = async function (prop, value) {
         // Update the stylesheet in DB
         await dbActions(styleToUpdate, 'style', 'upsert');
     } else {
-        await injectClass(selectedInstanceClass);
+        await injectClass(selectedInstanceClass, [], 'second alter');
 
         let diffBreakpoint = currentStyleSheet.find((ss) => ss.name === selectedInstanceClass && ss.breakpoint === breakpoint);
         if (diffBreakpoint) {
@@ -379,8 +436,6 @@ const alterStylingProperty = async function (prop, value) {
 
             // Update the styleSheet store with the modified styles
             styleSheet.set([...currentStyleSheet]);
-
-            console.log('Diff: ', diffBreakpoint)
 
             postMessage('stylingChanged', { styleSheet: currentStyleSheet });
 
@@ -411,7 +466,6 @@ const alterContent = async function (value) {
 }
 
 const postMessage = (action, data) => {
-    console.log('post message called');
     document.querySelector('iframe[title="Main frame"]').contentWindow.postMessage({ action, data }, baseFrameURL);
 }
 
@@ -429,6 +483,8 @@ const drawInstances = () => {
         instanceMap.set(instance.instanceId, instance);
     });
 
+    console.log('C: ', currentInstances);
+
     // Step 3: Compute depth for each instance and add it as a property
     const updatedInstances = currentInstances.map(instance => {
         const { instanceId, ...rest } = instance;
@@ -436,14 +492,19 @@ const drawInstances = () => {
         return {
             ...rest,
             instanceId,
+            id: instanceId,
             depth: computeDepth(instance)
         }
     });
+
+    console.log('U: ', updatedInstances);
 
     // Step 4: Initialize visibleIds with root elements (depth === 1)
     dVisibleIds = updatedInstances
         .filter(instance => instance.depth === 1)
         .map(instance => instance.instanceId)
+    
+    console.log(dVisibleIds);
 
     // Update the store with the new instances array
     instances.set(updatedInstances);
@@ -456,7 +517,6 @@ const drawInstances = () => {
 const computeDepth = (instance) => {
     let depth = 1; // Root elements start at depth 1
     let current = instance;
-    console.log(instanceMap, current);
     while (current.parentInstanceId && instanceMap.has(current.parentInstanceId)) {
         depth += 1;
         current = instanceMap.get(current.parentInstanceId);
@@ -474,18 +534,24 @@ const computeOrders = () => {
     })();
 
     // Filter top-level instances
-    let topLevelInstances = currentInstances.filter((i) => i.parentInstanceId === 'BODY');
+    let topLevelInstances = dCMSMode !== 'component' ?
+                                    currentInstances.filter((i) => i.parentInstanceId === 'BODY') :
+                                    currentInstances.filter(instance => !currentInstances.some(potential => potential.instanceId === instance.parentInstanceId));
     
     // Assign order to top-level instances and their children
     topLevelInstances.forEach((tInstance) => {
         assignOrder(tInstance, currentInstances);  // Make sure `assignOrder` works with currentInstances
     });
 
+    console.log('Current Instances: ', currentInstances);
+
     // Sort instances by their `order` property
     const sortedInstances = currentInstances.sort((a, b) => a.order - b.order);
 
     // Update the store with the sorted instances
     instances.set(sortedInstances);
+
+    console.log('Current Instances: ', sortedInstances);
 };
 
 const assignOrder = (instance, currentInstances) => {
@@ -495,7 +561,16 @@ const assignOrder = (instance, currentInstances) => {
     // If the instance has nestedInstanceIds, recursively assign order to each child instance
     if (instance.nestedInstanceIds && instance.nestedInstanceIds.length > 0) {
         instance.nestedInstanceIds.forEach((nId) => {
-            let childInstance = currentInstances.find((inst) => inst.instanceId === nId);
+            let childInstance = '';
+            console.log(nId, nId.startsWith('c-'));
+            if (nId.startsWith('c-')) {
+                childInstance = currentInstances.filter((inst) => inst.componentId === nId && inst.parentInstanceId === instance.instanceId)[0];
+            } else {
+                childInstance = currentInstances.find((inst) => inst.instanceId === nId);
+            }
+
+            console.log('Child Instance: ', childInstance);
+            
             if (childInstance) {
                 assignOrder(childInstance, currentInstances); // Recursively assign order to child
             }
@@ -525,6 +600,8 @@ function toggleExpand(id) {
     // Determine if the element is currently expanded by checking if any children are visible
     const isExpanded = instance.nestedInstanceIds.some(childId => dVisibleIds.includes(childId));
 
+    console.log('exp: ', isExpanded);
+
     if (isExpanded) {
         // Collapse: Remove all descendants
         const descendants = getDescendantIds(id);
@@ -532,6 +609,7 @@ function toggleExpand(id) {
     } else {
         // Expand: Add direct children
         if (instance.nestedInstanceIds && instance.nestedInstanceIds.length > 0) {
+            console.log(instance.nestedInstanceIds);
             dVisibleIds = [...dVisibleIds, ...instance.nestedInstanceIds];
         }
     }
@@ -539,13 +617,12 @@ function toggleExpand(id) {
     return dVisibleIds;
 }
 
-function changeSelection(event, instance) {
-    if (event.target.closest('.dropdown-button')) {
+function changeSelection(event, instanceId) {
+    if (event?.target?.closest('.dropdown-button') || event?.target?.closest('.cms-line-dropdown')) {
         return; }
 
     page.subscribe((value) => pageData = value);
-
-    console.log(pageData);
+    let instance = currentInstances.find((ins) => ins.instanceId === instanceId);
 
     let styleSheet = pageData.data.stylesRes.data.docs || [];
         selectedInstanceClass = instance.attributes.find((attr) => attr.name === 'class')?.value || '';
@@ -586,8 +663,6 @@ const alterAttribute = async function(attr, value) {
 
     let currentInstance = currentInstances.find((i) => i.instanceId === selectedInstanceId);
 
-    console.log('Attr alteration for: ', currentInstance, attr, value);
-
     // Find the index of the attribute with the given name
     const index = currentInstance.attributes.findIndex(a => a.name === attr);
     if (index !== -1) {
@@ -625,5 +700,7 @@ export {
     alterAttribute,
     alterContent,
     dbActions,
-    injectClass
+    injectClass,
+    removeClass,
+    generateRandomString
 }

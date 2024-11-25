@@ -4,6 +4,9 @@
     const dispatch = createEventDispatcher();
 
     export let elementsTabRevealed;
+
+    let codeBlockPopupVisible = false;
+    let codeBlock = '';
     
     const elementsSchema = {
         "Elements": [
@@ -15,6 +18,7 @@
                     console.log('Section selected');
 
                     dispatch('elementAppended', { nodeName: 'SECTION' })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -33,6 +37,7 @@
                     console.log('Div block selected');
 
                     dispatch('elementAppended', { nodeName: 'DIV' })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -43,6 +48,7 @@
                     console.log('List block selected');
 
                     dispatch('elementAppended', { nodeName: 'UL', subsequentElement: {nodeName: 'LI', content: 'Lorem ipsum' }})
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -53,6 +59,7 @@
                     console.log('List item selected');
 
                     dispatch('elementAppended', { nodeName: 'LI' })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -62,7 +69,8 @@
                 action: () => {
                     console.log('Link block selected');
 
-                    dispatch('elementAppended', { nodeName: 'A', content: 'Lorem ipsum', attributes: [{name: 'href',value: '#'}] })
+                    dispatch('elementAppended', { nodeName: 'A', subsequentElement: {nodeName: 'P', content: 'Lorem ipsum' }, attributes: [{name: 'href',value: '#'}] })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -73,6 +81,7 @@
                     console.log('Button selected');
 
                     dispatch('elementAppended', { nodeName: 'BUTTON' })
+                    elementsTabRevealed = false;
                 }
             }
         ],
@@ -85,6 +94,7 @@
                     console.log('Heading selected');
 
                     dispatch('elementAppended', { nodeName: 'H1', content: 'Heading' })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -95,6 +105,7 @@
                     console.log('Paragraph selected');
 
                     dispatch('elementAppended', { nodeName: 'P', content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.' })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -105,6 +116,7 @@
                     console.log('Text Link selected');
 
                     dispatch('elementAppended', { nodeName: 'A', content: 'Lorem ipsum', attributes: [{name: 'href',value: '#'}] })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -114,6 +126,7 @@
                 action: () => {
                     console.log('Text Block selected');
                     dispatch('elementAppended', { nodeName: 'SPAN', content: 'Text Block' })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -142,6 +155,7 @@
                     console.log('Image selected');
 
                     dispatch('elementAppended', { nodeName: 'IMG', attributes:[{name: 'src', value: 'https://d3e54v103j8qbb.cloudfront.net/plugins/Basic/assets/placeholder.60f9b1840c.svg'}] })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -170,6 +184,7 @@
                     console.log('Form Block selected');
 
                     dispatch('elementAppended', { nodeName: 'FORM', content: '' })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -180,6 +195,7 @@
                     console.log('Label selected');
 
                     dispatch('elementAppended', { nodeName: 'LABEL', content: 'Fill The Label' })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -190,6 +206,7 @@
                     console.log('Input selected');
 
                     dispatch('elementAppended', { nodeName: 'INPUT', content: 'Fill The Input' })
+                    elementsTabRevealed = false;
                 }
             },
             {
@@ -296,6 +313,7 @@
                 icon: `<svg data-wf-icon="AddPanelCodeBlock64Icon" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 15C12 13.3431 13.3431 12 15 12H49C50.6569 12 52 13.3431 52 15V49C52 50.6569 50.6569 52 49 52H15C13.3431 52 12 50.6569 12 49V15Z" fill="currentColor" fill-opacity="0.1"></path><path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M19 52L19 12L20 12L20 52H19Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M15 13H49C50.1046 13 51 13.8954 51 15V49C51 50.1046 50.1046 51 49 51H15C13.8954 51 13 50.1046 13 49V15C13 13.8954 13.8954 13 15 13ZM12 15C12 13.3431 13.3431 12 15 12H49C50.6569 12 52 13.3431 52 15V49C52 50.6569 50.6569 52 49 52H15C13.3431 52 12 50.6569 12 49V15ZM33 18H24V17H33V18ZM41 23H29V22H41V23ZM43 23H47V22H43V23ZM35 28V27H47V28H35ZM29 28H33V27H29V28ZM33 33H24V32H33V33Z" fill="currentColor"></path></svg>`,
                 action: () => {
                     console.log('Code Block selected');
+                    codeBlockPopupVisible = true;
                 }
             }
         ],
@@ -317,24 +335,49 @@
 <div class="elements-manager-holder">
     <div class="elements-manager">
         {#each Object.keys(elementsSchema) as categoryName, _index}
-        <h3>{categoryName}</h3>
+        <div class="element-category">
+            <h3>{categoryName}</h3>
 
-        <ul>
-            {#each elementsSchema[categoryName] as element, __index}
-            <li>
-                <div on:click={() => { element.action() }}>
-                    {@html element.icon}
+            <ul>
+                {#each elementsSchema[categoryName] as element, __index}
+                <li>
+                    <div on:click={() => { element.action(); }}>
+                        {@html element.icon}
 
-                    <p>{@html element.name}</p>
-                </div>
-            </li>
-            {/each}
-        </ul> 
+                        <p>{@html element.name}</p>
+                    </div>
+                </li>
+                {/each}
+            </ul> 
+        </div>
         {/each}
+
+        <button class="close-button" on:click={() => {elementsTabRevealed = false}}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8.33268 1.66675L1.66602 8.33341" stroke="currentColor"/>
+                <path d="M1.66602 1.66675L8.33268 8.33341" stroke="currentColor"/>
+            </svg>    
+        </button>
     </div>
 
     <div class="elements-manager-overlay" on:click={() => {elementsTabRevealed = false}}></div>
 </div>
+
+
+{#if codeBlockPopupVisible}
+    <div class="codeblock-editor-box">
+        <div class="codeblock-editor">
+            <textarea name="codeblock" id="codeblock" bind:value={codeBlock}></textarea>
+
+            <div>
+                <button on:click={() => codeBlockPopupVisible = false}>Close</button>
+                <button on:click={() => {dispatch('elementAppended', { nodeName: 'DIV', content: codeBlock }); codeBlockPopupVisible = false;}}>Save</button>
+            </div>
+        </div>
+
+        <div class="elements-manager-overlay" on:click={() => {codeBlockPopupVisible = false}}></div>
+    </div>
+{/if}
 
 <style>
     .elements-manager-holder {
@@ -357,28 +400,41 @@
     }
 
     .elements-manager {
+        display: flex;
+        flex-direction: column;
+        gap: 2.4rem;
+
         position: absolute;
 
-        width: 32rem;
+        width: 28rem;
         max-height: 100dvh;
             height: 100%;
 
         overflow-y: auto;
 
         background-color: var(--color-black, #060B13);
-        border-right: .1rem solid #2e2e2e;
 
-        padding: 1.2rem;
+        padding: 3.2rem 1.6rem;
 
         z-index: 6;
+    }
+
+    .close-button {
+        position: absolute;
+        right: 1.2rem;
+        
+        color: #fff;
+    }
+
+    .close-button svg {
+        width: 1.8rem;
+        height: 1.8rem;
     }
 
     ul {
         display: flex;
         flex-wrap: wrap;
-        gap: .4rem;
-
-        padding: 1.2rem 0;
+        gap: .6rem;
     }
 
     li {
@@ -386,7 +442,7 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        flex-basis: calc((100% - .8rem) / 3);
+        flex-basis: calc((100% - 1.2rem) / 3);
     }
 
     li div {
@@ -415,6 +471,30 @@
     h3 {
         font-size: 1.8rem;
 
-        margin-top: 1.8rem;
+        margin-bottom: 1.4rem;
+    }
+
+    .codeblock-editor-box {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        z-index: 99;
+    }
+
+    .codeblock-editor {
+        position: relative;
+
+        max-width: 72rem;
+            width: 90%;
+        max-height: 72%;
+
+        z-index: 2;
     }
 </style>

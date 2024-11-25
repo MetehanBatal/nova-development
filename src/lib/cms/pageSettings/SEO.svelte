@@ -6,8 +6,6 @@
     
     let dropdownOpened = false;
 
-    console.log('PPPPPP: ', $pages);
-
     // let selectedPage = $pages.pages.find((page) => page.pageId === pageId);
 </script>
 

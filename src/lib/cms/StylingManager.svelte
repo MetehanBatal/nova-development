@@ -1,6 +1,7 @@
 <script>
     import { selectedInstance } from '../../stores/cms/selectedInstance';
     import { nodeTags } from '../../stores/cms/nodeTags';
+    import { cmsMode } from '../../stores/cms/cmsMode';
 
     import LayoutSelector from '$lib/cms/styling/LayoutSelector.svelte';
     import ClassSelector from '$lib/cms/styling/ClassSelector.svelte';
@@ -10,13 +11,20 @@
     import TypographySelector from '$lib/cms/styling/TypographySelector.svelte';
     import BackgroundSelector from '$lib/cms/styling/BackgroundSelector.svelte';
     import BorderSelector from '$lib/cms/styling/BorderSelector.svelte';
+    import ComponentCreator from '$lib/cms/components/ComponentCreator.svelte';
 </script>
 
-<div class="styling-manager-outer-box">
+<div class="styling-manager-outer-box" class:hidden={$cmsMode === 'edit'}>
     <div class="selector-info-wrapper">
-        {@html nodeTags.find((tag) => tag.name === ($selectedInstance.instanceId !== '' ? $selectedInstance.nodeName : 'DIV')).icon}
+        <div>
+            {@html nodeTags.find((tag) => tag.name === ($selectedInstance.instanceId !== '' ? $selectedInstance.nodeName : 'DIV')).icon}
 
-        <p>{$selectedInstance.instanceId !== '' ? $selectedInstance.class.length > 0 ? $selectedInstance.class.replace('-', ' ') : $selectedInstance.nodeName : 'None Selected'}</p>
+            <p>{$selectedInstance.instanceId !== '' ? $selectedInstance.class.length > 0 ? $selectedInstance.class.split(' ')[0].replace('-', ' ') : $selectedInstance.nodeName : 'None Selected'}</p>
+        </div>
+
+        {#if $selectedInstance.instanceId !== ''}
+        <ComponentCreator />
+        {/if}
     </div>
     
     {#if $selectedInstance.instanceId !== ''}
@@ -55,9 +63,23 @@
         max-height: 100dvh;
 
         overflow-y: auto;
+
+        transition: all .24s ease-in-out;
+    }
+
+    .styling-manager-outer-box.hidden {
+        min-width: 0;
+        width: 0;
+        transform: translate3d(100%, 0, 0);
     }
 
     .selector-info-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .selector-info-wrapper > div {
         display: flex;
         align-items: center;
         gap: .6rem;

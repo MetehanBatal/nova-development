@@ -2,8 +2,9 @@
     import { onDestroy } from 'svelte';
     import { selectedInstance } from "../../stores/cms/selectedInstance";
     import { styleSheet } from '../../stores/cms/styleSheet';
-    import { injectClass } from "../../stores/cms/functions";
+    import { injectClass, removeClass } from "../../stores/cms/functions";
 
+    // Component state
     let classSelections = [];
     let suggestedClassNames = [];
     let selectionMode = false;
@@ -11,68 +12,65 @@
     let newClassName = '';
     let selectionBox;
 
-    let classAttribute = $selectedInstance.attributes.find((attr) => attr.name === 'class');
-    if (classAttribute && classAttribute.value) {
-        classSelections = classAttribute.value
-            .split(',') // Split the string by commas
-            .map(className => className.trim()) // Trim whitespace from each class name
-            .filter(className => className) // Remove any empty strings
-            .map(className => ({ name: className })); // Map to the desired object structure
-    }
+    // Helper functions
+    const parseClassAttribute = (attribute) => 
+        attribute?.value
+            ?.split(' ')
+            .map(className => className.trim())
+            .filter(Boolean)
+            .map(name => ({ name })) ?? [];
 
-    function focusInput() {
-        if (!selectionMode) { return; }
+    const updateClassSelections = () => {
+        const classAttribute = $selectedInstance.attributes.find(attr => attr.name === 'class');
+        classSelections = parseClassAttribute(classAttribute);
+    };
 
-        selectionInput.focus();
-    }
+    const getSuggestedClasses = (searchTerm = '') => {
+        const filtered = $styleSheet.filter(ss => 
+            ss.type === 'class' && 
+            (!searchTerm || ss.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        
+        // Convert to Set and back to array to remove duplicates
+        const uniqueNames = [...new Set(filtered.map(ss => ss.name))];
+        
+        // Return first 25 or 5 results depending on searchTerm
+        return uniqueNames.slice(0, searchTerm ? 25 : 5);
+    };
 
-    function alterSuggestedClassNames() {
-        if (newClassName.length < 1) {
-            suggestedClassNames = $styleSheet
-                .filter((ss) => ss.type === 'class')
-                .slice(0, 5)
-                .map((ss) => ss.name);
-
-            console.log(suggestedClassNames);
-        } else {
-            // When the user types something, filter class names that include the input
-            const searchTerm = newClassName.toLowerCase();
-            suggestedClassNames = $styleSheet
-                .filter(ss => 
-                    ss.type === 'class' && 
-                    ss.name.toLowerCase().includes(searchTerm)
-                )
-                .slice(0, 25)
-                .map(ss => ss.name);
-
-            console.log('eeeeee??: ', suggestedClassNames);
-        }
-    }
-
-    function handleClickOutside(event) {
+    // Event handlers
+    const handleClickOutside = (event) => {
         if (selectionBox && !selectionBox.contains(event.target)) {
             selectionMode = false;
         }
-    }
+    };
 
-    function handleEnterKey(event) {
+    const handleEnterKey = (event) => {
         if (event.key === 'Enter') {
-            handleClassAddUp();
+            handleClassAdd();
+        } else if (event.key === 'Backspace' && selectionMode && !newClassName) {
+            const lastClass = classSelections[classSelections.length - 1]?.name;
+            if (lastClass) {
+                removeClass(lastClass);
+                classSelections = classSelections.slice(0, -1);
+            }
         }
-    }
+    };
 
-    function handleClassAddUp() {
-        if (newClassName.length > 0) {
-            injectClass(newClassName);
-        } 
+    const handleClassAdd = () => {
+        if (newClassName) {
+            injectClass(newClassName.toLowerCase().replace(/\s+/g, '-'), classSelections, 'handle class add');
+            updateClassSelections();
+            newClassName = '';
+        }
         selectionMode = false;
-    }
+    };
 
-    function handlePopoverChanges() {
+    // Lifecycle and reactive statements
+    $: {
         if (selectionMode) {
-            focusInput();
-
             setTimeout(() => {
+                selectionInput?.focus();
                 document.addEventListener('click', handleClickOutside);
                 document.addEventListener('keydown', handleEnterKey);
             }, 240);
@@ -82,8 +80,8 @@
         }
     }
 
-    $: selectionMode, handlePopoverChanges();
-    $: newClassName, alterSuggestedClassNames();
+    $: suggestedClassNames = getSuggestedClasses(newClassName);
+    $: if ($selectedInstance.instanceId) updateClassSelections();
 
     onDestroy(() => {
         document.removeEventListener('click', handleClickOutside);
@@ -91,50 +89,56 @@
     });
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="selection-box">
-    <div class="selections" on:click={() => {selectionMode = true}}>
-        {#if classSelections.length > 0}
+    <div class="selections" on:click={() => selectionMode = true}>
+        {#if classSelections.length}
             {#each classSelections as selection}
-            <div class="selection">
-                <p>{selection.name}</p>
-            </div>
+                <div class="selection">
+                    <p>{selection.name}</p>
+                </div>
             {/each}
-        {:else}
-            {#if !selectionMode}
+        {:else if !selectionMode}
             <p class="label">Select a class or tag</p>
-            {/if}
         {/if}
 
-        <input bind:this={selectionInput} bind:value={newClassName} type="text" style={`flex: ${selectionMode ? 1 : 0}`} />
+        <input 
+            bind:this={selectionInput} 
+            bind:value={newClassName} 
+            type="text" 
+            style="flex: {selectionMode ? 1 : 0}"
+        />
     </div>
 </div>
 
 {#if selectionMode}
-<div class="class-selection-box" bind:this={selectionBox}>
-    <div>
-        <p class="subtitle">New Class</p>
+    <div class="class-selection-box" bind:this={selectionBox}>
+        <div>
+            <p class="subtitle">New Class</p>
+            <p on:click={handleClassAdd}>
+                {newClassName || 'Type in to create a new class'}
+            </p>
+        </div>
 
-        <p on:click={handleClassAddUp}>
-            {newClassName.length > 0 ? newClassName : 'Type in to create a new class'}
-        </p>
+        <div>
+            <p class="subtitle">HTML Tag</p>
+            <p class="tag">All {$selectedInstance.nodeName} Elements</p>
+        </div>
+
+        <div>
+            <p class="subtitle">Existing Classes</p>
+            {#each suggestedClassNames as className}
+                <p 
+                    class="tag blue" 
+                    on:click={() => {
+                        newClassName = className;
+                        handleClassAdd();
+                    }}
+                >
+                    {className}
+                </p>
+            {/each}
+        </div>
     </div>
-
-    <div>
-        <p class="subtitle">HTML Tag</p>
-
-        <p class="tag">All {$selectedInstance.nodeName} Elements</p>
-    </div>
-
-    <div>
-        <p class="subtitle">Existing Classes</p>
-
-        {#each suggestedClassNames as className}
-        <p class="tag blue" on:click={() => {newClassName = className; handleClassAddUp()}}>{className}</p>
-        {/each}
-    </div>
-</div>
 {/if}
 
 <style>
@@ -157,8 +161,9 @@
 
     .selections {
         display: flex;
-        gap: 0.4rem;
+        flex-wrap: wrap;
         flex: 1;
+        gap: 0.4rem;
         height: 100%;
     }
 

@@ -2,6 +2,7 @@
 	export let title;
 	export let fullWidth;
 	export let status;
+	export let titlePos;
 
 	console.log(status);
 
@@ -12,7 +13,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class={`outer-box ${fullWidth ? 'fullWidth' : ''}`} class:checked={status} on:click={() => {handleSwitch()}}>
+<div class={`outer-box ${fullWidth ? 'fullWidth' : ''} ${titlePos ? titlePos : ''}`} class:checked={status} on:click={() => {handleSwitch()}}>
 	<div class="switch-box">
 		<span></span>
 	</div>
@@ -31,6 +32,10 @@
 		justify-content: space-between;
 
 		width: 100%;
+	}
+
+	.outer-box.reversed .switch-box {
+		order: 1;
 	}
 
 	.outer-box.fullWidth .switch-box {

@@ -1,5 +1,5 @@
 <script>
-    import { alterTagName } from '../../../stores/cms/functions';
+    import { alterTagName, alterContent } from '../../../stores/cms/functions';
     import { selectedInstance } from "../../../stores/cms/selectedInstance";
 
     import { onMount } from "svelte";
@@ -39,10 +39,12 @@
         }
     ];
     let selectedTagIndex = 0;
+    let content = '';
 
     function getProperties() {
         selectionChangeInProgress = true;
         selectedTagIndex = tagOptions.findIndex((opt) => opt.value === $selectedInstance.nodeName);
+        content = $selectedInstance.content || '';
         
         setTimeout(() =>{
             selectionChangeInProgress = false;
@@ -63,4 +65,10 @@
     <p>Tag</p>
     
     <Switch options={tagOptions} bind:selectedIndex={selectedTagIndex} gap="0" />
+</div>
+
+<div>
+    <p>Text</p>
+
+    <input type="text" name="text" bind:value={content} on:blur={(e) => { alterContent(e.target.value) }} />
 </div>

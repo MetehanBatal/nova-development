@@ -15,9 +15,14 @@
 
     let fontOptions = [
         {
-            name: 'Gt walsheim pro',
-            value: 'Gt walsheim pro',
+            name: 'Brandon',
+            value: 'Brandon',
             index: 0
+        },
+        {
+            name: 'PT Sans',
+            value: 'PT Sans',
+            index: 1
         }
     ];
     let fontIndex = 0;

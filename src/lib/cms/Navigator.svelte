@@ -3,6 +3,8 @@
     import { selectedCMSTabIndex } from '../../stores/cms/selectedCMSTabIndex';
     import { assets } from '../../stores/cms/assets';
     import { pages } from '../../stores/cms/pages';
+    import { cmsMode } from '../../stores/cms/cmsMode';
+    import { components } from '../../stores/cms/components';
 
     import Pages from "$lib/cms/tabs/Pages.svelte";
     import Layers from "$lib/cms/tabs/Layers.svelte";
@@ -10,15 +12,21 @@
     import Assets from "$lib/cms/tabs/Assets.svelte";
     import Events from "$lib/cms/tabs/Events.svelte";
     import PageSettingsTab from "$lib/cms/PageSettings.svelte";
+    import ContextMenu from "$lib/toolkit/ContextMenu.svelte";
     
-    export let components;
     export let elementsTabRevealed;
 
     export let navigatorFixed;
 
-    let revealedSettingsId = '';
+    let appendActive = false;
 
-    console.log('RSI: ', revealedSettingsId);
+    let initialCMSMode = JSON.stringify($cmsMode);
+
+    let revealedSettingsId = '';
+    let contextPosX = 0;
+    let contextPosY = 0;
+
+    let dropdownOptions = [];
 
     const tabs = [
         {
@@ -74,17 +82,61 @@
         }
     ];
 
-    function handleElementTabVisibility() {
-        elementsTabRevealed = !elementsTabRevealed;
+    function handleAppendAction(event) {
+        if (!appendActive) {
+            if ($selectedCMSTabIndex === 0) {
+                elementsTabRevealed = !elementsTabRevealed;
+            } else if ($selectedCMSTabIndex === 3) {
+                fileInput.click();
+            } else if ($selectedCMSTabIndex === 2) {
+                $components = [...$components, {
+                    "componentId": "c622b95g-9082-74hc-h4ag7ca77711",
+                    "name": "Untitled",
+                    "path": "/src/lib/components/c622b95g-9082-74hc-h4ag7ca77711.svelte",
+                    "occurrences": [{}],
+                    "attributes": []
+                }];
+
+            } else if ($selectedCMSTabIndex === 1){
+                dropdownOptions = [
+                    {
+                        name: 'Add a New Page',
+                        icon:
+                            `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 2C3.44772 2 3 2.44772 3 3V13C3 13.5523 3.44772 14 4 14H7V13H4V3H8.29289L12 6.70711V8H13V6.29289L8.70711 2H4Z" fill="currentColor"></path><path d="M11 14H10V12H8V11H10V9H11V11H13V12H11V14Z" fill="currentColor"></path></svg>`,
+                        action: () => {
+                            handleNewPageCreation();
+
+                            handleAppendAction();
+                        }
+                    },
+                    {
+                        name: 'Add a New Folder',
+                        icon: 
+                        `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C2 3.44772 2.44772 3 3 3H6.70711L8.70711 5H13C13.5523 5 14 5.44772 14 6V7.5H13V6H8.29289L6.29289 4H3V12H8.5V13H3C2.44771 13 2 12.5523 2 12V4Z" fill="currentColor"></path><path d="M13 11V9H12V11H10V12H12V14H13V12H15V11H13Z" fill="currentColor"></path></svg>`,
+                        action: () => {
+                            console.log('Create new page folder');
+
+                            handleAppendAction();
+                        }
+                    }
+                ];
+
+                const buttonRect = event.target.closest('button').getBoundingClientRect();
+
+                const { top, left, width, height } = buttonRect;
+
+                contextPosX = left;
+                contextPosY = (top - 64) + height; // Note: removed the height of the navbar (64px)
+            }
+        } else {
+            dropdownOptions = [];
+        }
+
+        appendActive = appendActive ? false : true;
     }
 
     // Reference to the hidden file input
     let fileInput;
-
-    // Function to handle button click and trigger file input
-    const handleAssetUpload = () => {
-        fileInput.click();
-    };
 
     // Function to handle file selection and upload
     const handleFileChange = async (event) => {
@@ -116,7 +168,7 @@
         formData.append('altText', ''); // You can collect this from user input if needed
 
         try {
-            const response = await fetch('https://preconvert.novus.studio/prod/upload', {
+            const response = await fetch('http://localhost:3030/prod/upload', {
                 method: 'POST',
                 body: formData,
             });
@@ -129,7 +181,6 @@
 
             const data = await response.json();
             // trigger toast success message
-            console.log('Uploaded Asset:', data);
             $toastMessage.type = "success";
 			$toastMessage.content = 'Uploaded file.'
 
@@ -146,6 +197,7 @@
 
     function handleTabChange(index) {
         $selectedCMSTabIndex = index;
+        $cmsMode = initialCMSMode;
 
         revealedSettingsId = '';
     }
@@ -165,34 +217,11 @@
         {/each}
         </div>
 
-        <button class:active={elementsTabRevealed} on:click={() => { handleElementTabVisibility() }}>
+        <button class:active={appendActive} on:click={(e) => { handleAppendAction(e) }}>
             <svg data-wf-icon="AddPanel24Icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.875 10.875V3.5H13.125V10.875H20.5V12.125H13.125V19.5H11.875V12.125H4.5V10.875H11.875Z" fill="currentColor"></path></svg>
         </button>
-    </div>
 
-    <!-- <div class="heading">
-        <h3>{tabs[$selectedCMSTabIndex].name}</h3>
-
-        <div>
-            <button on:click={() => { navigatorFixed = !navigatorFixed }}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.85355 2.14646C9.73102 2.02392 9.55378 1.97357 9.38512 2.01339C9.21647 2.0532 9.08046 2.1775 9.02566 2.3419L8.10472 5.10473L5.34189 6.02567C5.17749 6.08047 5.05319 6.21648 5.01338 6.38513C4.97356 6.55379 5.02391 6.73103 5.14645 6.85356L6.79291 8.50003L3 12.2929V13H3.70711L7.50002 9.20714L9.14645 10.8536C9.26898 10.9761 9.44622 11.0264 9.61488 10.9866C9.78353 10.9468 9.91954 10.8225 9.97434 10.6581L10.8953 7.89529L13.6581 6.97435C13.8225 6.91955 13.9468 6.78354 13.9866 6.61489C14.0264 6.44623 13.9761 6.26899 13.8536 6.14646L9.85355 2.14646Z" fill="currentColor"></path></svg>
-            </button>
-
-            {#if tabs[$selectedCMSTabIndex].name === 'Pages'}
-            <button>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4C2 3.44772 2.44772 3 3 3H6.70711L8.70711 5H13C13.5523 5 14 5.44772 14 6V7.5H13V6H8.29289L6.29289 4H3V12H8.5V13H3C2.44771 13 2 12.5523 2 12V4Z" fill="currentColor"></path><path d="M13 11V9H12V11H10V12H12V14H13V12H15V11H13Z" fill="currentColor"></path></svg>
-            </button>
-
-            <button on:click={handleNewPageCreation}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 2C3.44772 2 3 2.44772 3 3V13C3 13.5523 3.44772 14 4 14H7V13H4V3H8.29289L12 6.70711V8H13V6.29289L8.70711 2H4Z" fill="currentColor"></path><path d="M11 14H10V12H8V11H10V9H11V11H13V12H11V14Z" fill="currentColor"></path></svg>
-            </button>
-            {/if}
-
-            {#if tabs[$selectedCMSTabIndex].name === 'Assets'}
-            <button on:click={handleAssetUpload}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.12008 5.02383C4.55596 3.2864 6.12738 2 8 2C9.87262 2 11.444 3.2864 11.8799 5.02383C13.3574 5.21056 14.5 6.47184 14.5 8C14.5 9.4865 13.4189 10.7205 12 10.9585V9.93699C12.8626 9.71497 13.5 8.93192 13.5 8C13.5 6.89598 12.6055 6.00089 11.5017 6L11.5 6L11.0314 6.0033L10.9696 5.57101C10.7618 4.11754 9.51099 3 8 3C6.48901 3 5.23817 4.11753 5.03038 5.57101L4.96858 6.00326L4.49835 6C3.39454 6.00089 2.5 6.89598 2.5 8C2.5 8.93192 3.13739 9.71497 4 9.93699V10.9585C2.58114 10.7205 1.5 9.4865 1.5 8C1.5 6.47184 2.64259 5.21055 4.12008 5.02383Z" fill="currentColor"></path><path d="M5.85355 9.85355L7.5 8.20711V13H8.5V8.20711L10.1464 9.85355L10.8536 9.14645L8 6.29289L5.14645 9.14645L5.85355 9.85355Z" fill="currentColor"></path></svg>
-            </button>
-
+        {#if $selectedCMSTabIndex === 3}
             <input
                 type="file"
                 accept="image/*,video/*"
@@ -200,9 +229,12 @@
                 on:change={handleFileChange}
                 style="display: none;"
             />
-            {/if}
-        </div>
-    </div> -->
+        {/if}
+
+        {#if dropdownOptions.length > 0}
+            <ContextMenu options={dropdownOptions} posX={contextPosX} posY={contextPosY} />
+        {/if}
+    </div>
 
     <div class="navigator-component-holder">
         <svelte:component this={tabs[$selectedCMSTabIndex].component} on:settingsIdChanged={(e) => revealedSettingsId = e.detail.id} />
@@ -250,6 +282,10 @@
     }
 
     .builder-nav button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        
         width: 3.4rem;
         height: 3.4rem;
 
@@ -260,6 +296,7 @@
         transition: background-color .24s ease-in-out;
     }
 
+    .builder-nav button.active,
     .builder-nav button:hover {
         background-color: #1A1F26;
     }
@@ -269,6 +306,10 @@
         padding: .8rem 0;
         
         overflow-y: auto; /* Add scroll if content overflows */
+    }
+
+    :global(.navigator-component-holder ul:hover .depth::after) {
+        opacity: 1;
     }
 
     .heading {
@@ -354,7 +395,26 @@
     }
 
     :global(.depth) {
+        position: relative;
+
         width: 2rem;
+    }
+
+    :global(.depth::after) {
+        position: absolute;
+        top: -.4rem;
+        bottom: 0;
+        left: 35%;
+
+        display: block;
+        
+        content: '';
+        opacity: 0;
+
+        width: .1rem;
+        height: calc(100% + .8rem);
+        
+        background: rgba( 230, 230, 230, .2 );
     }
 
     .tab-toggler {

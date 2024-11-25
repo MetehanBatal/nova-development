@@ -9,45 +9,69 @@
     export let settingsRevealed;
     export let x;
     export let y;
+    export let canvasX;
+
+    let dragOffset = { x: 0, y: 0 };
+    let settingsPos = {
+        left: x + canvasX,
+        top: y
+    };
 
     const settingsOptions = [
         {
-            tags: [
-                'H1',
-                'H2',
-                'H3',
-                'H4',
-                'H5',
-                'H6'
-            ],
+            tags: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'],
             component: HeadingOptions
         },
         {
-            tags: [
-                'P'
-            ],
+            tags: ['P'],
             component: ParagraphOptions
         },
         {
-            tags: [
-                'A'
-            ],
+            tags: ['A'],
             component: LinkOptions
         },
         {
-            tags: [
-                'IMG',
-                'VIDEO'
-            ],
+            tags: ['IMG', 'VIDEO'],
             component: ImageOptions
         }
     ];
+
+    function onDragStart(event) {
+        dragOffset.x = event.clientX - settingsPos.left;
+        dragOffset.y = event.clientY - settingsPos.top;
+        
+        event.dataTransfer.setData('text/plain', JSON.stringify(dragOffset));
+        event.stopPropagation(); // Prevent iframe from intercepting
+    }
+
+    function onDragOver(event) {
+        event.preventDefault();
+        event.stopPropagation(); // Prevent iframe from intercepting
+        return false;
+    }
+
+    function onDrop(event) {
+        event.preventDefault();
+        event.stopPropagation(); // Prevent iframe from intercepting
+        
+        settingsPos.left = event.clientX - dragOffset.x;
+        settingsPos.top = event.clientY - dragOffset.y;
+
+        return false;
+    }
 </script>
+
+<svelte:document on:dragover={onDragOver} on:drop={(e) => {onDrop(e)}}></svelte:document>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 {#if $selectedInstance.instanceId.length > 0 && settingsOptions.some((o) => o.tags.includes($selectedInstance.nodeName))}
-    <div class="settings-block" style={`transform: translate3d(calc(100% + ${x}px), calc(100% + ${y}px), 0)`}>
+    <div 
+        class="settings-block" 
+        style={`transform: translate3d(${settingsPos.left}px, ${settingsPos.top}px, 0)`} 
+        on:dragstart={onDragStart} 
+        draggable="true"
+    >
         <div class="block-header">
             <p>{$selectedInstance.nodeName} Settings</p>
 

@@ -2,6 +2,7 @@
     import { alterAttribute } from '../../../stores/cms/functions';
     import { selectedInstance } from '../../../stores/cms/selectedInstance';
     import { assets } from '../../../stores/cms/assets';
+    import { toastMessage } from '../../../stores/toast';
 
     import { onMount } from 'svelte';
 
@@ -28,7 +29,6 @@
     });
 
     function alterImgContent() {
-        console.log('Instance changed for imgggg: ', $selectedInstance);
         if ($selectedInstance.nodeName === 'IMG') {
             $assets = $assets.filter((asset) => asset.mimetype.includes('image'));
         } else if ($selectedInstance.nodeName === 'VIDEO') {
@@ -45,7 +45,6 @@
         if ($selectedInstance.nodeName === 'IMG' && asset.mimetype.includes('image')) {
             alterAttribute('src', asset.url);
         }
-        console.log(asset);
     }
 
     function getPopoverPos() {
@@ -54,20 +53,16 @@
         } else {
             setTimeout(() => {
                 let selectedAssetEl = document.querySelector('.asset.selected').getBoundingClientRect();
-                const offsetTop = selectedAssetEl.top;
+                const offsetTop = selectedAssetEl.top - 32;
                 const offsetLeft = selectedAssetEl.left;
                 const width = selectedAssetEl.width;
-
-                console.log(selectedAssetEl, offsetLeft);
 
                 popoverPos = {
                     top: offsetTop,
                     left: offsetLeft + (width / 2)
                 }
 
-                popoverPos = popoverPos
-
-                console.log(popoverPos)
+                popoverPos = popoverPos;
             }, 200);
         }
     }
@@ -94,6 +89,51 @@
             .catch((error) => console.error(error));
     }
 
+    async function deleteAsset(assetId) {
+        const apiHeaders = new Headers();
+        apiHeaders.append("Content-Type", "application/json");
+
+        const requestOptions = {
+            method: "DELETE",
+            headers: apiHeaders,
+            redirect: "follow"
+        };
+
+        try {
+            const response = await fetch(`https://preconvert.novus.studio/prod/upload?id=${assetId}`, requestOptions);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Failed to delete asset ${assetId}`);
+            }
+
+            const data = await response.json();
+            
+            $toastMessage = {
+                type: "success",
+                content: 'Successfully deleted file.'
+            };
+
+            assets.update(currentAssets => 
+                currentAssets.filter(asset => asset.assetId !== assetId)
+            );
+
+            assetSettingsOpened = '';
+
+            return data;
+
+        } catch (error) {
+            console.error('Error deleting file:', error);
+            
+            $toastMessage = {
+                type: "error",
+                content: 'Failed to delete file.'
+            };
+
+            throw error;
+        }
+    }
+
     function copyToClipboard() {
         navigator.clipboard.writeText(assetSettingsOpened.url)
             .then(() => {
@@ -108,8 +148,6 @@
 
     $: $selectedInstance, alterImgContent();
     $: assetSettingsOpened.assetId, getPopoverPos();
-
-    $: $assets, console.log('Assets changed: , ', $assets);
 </script>
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -181,6 +219,10 @@
 
                 <input type="text" name="altText" bind:value={assetSettingsOpened.altText} on:blur={(e) => handleAttrChange('altText', e.target.value, assetSettingsOpened.assetId)} >
             </div>
+
+            <div>
+                <button on:click={() => deleteAsset(assetSettingsOpened.assetId)}><p>Delete</p></button>
+            </div>
         </div>
     </div>
     {/if}
@@ -240,6 +282,16 @@
         align-items: center;
 
         padding: 1rem;
+    }
+
+    .popover-content > div:last-child {
+        justify-content: flex-end;
+    }
+
+    .popover-content > div:last-child button {
+        width: auto;
+
+        color: #F37261;
     }
 
     .assets-holder p {
