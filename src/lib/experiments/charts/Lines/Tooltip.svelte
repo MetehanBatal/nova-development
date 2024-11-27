@@ -95,7 +95,7 @@
 		<div class="content">
 		  <div class="color-gray">{dateFormat(dateValue)}</div>
 		  <div class="view">
-			<span class="color-white">{presentValue.toFixed(0)}</span>
+			<span class="color-white">{presentValue.toFixed(2)}</span>
 			<span class="color-gray"> views</span>
 		  </div>
 		  <div class="rate">
@@ -112,7 +112,7 @@
 			  <div class="content">
 			  <div class="color-gray">{dateFormat(dateArrayPast[selected])}</div>
 			  <div class="view">
-				  <span class="color-white">{pastValue.toFixed(0)}</span>
+				  <span class="color-white">{pastValue.toFixed(2)}</span>
 				  <span class="color-gray"> views</span>
 			  </div>
 			  </div>

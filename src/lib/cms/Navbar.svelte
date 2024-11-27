@@ -6,7 +6,7 @@
     import { styleSheet } from '../../stores/cms/styleSheet';
     import { selectedBreakpoint } from '../../stores/cms/selectedBreakpoint';
     import { cmsMode } from '../../stores/cms/cmsMode';
-    import { generateRandomString, dbActions } from '../../stores/cms/functions';
+    import { generateRandomString, generateRandomNumber, dbActions } from '../../stores/cms/functions';
 
     import Dropdown from '$lib/toolkit/Dropdown.svelte';
     import Switch from '$lib/toolkit/Switch.svelte';
@@ -71,7 +71,7 @@
             if (publishRes.success) {
                 $toastMessage = {
                     type: 'success',
-                    message: 'Publish initiated. Website should be live in a few minutes.'
+                    content: 'Publish initiated. Website should be live in a few minutes.'
                 }
             }
             
@@ -124,7 +124,7 @@
 
         let newVariantSchema = {
             componentId: $instances[0].componentId,
-            name: 'New Variant',
+            name: `New Variant ${generateRandomNumber(4)}`,
             nestedInstanceIds: newInstances.map(instance => instance.instanceId),
             variantId: newVariantId
         }

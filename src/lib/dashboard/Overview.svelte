@@ -202,7 +202,7 @@
             </div>
         </div>
 
-        <Chart
+        <!-- <Chart
             headline=""
             showLegend = {true}
             dataOptions = {{
@@ -214,7 +214,7 @@
                 measurementType : "unique",
                 accuracyUnit: "month"
             }}
-        />
+        /> -->
     </div>
 </div>
 

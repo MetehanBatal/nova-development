@@ -7,6 +7,7 @@
     export let type
     export let hoveredIndex
     export let hoveredIndexPrev
+    export let isTimeScale
 
     let dateFormat = timeFormat("%b %d - %I %p");
     let stroke = "#3b3d42";
@@ -23,22 +24,31 @@
         if(xGroupVerbose){
             return `${i + 1}. ${tick} VIEW`
         }
-
         return tick
     }
-
 </script>
     {#if type == "multiline"}
-    <g>
-        {#each xScale.ticks(numberOfTicks) as tick,  i(i)}
-            <g class = "x-axis" transform = {`translate(${xScale(tick)}, ${innerHeight})`}>
-                <line {y2}  {stroke} />
-                {#if i == 1 || i == 15 || i == numberOfTicks - 2 }
-                    <text {y} {dy} text-anchor="middle" >{dateFormat(tick)}</text>
-                {/if}
-            </g>
-        {/each}
-    </g>
+        {#if isTimeScale}
+        <g>
+            {#each xScale.ticks(numberOfTicks) as tick,  i(i)}
+                <g class = "x-axis" transform = {`translate(${xScale(tick)}, ${innerHeight})`}>
+                    <line {y2}  {stroke} />
+                    {#if i == 1 || i == 15 || i == numberOfTicks - 2 }
+                        <text {y} {dy} text-anchor="middle" >{dateFormat(tick)}</text>
+                    {/if}
+                </g>
+            {/each}
+        </g>
+        {:else}
+            {#each xScale.domain() as tick,  i(i)}
+                <g class = "x-axis" transform = {`translate(${i * xScale.step()}, ${innerHeight})`}>
+                    <line {y2}  {stroke} />
+                    <!-- {#if i == 1 || i == ((xScale.domain().length)/2).toFixed(0) || i == xScale.domain().length - 2 } -->
+                        <text {y} {dy} text-anchor="middle" >{tick}</text>
+                    <!-- {/if} -->
+                </g>
+            {/each}
+        {/if}
     {:else}
     <g>
         {#each xScale.domain() as tick, i}

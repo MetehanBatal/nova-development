@@ -278,7 +278,7 @@
 				redirect: "follow"
 			};
 			
-			fetch("https://mve.novus.studio/prod/experiments/update", requestOptions)
+			fetch("http://localhost:3030/prod/experiments/update", requestOptions)
 				.then((response) => response.json())
 				.then((result) => {
 					if (result.err && result.err.length > 0) {

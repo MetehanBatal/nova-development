@@ -10,6 +10,7 @@
 	export let width
 	export let margin
 	export let hasComparison
+	export let isTimeScale
 	
 	import { timeFormat } from "d3";
   import { colors } from "../../../../stores/colors";
@@ -60,7 +61,7 @@
 		<div class="content">
 			<div class = "title-row">
 				<div class="indicator" style="border-color:{strokeColor1};"></div>
-				<div class="color-gray">{dateFormat(dateValue)}</div>
+				<div class="color-gray">{isTimeScale ? dateFormat(dateValue) : dateValue}</div>
 			</div>
 		  <div class="view">
 			{#if hasComparison}
@@ -71,7 +72,7 @@
 			{/if}
 			<div class = "value">
 				<div class = "indicator indicator-box" style={`background-color: ${colors[1]}`}></div>
-				<span>{presentValue.toFixed(0)}</span>
+				<span>{presentValue.toFixed(2)}</span>
 			</div>
 			{#if presentTraits}
 				{#each Object.keys(presentTraits) as k, i}
@@ -89,7 +90,7 @@
 			  <div class="content">
 				<div class = "title-row">
 					<div class="indicator" style="border-color:{strokeColor2};"></div>
-					<div class="color-gray">{dateFormat(datePastValue)}</div>
+					<div class="color-gray">{isTimeScale ? dateFormat(datePastValue) : datePastValue}</div>
 				</div>
 				<div class="view">
 					<!-- <div class = "value">
@@ -98,7 +99,7 @@
 					</div> -->
 				<div class = "value">
 					<div class = "indicator indicator-box" style={`background-color: ${colors[1]}`}></div>
-					<span>{pastValue.toFixed(0)}</span>
+					<span>{pastValue.toFixed(2)}</span>
 				</div>
 					{#if pastTraits}
 						{#each Object.keys(pastTraits) as k, i}

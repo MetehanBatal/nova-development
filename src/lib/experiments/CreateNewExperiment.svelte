@@ -109,7 +109,7 @@
 				var apiHeaders = new Headers();
 				apiHeaders.append("Content-Type", "application/json");
 
-				$experiment.initiator = $user.emailAddress;
+				$experiment.initiator = $user.emailAddress || 'metehanbatal@gmail.com';
 
 				var requestOptions = {
 					method: 'POST',
@@ -118,7 +118,7 @@
 					redirect: 'follow'
 				};
 
-				fetch("https://mve.novus.studio/prod/experiments/create", requestOptions)
+				fetch("http://localhost:3030/prod/experiments/create", requestOptions)
 					.then(response => response.json())
 					.then(result => {
 						if (result.err && result.err.length > 0) {

@@ -1,16 +1,37 @@
 <script>
-	import { routes } from '../../../stores/routes--dev';
+	// import { routes } from '../../../stores/routes--dev';
 
 	export let slug;
+
+	let routes = [];
+	async function fetchPages() {
+		try {
+			const response = await fetch('http://localhost:3030/staging/pages/view?limit=100&offset=0');
+			
+			if (!response.ok) {
+				throw new Error(`HTTP error! Status: ${response.status}`);
+			}
+
+			let routeData = await response.json(); // Parse the JSON response
+			routes = routeData.data.docs;
+			console.log(routes, slug, routes.filter((location) => location.slug === slug));
+		} catch (error) {
+			console.error('Error:', error); // Log any errors
+		}
+	}
+
+	fetchPages();
+
+	let currentLocation = '';
 	
-	let currentLocation = routes.filter((location) => location.path === slug)[0];
+	$: routes, currentLocation = routes.filter((location) => location.slug === slug)[0];
 </script>
 
 <div class="config-outer-box">
 	<span class="muted">Locations</span>
 
 	<div class="config-box">
-		<p>{currentLocation.name}</p>
+		<p>{currentLocation?.pageName}</p>
 	</div>
 </div>
 

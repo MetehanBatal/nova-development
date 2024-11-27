@@ -1,7 +1,7 @@
 <script>
-    import { events, operator } from "../../stores/chartData--dev.js";
+    import { events, operator } from "./customChartText.js"
     import { onMount } from "svelte";
-    import FancyDropDown from "./FancyDropdown.svelte";
+    import FancyDropDown from "./FancyDropDown.svelte";
     
     export let data
     export let dataObj
@@ -330,11 +330,10 @@
         margin-left: 2.8rem;
         display: flex;
         justify-content: space-between;
-        padding: 1.2rem 8px 1.2rem 4px ;
+        padding: 0.5rem 0.5rem 0.5rem 0.25rem ;
         cursor: pointer;
         gap: 1rem;
         position: relative;
-        height: 34px;
         align-items: center;
         
     }

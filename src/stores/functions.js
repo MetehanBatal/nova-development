@@ -98,9 +98,9 @@ const groupBy = (data, sortBy, innerVariant) => {
 
 const componentStructureFunc = (variants) => Object.values(variants.reduce((acc, {arms}) => {
     arms.forEach(({name, component}) => {
-        acc[name] = acc[name] || { name, components: [] };
-        if (!acc[name].components.includes(component)) {
-            acc[name].components.push(component);
+        acc[component] = acc[component] || { name: component, components: [] }; // 'component' anahtar olarak kullanılıyor
+        if (!acc[component].components.includes(name)) { // 'name' 'components' dizisine ekleniyor
+            acc[component].components.push(name);
         }
     });
     return acc;

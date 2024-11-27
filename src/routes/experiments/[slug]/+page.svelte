@@ -92,7 +92,7 @@
 
 	const resetData = async (fromMount = false) => {
 		if(fromMount || (!isInitalized && isLoaded) ){
-			const eventsReq = await fetch(`https://mve.novus.studio/prod/experiments/analytics?experimentId=${$page.params.slug}`);
+			const eventsReq = await fetch(`http://localhost:3030/prod/experiments/analytics?experimentId=${$page.params.slug}`);
 			const eventsRes = await eventsReq.json();
 			processData(eventsRes.analytics?.data)
 			fetchInProgress = false
@@ -127,7 +127,7 @@
 		if(activeStep != 1) return
 		if(!isInitalized) return
 		fetchInProgress = true
-		const eventsReq = await fetch(`https://mve.novus.studio/prod/experiments/analytics?experimentId=${$page.params.slug}&startDate=${dateRangeReport.start}&endDate=${dateRangeReport.end}`);
+		const eventsReq = await fetch(`http://localhost:3030/prod/experiments/analytics?experimentId=${$page.params.slug}&startDate=${dateRangeReport.start}&endDate=${dateRangeReport.end}`);
 		const eventsRes = await eventsReq.json();
 
 		processData(eventsRes.analytics?.data)

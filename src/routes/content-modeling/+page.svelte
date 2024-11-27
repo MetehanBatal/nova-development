@@ -34,6 +34,9 @@
     let navigatorFixed;
     let canvas;
     let canvasWidth;
+    let canvasHeight = null;
+
+    console.log('STYLESHEET: ', $styleSheet);
 
     let baseFrameURL = dev ? 'http://localhost:5174' : 'https://preview-preconvert.vercel.app';
 
@@ -104,6 +107,10 @@
 
                 await dbActions(currentInstance, 'instances', 'upsert');
             }
+
+            if (message.data.action === 'heightChanged') {
+                canvasHeight = message.data.data.height;
+            }
         });
 
         window.addEventListener('keydown', handleKeyDown);
@@ -156,7 +163,7 @@
     <div class="iframe-holder" style={`height: ${$cmsMode === 'component' ? `${innerHeight - 64}px` : ''};`}>
         <iframe
             bind:this={canvas}
-            style={`height: ${$cmsMode === 'component' ? 'auto' : `${innerHeight - 64}px`}; width: ${$selectedBreakpoint === 'tablet' ? '768px' : $selectedBreakpoint === 'mobile' ? '468px' : '100%'}`}
+            style={`height: ${$cmsMode === 'component' ? canvasHeight ? `${canvasHeight}px` : 'auto' : `${innerHeight - 64}px`}; width: ${$selectedBreakpoint === 'tablet' ? '768px' : $selectedBreakpoint === 'mobile' ? '468px' : '100%'}`}
             src={`${baseFrameURL}/preview?editMode=true`}
             frameborder="0"
             title="Main frame"

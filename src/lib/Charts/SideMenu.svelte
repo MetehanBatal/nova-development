@@ -3,8 +3,9 @@
     export let sideMenu
     export let handleSideMenuAction
     export let handleMenuClick
+    export let handleSideMenuOver
+    export let handleSideMenuOut
     export let style
-
 
     let showChildren = false
     let childrenArray = []
@@ -18,56 +19,59 @@
         showChildren = false
         handleSideMenuAction(item)
     }
-
     // const showChildren
 </script>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-{#if showMenu}
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" on:click={() => handleMenuClick() }>
-        <path d="M13.3322 2.66681L2.66553 13.3335" stroke="#88888A" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M13.3322 2.66681L2.66553 13.3335" stroke="black" stroke-opacity="0.2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M2.66553 2.66681L13.3322 13.3335" stroke="#88888A" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M2.66553 2.66681L13.3322 13.3335" stroke="black" stroke-opacity="0.2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <div class="side-menu" {style}>
-        {#if showChildren}
-            <div class="side-menu-items return" on:click={() => showChildren = false}>
-                <svg  width="6" height="8" viewBox="0 0 6 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1.25 7.5L4.75 4L1.25 0.5" stroke="#6D6D6E" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span> Return </span>
-            </div>
-            {#each childrenArray as item}
-                <div class="side-menu-items" on:click={() => handleSideMenuClick(item)}>
-                    {@html item.icon}
-                    <span>{item.text}</span>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+<div on:mouseover={() => handleSideMenuOver()} on:mouseleave={() => handleSideMenuOut()}>
+    {#if showMenu}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" on:click={() => handleMenuClick() }>
+            <path d="M13.3322 2.66681L2.66553 13.3335" stroke="#88888A" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13.3322 2.66681L2.66553 13.3335" stroke="black" stroke-opacity="0.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2.66553 2.66681L13.3322 13.3335" stroke="#88888A" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2.66553 2.66681L13.3322 13.3335" stroke="black" stroke-opacity="0.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+        <div class="side-menu" {style}>
+            {#if showChildren}
+                <div class="side-menu-items return" on:click={() => showChildren = false}>
+                    <svg  width="6" height="8" viewBox="0 0 6 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1.25 7.5L4.75 4L1.25 0.5" stroke="#6D6D6E" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span> Return </span>
                 </div>
-            {/each}
-        {:else}
-            {#each sideMenu as item}
-                <div class="side-menu-items" on:click={() => handleSideMenuClick(item)}>
-                    {@html item.icon}
-                    <span>{item.text}</span>
-                    {#if item.children}
-                        <svg class="children-icon" width="6" height="8" viewBox="0 0 6 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1.25 7.5L4.75 4L1.25 0.5" stroke="#6D6D6E" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    {/if}
-                </div>
-            {/each}
-        {/if}
-    </div>                        
-{:else}
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" on:click={() => handleMenuClick()}>
-        <path d="M8.0026 8.66683C8.37079 8.66683 8.66927 8.36835 8.66927 8.00016C8.66927 7.63197 8.37079 7.3335 8.0026 7.3335C7.63441 7.3335 7.33594 7.63197 7.33594 8.00016C7.33594 8.36835 7.63441 8.66683 8.0026 8.66683Z" stroke="#88888A" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8.0026 8.66683C8.37079 8.66683 8.66927 8.36835 8.66927 8.00016C8.66927 7.63197 8.37079 7.3335 8.0026 7.3335C7.63441 7.3335 7.33594 7.63197 7.33594 8.00016C7.33594 8.36835 7.63441 8.66683 8.0026 8.66683Z" stroke="black" stroke-opacity="0.2" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8.0026 3.99984C8.37079 3.99984 8.66927 3.70136 8.66927 3.33317C8.66927 2.96498 8.37079 2.6665 8.0026 2.6665C7.63441 2.6665 7.33594 2.96498 7.33594 3.33317C7.33594 3.70136 7.63441 3.99984 8.0026 3.99984Z" stroke="#88888A" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8.0026 3.99984C8.37079 3.99984 8.66927 3.70136 8.66927 3.33317C8.66927 2.96498 8.37079 2.6665 8.0026 2.6665C7.63441 2.6665 7.33594 2.96498 7.33594 3.33317C7.33594 3.70136 7.63441 3.99984 8.0026 3.99984Z" stroke="black" stroke-opacity="0.2" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8.0026 13.3333C8.37079 13.3333 8.66927 13.0349 8.66927 12.6667C8.66927 12.2985 8.37079 12 8.0026 12C7.63441 12 7.33594 12.2985 7.33594 12.6667C7.33594 13.0349 7.63441 13.3333 8.0026 13.3333Z" stroke="#88888A" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8.0026 13.3333C8.37079 13.3333 8.66927 13.0349 8.66927 12.6667C8.66927 12.2985 8.37079 12 8.0026 12C7.63441 12 7.33594 12.2985 7.33594 12.6667C7.33594 13.0349 7.63441 13.3333 8.0026 13.3333Z" stroke="black" stroke-opacity="0.2" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-{/if}
+                {#each childrenArray as item}
+                    <div class="side-menu-items" on:click={() => handleSideMenuClick(item)}>
+                        {@html item.icon}
+                        <span>{item.text}</span>
+                    </div>
+                {/each}
+            {:else}
+                {#each sideMenu as item}
+                    <div class="side-menu-items" on:click={() => handleSideMenuClick(item)}>
+                        {@html item.icon}
+                        <span>{item.text}</span>
+                        {#if item.children}
+                            <svg class="children-icon" width="6" height="8" viewBox="0 0 6 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1.25 7.5L4.75 4L1.25 0.5" stroke="#6D6D6E" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        {/if}
+                    </div>
+                {/each}
+            {/if}
+        </div>
+    {:else}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" on:click={() => handleMenuClick()}>
+            <path d="M8.0026 8.66683C8.37079 8.66683 8.66927 8.36835 8.66927 8.00016C8.66927 7.63197 8.37079 7.3335 8.0026 7.3335C7.63441 7.3335 7.33594 7.63197 7.33594 8.00016C7.33594 8.36835 7.63441 8.66683 8.0026 8.66683Z" stroke="#88888A" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.0026 8.66683C8.37079 8.66683 8.66927 8.36835 8.66927 8.00016C8.66927 7.63197 8.37079 7.3335 8.0026 7.3335C7.63441 7.3335 7.33594 7.63197 7.33594 8.00016C7.33594 8.36835 7.63441 8.66683 8.0026 8.66683Z" stroke="black" stroke-opacity="0.2" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.0026 3.99984C8.37079 3.99984 8.66927 3.70136 8.66927 3.33317C8.66927 2.96498 8.37079 2.6665 8.0026 2.6665C7.63441 2.6665 7.33594 2.96498 7.33594 3.33317C7.33594 3.70136 7.63441 3.99984 8.0026 3.99984Z" stroke="#88888A" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.0026 3.99984C8.37079 3.99984 8.66927 3.70136 8.66927 3.33317C8.66927 2.96498 8.37079 2.6665 8.0026 2.6665C7.63441 2.6665 7.33594 2.96498 7.33594 3.33317C7.33594 3.70136 7.63441 3.99984 8.0026 3.99984Z" stroke="black" stroke-opacity="0.2" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.0026 13.3333C8.37079 13.3333 8.66927 13.0349 8.66927 12.6667C8.66927 12.2985 8.37079 12 8.0026 12C7.63441 12 7.33594 12.2985 7.33594 12.6667C7.33594 13.0349 7.63441 13.3333 8.0026 13.3333Z" stroke="#88888A" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.0026 13.3333C8.37079 13.3333 8.66927 13.0349 8.66927 12.6667C8.66927 12.2985 8.37079 12 8.0026 12C7.63441 12 7.33594 12.2985 7.33594 12.6667C7.33594 13.0349 7.63441 13.3333 8.0026 13.3333Z" stroke="black" stroke-opacity="0.2" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    {/if}
+</div>
 
 <style>
     .return {

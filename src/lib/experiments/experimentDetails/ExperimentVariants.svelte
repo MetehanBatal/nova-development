@@ -7,7 +7,29 @@
 	export let type;
 	export let variants;
 
-	const componentStructure = componentStructureFunc(variants)
+	let components = [];
+	let componentStructure = '';
+	async function fetchComponents() {
+		try {
+			const response = await fetch('http://localhost:3030/staging/components/view?limit=100&offset=0');
+			
+			if (!response.ok) {
+				throw new Error(`HTTP error! Status: ${response.status}`);
+			}
+
+			let routeData = await response.json(); // Parse the JSON response
+			components = routeData.data.docs;
+
+			componentStructure = componentStructureFunc(variants);
+			console.log(components, components.find((c) => c.componentId === components[0].componentId)?.name);
+		} catch (error) {
+			console.error('Error:', error); // Log any errors
+		}
+	}
+
+	fetchComponents();
+
+	console.log(componentStructure, variants);
 
 	let visibleVariants = [0];
 
@@ -70,7 +92,7 @@
 			<div class="config-box">
 				<span class="color" style={`background-color: ${colors[Math.floor(Math.random() * colors.length)]}`}></span>
 
-				<p>{variantGroup.name}</p>
+				<p>{components.find((c) => c.componentId === variantGroup.name)?.name || variantGroup.name}</p>
 			</div>
 
 			<div class="variants">

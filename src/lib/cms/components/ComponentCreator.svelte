@@ -1,5 +1,5 @@
 <script>
-    import { generateRandomString, dbActions } from "../../../stores/cms/functions";
+    import { generateRandomString, generateRandomNumber, dbActions } from "../../../stores/cms/functions";
     import { pages } from '../../../stores/cms/pages';
     import { selectedInstance } from '../../../stores/cms/selectedInstance';
     import { instances } from '../../../stores/cms/instances';
@@ -12,7 +12,6 @@
     let currentInstance = $instances.find((ins) => ins.instanceId === $selectedInstance.instanceId);
 
     let instancesToUpdate = [];
-
     function updateChildInstances(topInstance, id) {
         topInstance.nestedInstanceIds.forEach((ins) => {
             let child = $instances.find((i) => i.instanceId === ins.instanceId);
@@ -27,6 +26,8 @@
     }
 
     async function saveComponent() {
+        console.log('Current Instance: ', currentInstance);
+
         let schema = {
             componentId: newComponentId,
             name: componentName,
@@ -49,31 +50,47 @@
         currentInstance.variantId = newVariantId;
 
         updateChildInstances(currentInstance, newComponentId);
-        
+
+        let parentInstance = null;
+
         if (currentInstance.parentInstanceId) {
-            const parentInstance = $instances.find((ins) => ins.instanceId === currentInstance.parentInstanceId);
-            if (parentInstance && parentInstance.nestedInstanceIds) {
+            parentInstance = $instances.find((ins) => ins.instanceId === currentInstance.parentInstanceId);
+            if (parentInstance && Array.isArray(parentInstance.nestedInstanceIds)) {
                 const indexToReplace = parentInstance.nestedInstanceIds.indexOf(currentInstance.instanceId);
                 if (indexToReplace !== -1) {
+                    // Replace the instanceId with newComponentId
                     parentInstance.nestedInstanceIds[indexToReplace] = newComponentId;
 
-                    instancesToUpdate.push(parentInstance)
+                    // Add the updated parentInstance to the update list
+                    instancesToUpdate.push(parentInstance);
                 }
             }
         }
 
-        currentInstance.parentInstanceId = 'component';
-
+        // Add currentInstance to the update list
         instancesToUpdate.push(currentInstance);
 
-        instancesToUpdate = instancesToUpdate.filter(instance => instance !== undefined);
+        // Filter out undefined instances (in case of unexpected results)
+        instancesToUpdate = instancesToUpdate.filter((instance) => instance !== undefined);
+
+        // Build the variant schema
+        let variantSchema = {
+            variantId: newVariantId,
+            componentId: newComponentId,
+            name: `Base Variant ${generateRandomNumber(4)}`,
+            nestedInstanceIds: instancesToUpdate
+                .map(({ instanceId }) => instanceId) // Ensure we're mapping instanceId correctly
+                .filter((id) => id !== parentInstance?.instanceId) // Exclude the parentInstance's ID
+        };
+
+
+        // currentInstance.parentInstanceId = 'component';
 
         let updatedInstances = await dbActions(instancesToUpdate, 'instances', 'upsert');
         let updatedComponent = await dbActions(schema, 'components', 'upsert');
+        let updatedVariant = await dbActions(variantSchema, 'variants', 'upsert');
 
-        console.log(schema);
-        console.log(instancesToUpdate);
-        console.log(updatedInstances, updatedComponent);
+        console.log(updatedInstances, updatedComponent, updatedVariant);
     }
 </script>
 

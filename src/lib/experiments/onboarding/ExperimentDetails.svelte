@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { experiment } from '../../../stores/experiment';
+	import { generateRandomNumber } from '../../../stores/cms/functions';
 
     import ComboBox from '$lib/toolkit/ComboBox.svelte';
 
@@ -265,8 +266,8 @@
 				// Get the slugs of pages where the component occurs
 				const on = component.occurrences
 					.map(occurrence => {
-					const page = pages.find(p => p.pageId === occurrence.pageId);
-					return page ? page.slug : null;
+						const page = pages.find(p => p.pageId === occurrence.pageId);
+						return page ? page.slug : null;
 					})
 					.filter(slug => slug !== null);
 
@@ -281,6 +282,7 @@
 
 				// Return the transformed object
 				return {
+					id: component.componentId,
 					name: component.name,
 					on: on,
 					variants: componentVariants
@@ -325,12 +327,16 @@
 		if (index === keys.length) {
 			return [current];
 		}
+		let componentId = components.find((c) => c.name === keys[index]).id;
+		console.log(keys, keys[index], components);
+
 		return groups[keys[index]].flatMap(item => 
-			generateCombinations(groups, index + 1, [...current, { name: keys[index], component: item.component }])
+			generateCombinations(groups, index + 1, [...current, { name: item.name, component: componentId, id: item.id }])
 		);
 	};
 
 	function handleComponentChange() {
+		console.log('S: ', selectedComponents);
 		Object.keys(selectedComponents).forEach(component => {
 			if (selectedComponents[component].length < 1) {
 				delete selectedComponents[component];
@@ -345,8 +351,10 @@
 
 		// Generate the variants
 		const combinations = generateCombinations(selectedComponents);
+
+		console.log('Combs: ', combinations);
 		const variants = combinations.map((combination, index) => ({
-			id: index,
+			id: generateRandomNumber(8),
 			name: `Variant ${index}`,
 			allocation: (100 / combinations.length).toFixed(4),
 			arms: combination

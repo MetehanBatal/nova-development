@@ -1,4 +1,6 @@
 <script>
+    import { pages } from '../../stores/cms/pages';
+
     import { createEventDispatcher } from 'svelte';
     
     const dispatch = createEventDispatcher();
@@ -39,7 +41,7 @@
                     <div>
                         <p>miracle.nova.io</p>
 
-                        <a href="https://miracle-rebuild.vercel.app/">
+                        <a href={`https://miracle-rebuild.vercel.app${$pages.pages[$pages.selectedPageIndex].slug}`}>
                             <svg data-wf-icon="TabNewIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.2929 5L6.00004 5V4H12L12 10L11 10V5.70711L5.35359 11.3536L4.64648 10.6464L10.2929 5Z" fill="currentColor"></path></svg>
                         </a>
                     </div>

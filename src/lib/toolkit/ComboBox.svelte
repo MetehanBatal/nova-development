@@ -3,7 +3,9 @@
 	export let selectedComponents = [];
 	let isChecked = false;
 
-	function handleCheckboxChange(group, name, component, target) {
+	console.log('comps: ', components);
+
+	function handleCheckboxChange(group, name, component, id, target) {
 		if (!selectedComponents[group]) {
 			selectedComponents[group] = [];
 		}
@@ -12,7 +14,7 @@
 
 		if (index === -1) {
 			// Add to selected components if not present
-			selectedComponents[group].push({ name, component });
+			selectedComponents[group].push({ name, component, id });
 
 			target.parentNode.classList.add('active');
 			target.checked = true;
@@ -52,14 +54,14 @@
 	{#each components as componentGroup, _index}
 		<div class="experiment-list" class:nonselectable={!componentGroup.selectable}>
 			<span class="low-text">{componentGroup.name}</span>
-			{#each componentGroup.variants as { name, component }}
+			{#each componentGroup.variants as { name, component, id }}
 			<label>
 				<input 
 					type="checkbox" 
 					class="checkmark"
 					disabled={!componentGroup.selectable} 
 					checked={isComponentSelected(componentGroup.name, name)}
-					on:change={(event) => handleCheckboxChange(componentGroup.name, name, component, event.target)}
+					on:change={(event) => handleCheckboxChange(componentGroup.name, name, component, id, event.target)}
 				/>
 				<span>{name}</span>
 

@@ -7,6 +7,7 @@
     export let hasComparison
     export let relatedBar
     export let handleMoveBarIndicator
+    export let chartType
 
     import {max } from 'd3'
 
@@ -87,7 +88,6 @@
     }
 
     let xGroupDepth = Object.keys(data).reverse()
-
     const handleInfoPosition = (e, d, i) => {
 
         if(!relatedBar){
@@ -101,10 +101,18 @@
         let temp = data?.current?.[i - 1]?.value || 100
         return yScale(max([temp, d.value ])) - indictorHeight * 0.25
     }
+
+    const handleTranslate = (key, i) => {
+        if(chartType != "funnel"){
+            return xScale(key)
+        } else {
+            return xScale(`${i}. ${key}`)
+        }
+    }
 </script>
 
 {#each data.current as d, i}
-    <g class="bar-group" transform={`translate(${xScale(d.key)}, 0)`}>
+    <g class="bar-group" transform={"translate(" + handleTranslate(d.key, i) + ", 0)"}>
         {#each bars as b}
             <rect 
                 class={`bar-rect ${b.class}`} 

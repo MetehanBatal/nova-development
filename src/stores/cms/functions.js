@@ -702,5 +702,6 @@ export {
     dbActions,
     injectClass,
     removeClass,
-    generateRandomString
+    generateRandomString,
+    generateRandomNumber
 }

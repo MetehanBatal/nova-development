@@ -8,14 +8,14 @@
 	export let strokeColor2;
 	export let dataProperty;
 	export let hasComparison
+	export let isTimeScale
 
 	import { select, selectAll, easeLinear } from "d3";
 	import { onMount } from 'svelte';
 
-	$: xLoc = xScale(data.current[selected].key);
+	$: xLoc = isTimeScale ? xScale(data.current[selected].key) : selected * xScale.step()
 	$: yLocPast = hasComparison && yScale(data.comparison[selected].value);
 	$: yLocPresent = yScale(data.current[selected].value);
-
 	let strokeWidth = 1.5;
 	let r = 3;
 	let justMounted = false

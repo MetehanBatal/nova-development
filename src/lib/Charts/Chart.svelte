@@ -7,28 +7,19 @@
     import { colors } from "../../stores/colors";
     import {sum, descending} from 'd3'
 
-    export let headline
-    export let hasComparison
-    export let hasRangeSelector
-    export let showLegend
-    export let dataOptions
+    export let otherParams
+    export let dataBody
     export let width
-    export let height
-    export let isPreview
-    export let previewAccuracy
-    export let previewDaySelection
-    export let previewSelectedDayIndexes
+    let dataOptions = JSON.parse(dataBody)
 
-    const now = new Date().getTime() - (30 * 24 * 60 * 60 * 1000)
-    let relatedBar
+    const now = new Date().getTime() - (60 * 24 * 60 * 60 * 1000)
 	const spinner = `<div class="lds-spinner get-center"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>`;
-    const spinnerPreview = `<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>`;
 
+    let relatedBar
     let type = ""
     let chartType = dataOptions?.displayOptions?.chartType || ""
-
     let minBarWidth = 150
-
+    let height
 
     // let isMounted = false
     let data = {}
@@ -49,28 +40,22 @@
 		},
 	];
 
-    let daySelection = isPreview ? previewDaySelection : 7;
+    let daySelection = otherParams.daySelection;
     let defaultRange
-
-
-    let accuracy = "day";
-    // let sessions_accuracy = "unique"
-
+    let accuracy = otherParams.accuracy;
     let tabTogglerSection = "all";
     let dateElement = {}
     let dateRange = {}
-    let windowWidth;
+    let windowWidth = window.innerWidth
+    let hasRangeSelector = otherParams.hasRangeSelector
+    let headline = otherParams.headline
+    let showLegend = otherParams.showLegend
+    let isTimeScale = otherParams.isTimeScale
+    let hasComparison = otherParams.hasComparison
 
-    let margin = isPreview
-        ?  {
-            top: 30,
-            right: 45,
-            bottom: 55,
-            left: 45,
-        }
-        : {
+    let margin =  {
             top: 50,
-            right: 45,
+            right: 5,
             bottom: 55,
             left: 45,
         }
@@ -83,7 +68,6 @@
 
     const handleRangeSelection = () => {
         if(daySelection != "custom"){
-            if(isPreview)  previewDaySelection = daySelection
             defaultRange = {
                 start: now - daySelection * 24 * 60 * 60 * 1000,
                 end: now,
@@ -93,20 +77,17 @@
         }
     }
 
-    selectedDayIndexes =  isPreview ?  previewSelectedDayIndexes : 2
-    selectedComparisonIndexes = comparisonDays.findIndex((d) => d.value == dataOptions.accuracyUnit)
+    selectedDayIndexes = otherParams.selectedDayIndexes
+    selectedComparisonIndexes = comparisonDays.findIndex((d) => d.value == otherParams.accuracy)
     accuracy =  comparisonDays[selectedComparisonIndexes].value
-    if(previewAccuracy) previewAccuracy = accuracy
 
     const handleCustomDateRange = () => {
         daySelection = (dateRange.end - dateRange.start) / (24 * 60 * 60 * 1000);
-        if(isPreview) previewDaySelection = daySelection
     }
 
     const handleCustomData = (_index) => {
         tabTogglerSection = event
         selectedDayIndexes = _index
-        previewSelectedDayIndexes = _index
         let dom = dateElement.childNodes[0].childNodes[1]
         dom.style.maxWidth = "4.2rem"
         dom.click()
@@ -122,28 +103,31 @@
         }
 
         const dateRangeComparison = dateRange.comparison
-        const body = {}
-        if (dataOptions.event) body["event"] = dataOptions.event
-        if (hasRangeSelector) body["dateRange"] = dateRangeObject
-        if (hasComparison) body["comparisonStartTimestamp"] = dateRangeComparison
-        if (dataOptions.filters) body["filters"] = dataOptions.filters
-        if (dataOptions.valueCalculation) body["valueCalculation"] = dataOptions.valueCalculation
-        if (dataOptions.traitCalculations) body["traitCalculations"] = dataOptions.traitCalculations
-        if (dataOptions.traits) body["traits"] = dataOptions.traits
-        if (dataOptions.displayOptions) body["displayOptions"] = dataOptions.displayOptions
-        if (dataOptions.sort) body["sort"] = dataOptions.sort
-        if (dataOptions.steps) body["displayOptions"]["steps"] = dataOptions.steps
-        if (dataOptions.breakdownValue)  body["breakdown"] = dataOptions.breakdownValue
-        if (dataOptions.accuracyUnit) {
-            body["accuracy"] = {}
-            body["accuracy"]["unit"] = accuracy
-        }
-        if (dataOptions.measurementType) {
-            body["measurement"] = {}
-            body["measurement"]["type"] = dataOptions.measurementType
-        }
+        dataOptions.dateRange = dateRangeObject
+        if(otherParams.hasComparison) dataOptions.comparisonStartTimestamp = dateRangeComparison
+        dataOptions["accuracy"]["unit"] = accuracy
 
-        const raw = JSON.stringify(body);
+        // if (dataOptions.event) body["event"] = dataOptions.event
+        // if (hasRangeSelector) body["dateRange"] = dateRangeObject
+        // if (hasComparison) body["comparisonStartTimestamp"] = dateRangeComparison
+        // if (dataOptions.filters) body["filters"] = dataOptions.filters
+        // if (dataOptions.valueCalculation) body["valueCalculation"] = dataOptions.valueCalculation
+        // if (dataOptions.traitCalculations) body["traitCalculations"] = dataOptions.traitCalculations
+        // if (dataOptions.traits) body["traits"] = dataOptions.traits
+        // if (dataOptions.displayOptions) body["displayOptions"] = dataOptions.displayOptions
+        // if (dataOptions.sort) body["sort"] = dataOptions.sort
+        // if (dataOptions.steps) body["displayOptions"]["steps"] = dataOptions.steps
+        // if (dataOptions.breakdownValue)  body["breakdown"] = dataOptions.breakdownValue
+        // if (dataOptions.accuracyUnit) {
+        //     body["accuracy"] = {}
+        //     body["accuracy"]["unit"] = accuracy
+        // }
+        // if (dataOptions.measurementType) {
+        //     body["measurement"] = {}
+        //     body["measurement"]["type"] = dataOptions.measurementType
+        // }
+
+        const raw = JSON.stringify(dataOptions);
 
         const requestOptions = {
             method: "POST",
@@ -166,22 +150,18 @@
         } else if (chartType == "bar" || chartType == "funnel") {
             type = "dropOff"
         }
-
-        if(!isPreview){
-            width = type == "multiline"
+        if(!width){
+            width = type == "multiline" || type == "dropOff"
                 ?  windowWidth - 500
                 :  type == "radial"
                 ?  200
                 :  windowWidth - 160
         }
-
-        if(!isPreview){
-            height =  type == "multiline"
-                ?  580
-                :  type == "radial"
-                ?  200
-                :  470
-        }
+        height =  type == "multiline"
+            ?  580
+            :  type == "radial"
+            ?  200
+            :  470
 
         try {
             const req = await fetch(ENDPOINT, fetchData())
@@ -213,7 +193,7 @@
 
             if(type == "dropOff"){
                 data = res.result
-                width =  windowWidth - 500 // to reset on range selection
+                // to reset on range selection
                 let multiplier = hasComparison ? 2 : 1
                 let temp = minBarWidth * multiplier * data.current.length
                 width = width > temp ? width : temp
@@ -242,65 +222,57 @@
     $: daySelection, dataOptions, selectedComparisonIndexes, processData()
 
 </script>
-
-<svelte:window bind:innerWidth={windowWidth}></svelte:window>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
-
+        {#if hasRangeSelector}
         <div class = "chart-header">
-            {#if isPreview}
-                <input class="headline-input" placeholder="chart title" type="text" bind:value={headline}>
-            {:else if headline != ""}
-                <h3>{headline}</h3>
-            {/if}
-
-            {#if hasRangeSelector}
-                <div class="chart-selection-wrapper">
-                    <div class="tab-toggler">
-                        {#each selectableDays as selectItem, _index}
-                            {#if selectItem.name == "Custom"}
-                                <div
-                                    class:active={selectedDayIndexes === _index}
-                                    on:click={() => handleCustomData(_index)}
-                                >
-                                    {selectItem.name}
-                                    <div class="date-picker-dash" id = "date-picker-page-view" bind:this = {dateElement}>
-                                        <DatePicker selectedOption={2} bind:dateRange={dateRange} />
-                                    </div>
-                                </div>
-                            {:else}
-                                <div
-                                    class:active={selectedDayIndexes === _index}
-                                    on:click={() => {
-                                        tabTogglerSection = event;
-                                            daySelection = selectItem.value;
-                                            selectedDayIndexes = _index;
-                                            previewSelectedDayIndexes = _index;
-                                        }
-                                    }>
-                                        {selectItem.name}
-                                </div>
-                            {/if}
-                        {/each}
-                    </div>
-
-                    <div class="tab-toggler">
-                        {#each comparisonDays as selectItem, _index}
+            <h3>{headline}</h3>
+        {#if hasRangeSelector}
+            <div class="chart-selection-wrapper">
+                <div class="tab-toggler">
+                    {#each selectableDays as selectItem, _index}
+                        {#if selectItem.name == "Custom"}
                             <div
-                                class:active={selectedComparisonIndexes === _index}
-                                on:click={() => {
-                                    tabTogglerSection = event; 
-                                    selectedComparisonIndexes = _index;
-                                    accuracy = selectItem.value
-                                    if(previewAccuracy) previewAccuracy = selectItem.value
-                                }}>
-                                    {selectItem.name}							
+                                class:active={selectedDayIndexes === _index}
+                                on:click={() => handleCustomData(_index)}
+                            >
+                                {selectItem.name}
+                                <div class="date-picker-dash" id = "date-picker-page-view" bind:this = {dateElement}>
+                                    <DatePicker selectedOption={2} bind:dateRange={dateRange} />
+                                </div>
                             </div>
-                        {/each}
-                    </div>
+                        {:else}
+                            <div
+                                class:active={selectedDayIndexes === _index}
+                                on:click={() => {
+                                    tabTogglerSection = event;
+                                        daySelection = selectItem.value;
+                                        selectedDayIndexes = _index;
+                                    }
+                                }>
+                                    {selectItem.name}
+                            </div>
+                        {/if}
+                    {/each}
                 </div>
-            {/if}
-        </div>
+
+                <div class="tab-toggler">
+                    {#each comparisonDays as selectItem, _index}
+                        <div
+                            class:active={selectedComparisonIndexes === _index}
+                            on:click={() => {
+                                tabTogglerSection = event;
+                                selectedComparisonIndexes = _index;
+                                accuracy = selectItem.value
+                            }}>
+                                {selectItem.name}
+                        </div>
+                    {/each}
+                </div>
+            </div>
+        {/if}
+    </div>
+        {/if}
 
     {#if data && Object.keys(data).length > 0 }
         {#if showLegend}
@@ -327,6 +299,8 @@
                 {margin}
                 {hasComparison}
                 {relatedBar}
+                {isTimeScale}
+                {chartType}
             />
         {:else if  type.includes("radial")}
             <Radial
@@ -341,29 +315,15 @@
         {/if}
 
     {:else}
-        {#if isPreview}
-            <div class="loader">
-                {@html spinnerPreview} Select Right Options
-            </div>
-        {:else}
-            {@html spinner}
-        {/if}
+        {@html spinner}
     {/if}
 
 <style>
-    .headline-input{
-        padding: 1rem;
-        font-family: "Nunito";
-        border: .1rem solid #212830;
-        border-radius: .8rem;
-        font-size: 1.1rem;
-        background-color: #0D121A;
-        color: #FFF;
-    }
 	.chart-header {
 		display: flex;
 		align-items: center;
-        margin-bottom: 40px;
+        margin: 2rem 0px 3rem;
+        padding-inline: 1.5rem;
 	}
 
 	.chart-header h3 {
@@ -417,15 +377,5 @@
 		position: absolute;
 	}
 
-    .loader{
-        width: 100%;
-        height: calc(100vh - 29rem);
-        background-color: #383C42;
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-        justify-content: center;
-        border-radius: 1rem;
-    }
 
 </style>

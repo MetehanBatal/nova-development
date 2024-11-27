@@ -7,6 +7,12 @@
 
 	export let data;
 
+	const excludedIds = [390375802347, 773819988178];
+
+	let experiments = data.experimentsRes.data?.docs?.filter(
+		(experiment) => !excludedIds.includes(experiment.id)
+	);
+
 	const tabs = [
 		{ title: 'Experiments', id: 'in-progress' },
 		{ title: 'Drafts', id: 'draft' },
@@ -14,12 +20,12 @@
 	];
 	let activeTabIndex = 0;
 
-	let experiments = data.experimentsRes.data?.docs?.filter((experiment) => experiment.status === tabs[activeTabIndex].id);
+	experiments = experiments.filter((experiment) => experiment.status === tabs[activeTabIndex].id);
 
 	let isFormActive = false;
 	let isAudiences = false;
 
-	$: activeTabIndex, experiments = data.experimentsRes.data?.docs?.filter((experiment) => typeof(tabs[activeTabIndex].id) === 'object' ? tabs[activeTabIndex].id.includes(experiment.status) : experiment.status === tabs[activeTabIndex].id );
+	$: activeTabIndex, experiments = experiments.filter((experiment) => typeof(tabs[activeTabIndex].id) === 'object' ? tabs[activeTabIndex].id.includes(experiment.status) : experiment.status === tabs[activeTabIndex].id );
 
 	let filteredExperiments = [];
 </script>

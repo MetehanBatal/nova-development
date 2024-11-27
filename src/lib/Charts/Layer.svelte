@@ -1,9 +1,9 @@
 <script>
     import Dropdown from '$lib/toolkit/Dropdown.svelte';
-    import DropdownType2 from './DropdownType.svelte';
+    import DropdownType2 from './DropdownType2.svelte';
     import Formula from "./Formula.svelte";
     import SideMenu from "./SideMenu.svelte";
-    import FancyDropDown from "./FancyDropdown.svelte";
+    import FancyDropDown from "./FancyDropDown.svelte";
     import {
         events,
         dataType,
@@ -13,7 +13,7 @@
         session,
         events_session,
         traitOperator,
-    } from "../../stores/chartData--dev.js";
+    } from "./customChartText"
 
     export let main
     export let isMultple
@@ -23,25 +23,43 @@
     export let dataBody
     export let dataBodyTracker
     export let subSideMenu
+    export let selectedSideMenuLayerClose
+    export let selectedSideMenuLayer
+    export let handleCloseSideMenu
 
-    let showMenu = false
-    let selectedSideMenuLayer = []
+    //let showMenu = false
     let traitsData = []
+    let dom
+    let domInputFilter
+    let domTop
+    let domStep
+    let domStepFilter
 
-    const handleMenuClick = (key, i, subValue, value) => {
-        selectedSideMenuLayer = [key, i, subValue]
-        if(!key){
-            showMenu = !showMenu
+    const handleSideMenuOver = () => {
+        selectedSideMenuLayerClose = []
+    }
+
+    const handleSideMenuOut = () => {
+        selectedSideMenuLayerClose = JSON.parse(JSON.stringify(selectedSideMenuLayer))
+    }
+
+    const handleMenuClick = (e, key, i, subValue, value) => {
+        if(JSON.stringify(selectedSideMenuLayer) != JSON.stringify([key, i, subValue, value])){
+            handleCloseSideMenu(selectedSideMenuLayer)
+        }
+        selectedSideMenuLayer = [key, i, subValue, value]
+        if(i == null){
+            dataBodyTracker[key][value] = !dataBodyTracker[key][value]
             return
         }
         dataBodyTracker[key][i][value] = !dataBodyTracker[key][i][value]
     }
 
     const handleTraitsData = () => {
-        if(main.name == "eventName" || main.name == "traits"){
+        if(main.name == "valueCalculation" || main.name == "traits"){
             let temp = []
             let tempArray = []
-            if(dataBody.eventName && !tempArray.includes(events[dataBody.eventName].id)){
+            if(dataBody.eventName != null){
                 tempArray.push(events[dataBody.eventName].id)
                 temp.push({
                     index: 0,
@@ -63,41 +81,44 @@
                 })
             }
             traitsData = temp
-        }
+
+       }
     }
 
     const handleKeyup = (key) => {
         const [value, index, subIndex] = key.split("-")
         if(value == "filters"){
-            dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(dataBody[main.name][index].value.toLowerCase()))
+            dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(domTop.value))
             return
         }
         if(value == "breakdown"){
-            dataBodyTracker[main.name][index].data = session.filter((f) => f.name.toLowerCase().includes(dataBody[main.name][index].value.toLowerCase()))
+            dataBodyTracker[main.name][index].data = session.filter((f) => f.name.toLowerCase().includes(domTop.value))
             return
         }
         if(value == "traits"){
-            dataBodyTracker[main.name][index].data = events_session.filter((f) => f.name.toLowerCase().includes(dataBody[main.name][index].value.toLowerCase()))
+            dataBodyTracker[main.name][index].data = events_session.filter((f) => f.name.toLowerCase().includes(domTop.value))
         }
 
         if(value == "steps"){
             if(!subIndex){
-                dataBodyTracker[main.name][index].dataEvent = events.filter((f) => f.name.toLowerCase().includes(dataBody[main.name][index].value.toLowerCase()))
+                dataBodyTracker[main.name][index].dataEvent = events.filter((f) => f.name.toLowerCase().includes(domStep.value))
             } else {
-                dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(dataBody[main.name][index].filters[0].value.toLowerCase()))
+                dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(domStepFilter.value))
             }
         }
         
     }
 
     const handleSideMenuAction = (item) => {
-        console.log(0);
-        console.log(selectedSideMenuLayer);
         const action = item.action
+
+        if(action != "changeType"){
+            selectedSideMenuLayerClose = []
+        }
         if(action == "formula"){
-            showMenu = false
             if(dataBody[main.name]?.formula){
                 dataBodyTracker[main.name].showFormula = true
+                dataBodyTracker[selectedSideMenuLayer[0]].isMenuOpen = false
                 return
             }
             dataBody[main.name] = {
@@ -106,12 +127,15 @@
 
             dataBodyTracker[main.name] = {
                 allowFocusOut: true,
-                showFormula : true
+                showFormula : true,
+                isMenuOpen : false
             }
             return
         }
 
         if(action == "addFilter"){
+            dataBodyTracker[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].isMenuOpenEvent = false
+            dataBodyTracker[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].isMenuOpen = false
             if(dataBody[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]]?.["filters"]) return
             dataBody[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]]["filters"] = [
                 {
@@ -121,22 +145,29 @@
                     type: "string",
                 }
             ]
-
             return
         }
 
         if(action == "renameEvent"){
             dataBodyTracker[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].showTitle = true
+            dataBodyTracker[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].isMenuOpen = false
+            dataBodyTracker[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].isMenuOpenEvent = false
         }
 
 
         if(action == "changeType"){
+            console.log(selectedSideMenuLayer);
+            if(selectedSideMenuLayer[0] == "filters"){
+                dataBody[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].valueArray = []
+            }
             dataBody[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].type = item.text
+            dataBodyTracker[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].isMenuOpen = false
+            dataBodyTracker[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].isMenuOpenEvent = false
             return
         }
 
         if(action == "remove"){
-            if(!selectedSideMenuLayer[2]){
+            if(selectedSideMenuLayer[2] == null){
                 dataBody[selectedSideMenuLayer[0]].splice(selectedSideMenuLayer[1], 1)
                 dataBodyTracker[selectedSideMenuLayer[0]].splice(selectedSideMenuLayer[1], 1)
             } else {
@@ -149,9 +180,10 @@
 
         if(action == "duplicate"){
             let temp = JSON.parse(JSON.stringify(dataBody[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]]))
+            dataBodyTracker[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].isMenuOpen = false
+            dataBodyTracker[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].isMenuOpenEvent = false
+
             let tempTracker = JSON.parse(JSON.stringify(dataBodyTracker[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]]))
-            tempTracker.isMenuOpen = false
-            tempTracker.isMenuOpenEvent = false
             dataBody[main.name].push(temp)
             dataBodyTracker[main.name].push(tempTracker)
 
@@ -229,8 +261,7 @@
 
         dataBody = dataBody
     }
-
-    $: dataBody["eventName"], dataBody["traits"],  handleTraitsData()
+    $: dataBody["valueCalculation"], dataBody["traits"],  handleTraitsData()
 </script>
     <!-- svelte-ignore missing-declaration -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -238,7 +269,7 @@
     <!-- svelte-ignore a11y-mouse-events-have-key-events -->
 
     <div class="card">
-        <div class="top">
+        <div class="top"  on:click={() => handleMultiple()}>
             <div class="left">
                 {@html main.icon}
                 {#if !isMultple}
@@ -256,12 +287,19 @@
             </div>
             <div class="right">
                 {#if isMultple}
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" on:click={() => handleMultiple()}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M3.66199 8H12.7537" stroke="white" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M8.20715 3.33331V12.6666" stroke="white" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 {:else}
-                    <SideMenu bind:showMenu = {showMenu} {sideMenu} {handleSideMenuAction} {handleMenuClick}/>
+                    <SideMenu
+                        bind:showMenu = {dataBodyTracker[main.name].isMenuOpen}
+                        {sideMenu}
+                        handleMenuClick =  {(e) => handleMenuClick(e, main.name, null, null, "isMenuOpen")}
+                        {handleSideMenuAction}
+                        {handleSideMenuOver}
+                        {handleSideMenuOut}
+                    />
                 {/if}
             </div>
         </div>
@@ -278,7 +316,7 @@
         {/if}
         {#if dataBodyTracker[main.name]?.showFormula}
             <Formula 
-                data = {sideMenu[0].data}
+                data = {traitsData}
                 bind:dataObj = {dataBody[main.name]}
                 bind:dataObjTracker = {dataBodyTracker[main.name]}
             />
@@ -297,11 +335,13 @@
                                     </div>
                                     <div class="relative count-indicator-input">
                                         <input
+                                            bind:this={domStep}
                                             type="text"
-                                            bind:value={dataBody[main.name][i].value}
+                                            value={dataBody[main.name][i].value}
                                             on:keyup={() =>  handleKeyup(`${main.name}-${i}`)}
                                             on:focus = {() => handleKeyup(`${main.name}-${i}`)}
                                             on:focusout = {() => {
+                                                dataBody[main.name][i].value = domStep.value
                                                 if(dataBodyTracker[main.name][i].allowFocusOutEvent) dataBodyTracker[main.name][i].dataEvent = []
                                             }}
                                         />
@@ -322,8 +362,10 @@
                                     bind:showMenu = {dataBodyTracker[main.name][i].isMenuOpenEvent}
                                     {sideMenu}
                                     {handleSideMenuAction}
-                                    handleMenuClick =  {() => handleMenuClick(main.name, i, null, "isMenuOpenEvent")}
+                                    handleMenuClick =  {(e) => handleMenuClick(e, main.name, i, null, "isMenuOpenEvent")}
                                     style = {"top: 2.2rem"}
+                                    {handleSideMenuOver}
+                                    {handleSideMenuOut}
                                 />
                             </div>
                             {#if dataBodyTracker[main.name][i].showTitle}
@@ -351,11 +393,13 @@
                                     </div>
                                     <div class="relative w-100 small-gap align-center bg-090e16 border-radius">
                                         <input
+                                            bind:this={domStepFilter}
                                             type="text"
-                                            bind:value={dataBody[main.name][i].filters[0].value}
+                                            value={dataBody[main.name][i].filters[0].value}
                                             on:keyup={() =>  handleKeyup(`${main.name}-${i}-2`)}
                                             on:focus = {() => handleKeyup(`${main.name}-${i}-2`)}
                                             on:focusout = {() => {
+                                                dataBody[main.name][i].filters[0].value = domStepFilter.value
                                                 if(dataBodyTracker[main.name][i].allowFocusOut) dataBodyTracker[main.name][i].data = []
                                             }}
                                         />
@@ -376,7 +420,9 @@
                                     bind:showMenu = {dataBodyTracker[main.name][i].isMenuOpen}
                                     sideMenu = {subSideMenu}
                                     {handleSideMenuAction}
-                                    handleMenuClick =  {() => handleMenuClick(main.name, i, "filters", "isMenuOpen")}
+                                    {handleSideMenuOver}
+                                    {handleSideMenuOut}
+                                    handleMenuClick =  {(e) => handleMenuClick(e, main.name, i, "filters", "isMenuOpen")}
                                     style = {"top: 2.8rem; right: 1.5rem;"}
                                 />
                             </div>
@@ -420,13 +466,16 @@
                                     </div>
                                     <div class="relative w-100">
                                         <input
+                                            bind:this = {domTop}
                                             type="text"
-                                            bind:value={dataBody[main.name][i].value}
+                                            value={dataBody[main.name][i].value}
                                             on:keyup={() =>  handleKeyup(`${main.name}-${i}`)}
                                             on:focus = {() => handleKeyup(`${main.name}-${i}`)}
                                             on:focusout = {() => {
+                                                dataBody[main.name][i].value = domTop.value
                                                 if(dataBodyTracker[main.name][i].allowFocusOut) dataBodyTracker[main.name][i].data = []
                                             }}
+                                            on:change = {() => dataBody[main.name][i].valueArray = []}
                                         />
                                         {#if dataBodyTracker[main.name][i].data.length}
                                             <FancyDropDown
@@ -445,7 +494,9 @@
                                     bind:showMenu = {dataBodyTracker[main.name][i].isMenuOpen}
                                     {sideMenu}
                                     {handleSideMenuAction}
-                                    handleMenuClick =  {() => handleMenuClick(main.name, i, null, "isMenuOpen")}
+                                    {handleSideMenuOver}
+                                    {handleSideMenuOut}
+                                    handleMenuClick =  {(e) => handleMenuClick(e, main.name, i, null, "isMenuOpen")}
                                     style = {"top: 2.2rem"}
                                 />
                             </div>
@@ -459,18 +510,28 @@
                                         type="plain"
                                         class = "custom-dropdown"
                                     />
-                                    {#if collectionValue?.[item.value]}
-                                        <div class="multiple">
-                                            <Dropdown
-                                                placeholder = {"Select a value..."}
-                                                options={collectionValue?.[item.value]}
-                                                bind:selectedStatusIndex={dataBody[main.name][i].valueArray}
-                                                position="right"
-                                                type="plain"
-                                                selection = "multiple"
-                                                class = {`custom-dropdown ${dataBody[main.name][i].valueArray.length > 0 ? "white" : ""}`}
-                                            />
-                                        </div>
+                                    {#if item.type == "number"}
+                                        <input
+                                            bind:this={domInputFilter}
+                                            placeholder="type a number"
+                                            type="text"
+                                            value = {dataBody[main.name][i].valueArray[0] || ""}
+                                            on:focusout = {() => dataBody[main.name][i].valueArray[0] = domInputFilter.value}
+                                        >
+                                    {:else}
+                                        {#if collectionValue?.[item.value]}
+                                            <div class="multiple">
+                                                <Dropdown
+                                                    placeholder = {"Select a value..."}
+                                                    options={collectionValue?.[item.value]}
+                                                    bind:selectedStatusIndex={dataBody[main.name][i].valueArray}
+                                                    position="right"
+                                                    type="plain"
+                                                    selection = "multiple"
+                                                    class = {`custom-dropdown ${dataBody[main.name][i].valueArray.length > 0 ? "white" : ""}`}
+                                                />
+                                            </div>
+                                        {/if}
                                     {/if}
                                 </div>
                             {/if}
@@ -485,8 +546,10 @@
 
                                     <input
                                         type="text"
-                                        bind:value={dataBody[main.name][i].title}
+                                        value={dataBody[main.name][i].title}
                                         placeholder="type to overwrite title"
+                                        bind:this={dom}
+                                        on:focusout = {() => dataBody[main.name][i].title = dom.value}
                                     />
                                 </div>
                                 <div class="bottom">
@@ -517,9 +580,10 @@
     .step-title{
         position: relative;
         display: block;
+        padding: 2px 0px;
     }
     .w-step{
-        width: calc(100% - 32px - 2.8rem) !important;
+        width: calc(100% - 1.6rem) !important;
         margin-top: 0.8rem;
         border-radius: 0.5rem;
         margin-left: calc(16px + 1rem);

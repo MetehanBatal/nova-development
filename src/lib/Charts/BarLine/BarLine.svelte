@@ -7,7 +7,7 @@
 	import Overlay from './components/Overlay.svelte'
 	import Tooltip from './components/Tooltip.svelte'
     import Bars from './components/Bars.svelte'
-	import { scaleTime, scaleLinear, extent, pointer, bisector, scaleBand, select } from 'd3'
+	import { scaleTime, scalePoint, scaleLinear, extent, pointer, bisector, scaleBand, select } from 'd3'
 
     export let data
     export let strokeColor1
@@ -20,6 +20,8 @@
     export let relatedBar
     export let width
     export let height
+    export let chartType
+    export let isTimeScale
 
 	let innerWidth
     let innerHeight
@@ -41,16 +43,27 @@
 
         let tempX
         if(type == "multiline"){
-            tempX = scaleTime(
-                extent(data.current, (d) => {
-                    return  d.key
-                } ),
-                [0, innerWidth]
-		    )
+            if(isTimeScale){
+                tempX = scaleTime(
+                    extent(data.current, (d) => {
+                        return  d.key
+                    } ),
+                    [0, innerWidth]
+		        )
+            } else {
+                tempX = scalePoint(
+                    data.current.map((d) => d.key),
+                    [0, innerWidth]
+		        )
+            }
         }  else {
-            console.log(data.current.map(d => d.key), data.current);
             tempX =  scaleBand(
-                data.current.map(d => d.key),
+                data.current.map((d, i) => {
+                    if(chartType == "funnel"){
+                        return `${i}. ${d.key}`
+                    }
+                    return d.key
+                }),
                 [0, innerWidth]
             ).padding([0.1])
         }
@@ -110,16 +123,23 @@
     $:handleSpace()
 
 	function handleMousemove (event) {
-		isShowTrends = true
-		const [x, y] = pointer(event);
-        const b = bisector((d) => d.key).center(data.current, xScale.invert(x))
-		selected = b > data.length - 1
-			? data.length - 1
-			: b;
+        isShowTrends = true
+        if(isTimeScale){
+            const [x, y] = pointer(event);
+            const b = bisector((d) => d.key).center(data.current, xScale.invert(x))
+            selected = b > data.length - 1
+                ? data.length - 1
+                : b;
+        } else {
+            if(xScale?.step()){
+                const [x, y] = pointer(event);
+                selected = Math.round(x/xScale.step())
+            }
+        }
 	}
 
 	function handleMouseLeave (event) {
-		isShowTrends = false
+		isShowTrends = false;
         select(`.trends-${dataProperty}`).attr('opacity', 0)
         select(`.c1-${dataProperty}`).attr('opacity', 0)
         select(`.c2-${dataProperty}`).attr('opacity', 0)
@@ -133,25 +153,33 @@
 >
     <svg  {width} {height}>
         <g class= {`g-${dataProperty}`} transform = {`translate(${margin.left}, ${margin.top})`}>
-            <Yaxis {innerWidth}  {yScale} {dataProperty} {type} />
-            <Xaxis {xScale} {innerHeight} xGroupVerbose = {false} {type} bind:hoveredIndex bind:hoveredIndexPrev />
+            {#if (type == "multiline" && data.current.length > 1) || type == "dropOff"}
+                <Yaxis {innerWidth}  {yScale} {dataProperty} {type} />
+                <Xaxis {xScale} {innerHeight} xGroupVerbose = {false} {type} bind:hoveredIndex bind:hoveredIndexPrev {isTimeScale}/>
+            {/if}
+
             {#if type == "multiline"}
+                {#if data.current.length < 2}
+                    <text fill = "#fff" dx = {width/2} dy = {height/2} text-anchor = "middle">Insufficient data to plot line chart</text>
+                {:else}
                 <Path {yScale} {xScale} {data} {innerHeight} {hasComparison} />
-                {#if isShowTrends}
-                    <g class = {`g-trends-${dataProperty}`}>
-                        <Trends 
-                            {selected}
-                            {dataProperty}
-                            {innerHeight} 
-                            {data}
-                            {width}
-                            {xScale} 
-                            {yScale}
-                            {strokeColor1}
-                            {strokeColor2}
-                            {hasComparison}
-                        />
-                    </g>
+                    {#if isShowTrends}
+                        <g class = {`g-trends-${dataProperty}`}>
+                            <Trends
+                                {selected}
+                                {dataProperty}
+                                {innerHeight}
+                                {data}
+                                {width}
+                                {xScale}
+                                {yScale}
+                                {strokeColor1}
+                                {strokeColor2}
+                                {hasComparison}
+                                {isTimeScale}
+                            />
+                        </g>
+                    {/if}
                 {/if}
                 <Overlay {innerHeight} {innerWidth}  {handleMousemove} {handleMouseLeave} />
             {:else}
@@ -163,6 +191,7 @@
                 {innerHeight}
                 {hasComparison}
                 {type}
+                {chartType}
                 {relatedBar}
                 {handleMoveBarIndicator}
             />
@@ -178,7 +207,7 @@
             {/if}
         </g>
     </svg>
-    {#if isShowTrends && type == "multiline"}
+    {#if isShowTrends && type == "multiline" && data.current.length > 1}
         <Tooltip 
             tooltipTitle = {headline}
             {strokeColor1} 
@@ -191,6 +220,7 @@
             {yScale}
             {hasComparison}
             bottom = {margin.bottom}
+            {isTimeScale}
         />
     {/if}
 
@@ -212,7 +242,6 @@
 </div>
 <style>
     svg, .chart {
-		display: block;
 		margin: 0px auto;
 		background-color: #060b13;
 		position: relative;

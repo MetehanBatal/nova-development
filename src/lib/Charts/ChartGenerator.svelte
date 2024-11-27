@@ -1,4 +1,5 @@
 <script>
+    import Layer from "./Layer.svelte"
     import {
         measurementType,
         events,
@@ -8,21 +9,22 @@
         chartTypeObj,
         sideMenuObj
     } from "../../stores/chartData--dev.js";
-    import {parsePeriod, selectableDays} from '../../stores/functions';
-    import { colors } from "../../stores/colors";
-
-    import Layer from "$lib/charts/Layer.svelte"
     import DatePicker from '$lib/toolkit/DatePicker.svelte';
     import BarLine  from "$lib/Charts/BarLine/BarLine.svelte";
     import Radial from '$lib/Charts/Radial/Radial.svelte';
     import Legend from '$lib/Charts/components/Legend.svelte';
-    import DropdownType2 from "$lib/Charts/DropdownType.svelte"
-    
+    import {parsePeriod, selectableDays} from '../../stores/functions';
+    import { colors } from "../../stores/colors";
     import {sum, descending} from 'd3'
+    import DropdownType2 from "./DropdownType2.svelte"
     import { onMount } from "svelte";
+    import { toastMessage } from '../../stores/toast';
 
-    const ENDPOINT = `https://mve.novus.studio/prod/analytics/test`;
-    const now = new Date().getTime() - (60 * 24 * 60 * 60 * 1000);
+    export let handleModalClose
+    const spinner = `<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>`;
+
+    const ENDPOINT = `https://mve.novus.studio/prod/analytics/test`
+    const now = new Date().getTime() - (60 * 24 * 60 * 60 * 1000)
 
     const {
         showChildren,
@@ -34,17 +36,18 @@
         formula
     } = sideMenuObj
 
-    const otherParams = {
+    let otherParams = {
         accuracy : "day",
         daySelection : 7,
         selectedDayIndexes : 2
     }
 
-    const otherParamsFunnels = {
+    let otherParamsFunnels = {
         accuracy : "day",
         daySelection : 7,
         selectedDayIndexes : 2
     }
+
     let isMounted = false
     let tabSelected = "insights"
     let prevTabSelected = "insights"
@@ -83,6 +86,10 @@
     let resFunnel
     let reqInsight
     let resInsight
+    let selectedSideMenuLayerClose = []
+    let selectedSideMenuLayer = []
+    let allowFetch
+    let isTimeScale = true
 
     let dataBody = {
         filters: [],
@@ -109,6 +116,9 @@
         breakdown: [],
         traits:[],
         eventName: null,
+        valueCalculation: [{
+            isMenuOpen : false
+        }]
     }
 
     let dataBodyTrackerFunnel = {
@@ -135,8 +145,39 @@
         isMounted = true
     })
 
+    const handleCloseSideMenu = (d = selectedSideMenuLayerClose) => {
+        if(d && d.length > 0){
+               if(tabSelected != "funnels"){
+                    if(dataBodyTracker?.[d[0]]?.[d[3]]){
+                        dataBodyTracker[d[0]][d[3]] = false
+                    } else if(dataBodyTracker?.[d[0]]?.[d[1]]?.[d[3]]) {
+                        dataBodyTracker[d[0]][d[1]][d[3]] = false
+                    }
+               } else {
+                    if(dataBodyTrackerFunnel?.[d[0]]?.[d[1]]?.[d[3]]){
+                        dataBodyTrackerFunnel[d[0]][d[1]][d[3]] = false
+                    }
+               }
+        }
+
+        let dom = document.getElementsByClassName("dropdown-bind")
+        for (let i = 0; i < dom.length; i++) {
+            if(dom[i].getElementsByClassName("dropdown-content").length){
+                dom[i].getElementsByClassName("dropdown-title")[0].click()
+            }
+        }
+
+        let domBox = document.getElementsByClassName("dropdown-box-bind")
+        for (let i = 0; i < domBox.length; i++) {
+            if(domBox[i].getElementsByClassName("dropdown").length){
+                domBox[i].getElementsByClassName("dropdown-selection")[0].click()
+            }
+        }     
+    }
+
     const handleRangeSelection = () => {
         if(daySelection != "custom"){
+            
             defaultRange = {
                 start: now - daySelection * 24 * 60 * 60 * 1000,
                 end: now,
@@ -219,7 +260,7 @@
         handleSetChartType(propData)
         prevSelectedChart = chartType
     }
-    let allowFetch
+
     const fetchData =  () => {
         allowFetch = true
         const body = {}
@@ -255,28 +296,26 @@
             let temp = []
             tempBody.filters.map(({operator, type, value, valueArray}) => {
                 if(value && valueArray.length > 0){
+                    let filterValue
+                    if(type == "number"){
+                        filterValue = valueArray[0]
+                    } else {
+                        filterValue = valueArray.map((d) => collectionValue[value][d].name).join("|").split("|")
+                    }
                     temp.push({
                         "filterOperator": operatorType[type][operator].name,
                         "filterType": type,
-                        "filterValue": valueArray.map((d) => collectionValue[value][d].name).join("|").split("|"),
+                        filterValue,
                         value
                     })
                 }
             })
            if(temp.length > 0) {
-                body.filter = temp
-            } else {
-                allowFetch = false
+                body.filters = temp
             }
-        }
-
-        if (tempBody?.valueCalculation?.formula && tempBody.valueCalculation.formula.length > 0){
-            body["valueCalculation"] = tempBody.valueCalculation.formula.map((d) => {
-                if(d.formulaType == "property"){
-                    return `traits[${d.value}]`
-                }
-                return d.value
-            }).join("")
+            // else {
+            //     allowFetch = false
+            // }
         }
 
         if (tempBody?.traits && tempBody.traits.length > 0){
@@ -286,40 +325,61 @@
             tempBody.traits.map(({title, formula, value, operator, type}, i) => {
                 if(type == "formula" && formula.length > 0){
                     tempCalculations.push({
-                        title : `${title || "untitled"}`,
-                        expression: `${formula.map((d) => {
+                        title : `${title || "UNTITLED-" + i}`,
+                        expression: `(${formula.map((d) => {
                             if(d.formulaType == "property"){
-                                return `traits[${d.value}]`
+                                if( body["event"] == d.value){
+                                    return `value`
+                                } else {
+                                   let i = tempBody.traits.findIndex((e) => e.value == d.value)
+                                    return tempBody.traits[i].title ? `traits["${tempBody.traits[i].title}"]` :  `traits["UNTITLED-${i}"]`
+                                }
                             }
                                 return d.value
-                            }).join("")}`
+                            }).join("")}).toFixed(2)`
                     })
                     if(tempCalculations.length > 0){
                         body["traitCalculations"] = tempCalculations
                     }
                 }
 
-                if(type == "string"){
+                //if(type == "string"){
                     if(value){
                         let [event, value_session] = value.replace("]","").split("[")
                         tempTraits.push({
-                            titleOverwrite : `${title || "untitled-" + i}`,
+                            titleOverwrite : `${title || "UNTITLED-" + i}`,
                             operator : traitOperator[operator].id,
                             event,
                             value: `${value_session ? value_session.toLowerCase() : ""}`
                         })
                     }
-                }
-                if(tempTraits.length > 0){
-                    body["traits"] = tempTraits
-                } else {
-                    allowFetch = false
-                }
+                    if(tempTraits.length > 0){
+                        body["traits"] = tempTraits
+                    }
+                    // else {
+                    //     allowFetch = false
+                    // }
+                //}
             })
         }
 
+        if (tempBody?.valueCalculation?.formula && tempBody.valueCalculation.formula.length > 0){
+            body["valueCalculation"] = `(${tempBody.valueCalculation.formula.map((d) => {
+                if(d.formulaType == "property"){
+                    if( body["event"] == d.value){
+                        return `value`
+                    } else {
+                        let i = tempBody.traits.findIndex((e) => e.value == d.value)
+                        return tempBody.traits[i].title ? `traits["${tempBody.traits[i].title}"]` :  `traits["UNTITLED-${i}"]`
+                    }
+                }
+                return d.value
+            }).join("")}).toFixed(2)`
+        }
+
+
         body["displayOptions"] = tempBody.displayOptions
-        if(hasComparison && hasDataSync) body["displayOptions"]["dataSyncronization"] = hasDataSync
+        if(hasComparison && hasDataSync && isTimeScale) body["displayOptions"]["dataSyncronization"] = hasDataSync
         if(tempBody?.steps){
             let temp = []
             tempBody.steps.map(({index, value, title, filters}, i) => {
@@ -331,22 +391,28 @@
                         filters: []
                     })
                     if(filters && filters?.[0]?.value && filters?.[0]?.valueArray && filters?.[0]?.valueArray.length > 0){
+                        let filterValue
+                        if(filters[0].type == "number"){
+                            filterValue = filters[0].valueArray[0]
+                        } else {
+                            filterValue = filters[0].valueArray.map((d) => collectionValue[filters[0].value][d].name.toLowerCase()).join("|").split("|")
+                        }
                         temp[i].filters = [{
                             "filterOperator": operatorType[filters[0].type][filters[0].operator].name,
                             "filterType": filters[0].type,
-                            "filterValue": filters[0].valueArray.map((d) => collectionValue[filters[0].value][d].name.toLowerCase()).join("|").split("|"),
+                            filterValue,
                             value: filters[0].value
                         }]
 
-                        console.log(temp);
                     }
                 }
             })
             if(temp.length > 1){
                 body["displayOptions"]["steps"] = temp
-            } else {
-                allowFetch = false
             }
+            // else {
+            //     allowFetch = false
+            // }
 
         }
         if(tempBody?.breakdown){
@@ -401,6 +467,9 @@
             otherParams["selectedDayIndexes"] = selectedDayIndexes
             otherParams["headline"] = "New Chart"
             otherParams["accuracy"] = accuracy
+            otherParams["isTimeScale"] = isTimeScale
+            otherParams = otherParams
+
         } else {
             otherParamsFunnels["daySelection"] = daySelection
             otherParamsFunnels["hasDataSync"] = hasDataSync
@@ -410,6 +479,7 @@
             otherParamsFunnels["selectedDayIndexes"] = selectedDayIndexes
             otherParamsFunnels["headline"] = "New Chart"
             otherParamsFunnels["accuracy"] = accuracy
+            otherParamsFunnels = otherParamsFunnels
         }
 
         const raw = JSON.stringify(body);
@@ -456,18 +526,19 @@
             }
         }
 
-        if(controller){
-            controller.abort()
-        }
+        // if(controller){
+        //     //if((tabSelected == "insights" && resInsight) || (tabSelected == "funnels" && resFunnel)) controller.abort()
+        // }
 
-        if(allowRefetch && (!postBody || (tabSelected == "insights" && dataBody.eventName == null))  || !allowFetch) return
+        if(allowRefetch && (!postBody || (tabSelected == "insights" && dataBody.eventName == null))) return
         let tempMainData = {}
 
-        controller = new AbortController()
-        const signal = controller.signal
+        // controller = new AbortController()
+        // const signal = controller.signal
         try {
             if(allowRefetch){
-                req = await fetch(ENDPOINT, {signal, ...postBody})
+               //req = await fetch(ENDPOINT, {signal, ...postBody})
+                req = await fetch(ENDPOINT, postBody)
                 res = await req.json()
 
                 if(tabSelected == "funnels"){
@@ -490,7 +561,12 @@
             if(type == "multiline"){
                     let tempParse = parsePeriod[accuracy]
                     let temp = JSON.parse(JSON.stringify(res.result.current))
-                    temp.map((d) => d.key =  tempParse(d.key))
+                    if(tempParse(temp[0].key) == null){
+                        isTimeScale = false
+                    } else {
+                        temp.map((d) => d.key =  tempParse(d.key))
+                        isTimeScale = true
+                    }
                     tempMainData.current = temp
 
                     legendData = tempMainData?.current?.[0]?.traits
@@ -507,7 +583,7 @@
                     if(hasComparison){
                         let tempPast = JSON.parse(JSON.stringify(res.result.comparison))
                         tempPast = tempPast.slice(0, temp.length)
-                        tempPast.map((d) => d.key =  tempParse(d.key))
+                        isTimeScale && tempPast.map((d) => d.key =  tempParse(d.key))
                         tempMainData.comparison = tempPast
                     }
             }
@@ -541,6 +617,37 @@
         }
     }
 
+    const handleSave = () => {
+        let currentData  = JSON.parse(sessionStorage.getItem("customCharts"));
+        if(tabSelected == "funnels"){
+            if(prevBodyFunnel){
+                currentData.push({
+                    dataBody : prevBodyFunnel,
+                    otherParams: otherParamsFunnels
+                })
+                $toastMessage.type = "success";
+				$toastMessage.content = `Chart saved!`;
+            } else {
+                $toastMessage.type = "error";
+				$toastMessage.content = 'Chart parameters insufficent'
+            }
+        } else {
+            if(prevBody){
+                currentData.push({
+                    dataBody : prevBody,
+                    otherParams
+                })
+                $toastMessage.type = "success";
+				$toastMessage.content = `Chart saved!`;
+            } else {
+                $toastMessage.type = "error";
+				$toastMessage.content = 'Chart parameters insufficent'
+            }
+        }
+
+        sessionStorage.setItem("customCharts", JSON.stringify(currentData));
+    }
+
     $: tabSelected, handleChartType()
     $: dateRange, (dateRange?.start && dateRange?.end) && handleCustomDateRange()
     $: dataBody, dataBodyFunnel,  selectedDayIndexes, selectedComparisonIndexes, processData()
@@ -551,7 +658,7 @@
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
 
-    <div class="main">
+    <div class="main" on:click={() => handleCloseSideMenu()}>
         <div class="container">
             <!-- left -->
             <div class = "container-left">
@@ -585,6 +692,9 @@
                         <div class="layer-tab">
                             <Layer
                                 bind:dataBody = {dataBody}
+                                bind:selectedSideMenuLayerClose
+                                bind:selectedSideMenuLayer
+                                {handleCloseSideMenu}
                                 {dataBodyTracker},
                                 main = {{
                                     text: "Select Event",
@@ -617,7 +727,10 @@
                         <div class="layer-tab">
                             <Layer
                                 bind:dataBody = {dataBody}
-                                {dataBodyTracker},
+                                bind:selectedSideMenuLayerClose
+                                bind:selectedSideMenuLayer
+                                {dataBodyTracker}
+                                {handleCloseSideMenu}
                                 main = {{
                                     name: "filters",
                                     text: "Filters",
@@ -639,7 +752,10 @@
                         <div class="layer-tab">
                             <Layer
                                 bind:dataBody = {dataBody}
-                                {dataBodyTracker},
+                                {dataBodyTracker}
+                                bind:selectedSideMenuLayerClose
+                                bind:selectedSideMenuLayer
+                                {handleCloseSideMenu}
                                 main = {{
                                     text: "Breakdown",
                                     name: "breakdown",
@@ -678,7 +794,10 @@
                         <div class="layer-tab">
                             <Layer
                                 bind:dataBody = {dataBody}
-                                {dataBodyTracker},
+                                {dataBodyTracker}
+                                bind:selectedSideMenuLayerClose
+                                bind:selectedSideMenuLayer
+                                {handleCloseSideMenu}
                                 main = {{
                                     text: "Traits",
                                     name: "traits",
@@ -706,6 +825,9 @@
                             <Layer
                                 bind:dataBody = {dataBodyFunnel}
                                 dataBodyTracker = {dataBodyTrackerFunnel}
+                                bind:selectedSideMenuLayerClose
+                                bind:selectedSideMenuLayer
+                                {handleCloseSideMenu}
                                 main = {{
                                     name: "steps",
                                     text: "Steps",
@@ -741,6 +863,9 @@
                             <Layer
                                 bind:dataBody = {dataBodyFunnel}
                                 dataBodyTracker = {dataBodyTrackerFunnel}
+                                bind:selectedSideMenuLayerClose
+                                bind:selectedSideMenuLayer
+                                {handleCloseSideMenu}
                                 main = {{
                                     name: "filters",
                                     text: "Filters",
@@ -832,7 +957,8 @@
                         {/if}
                     </div>
                     <div class="right flex">
-                        <div class="cta-button primary">Save</div>
+                        <div class="cta-button secondary" on:click={() => handleModalClose()}>Close</div>
+                        <div class="cta-button primary" on:click={() =>  handleSave()}>Save</div>
                     </div>
                 </div>
 
@@ -840,40 +966,51 @@
                 <div class="content" bind:clientWidth={clientWidth} bind:clientHeight = {clientHeight}>
                     {#if tabSelected == "insights"}
                         {#if data && Object.keys(data).length > 0 }
-                            {#if type != "dropOff" && showLegend}
-                                <Legend
-                                    data = {legendData}
-                                    {colors}
-                                    {width}
-                                    {type}
-                                    {margin}
-                                    displayType = {type != "radial" ? "keyOnly" : "keyValue"}
-                                    {hasComparison}
-                                />
+                            {#if data.current.length < 1}
+                                <div class="spinner">
+                                    <p>Insufficient Data</p>
+                                </div>
+                            {:else}
+                            {#if  (type == "multiline" && data.current.length > 1 && showLegend)|| (type == "radial" && showLegend)}
+                            <Legend
+                                data = {legendData}
+                                {colors}
+                                {width}
+                                {type}
+                                {margin}
+                                displayType = {type != "radial" ? "keyOnly" : "keyValue"}
+                                {hasComparison}
+                            />
+                        {/if}
+                        {#if type.includes("line") || type.includes("drop")}
+                            <BarLine
+                                {data}
+                                {type}
+                                {width}
+                                {height}
+                                {strokeColor1}
+                                {strokeColor2}
+                                {isTimeScale}
+                                dataProperty = {Date.now()}
+                                headline = ""
+                                {margin}
+                                {hasComparison}
+                                {relatedBar}
+                            />
+                        {:else if  type.includes("radial")}
+                            <Radial
+                                {data}
+                                {type}
+                                {width}
+                                {height}
+                                {colors}
+                            />
+                        {/if}
                             {/if}
-                            {#if type.includes("line") || type.includes("drop")}
-                                <BarLine
-                                    {data}
-                                    {type}
-                                    {width}
-                                    {height}
-                                    {strokeColor1}
-                                    {strokeColor2}
-                                    dataProperty = {Date.now()}
-                                    headline = ""
-                                    {margin}
-                                    {hasComparison}
-                                    {relatedBar}
-                                />
-                            {:else if  type.includes("radial")}
-                                <Radial
-                                    {data}
-                                    {type}
-                                    {width}
-                                    {height}
-                                    {colors}
-                                />
-                            {/if}
+                        {:else if  resInsight}
+                            <div class="spinner">
+                                {@html spinner}
+                            </div>
                         {:else}
                             <div class="center">
                                 <svg width="400" height="200" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -891,6 +1028,7 @@
                                 <BarLine
                                     data = {dataFunnel}
                                     {type}
+                                    {chartType}
                                     {width}
                                     {height}
                                     {strokeColor1}
@@ -901,6 +1039,10 @@
                                     {hasComparison}
                                     {relatedBar}
                                 />
+                                {:else if  resFunnel && allowFetch}
+                            <div class="spinner">
+                                {@html spinner}
+                            </div>
                         {:else}
                             <div class="center">
                                 <svg width="400" height="200" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -924,6 +1066,14 @@
     </div>
 
 <style>
+    .spinner{
+        height: 100%;
+        width: 100%;
+        background: rgba(6, 11, 19, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
     .center span{
         font-size: 1.35rem;
     }
@@ -953,15 +1103,12 @@
         width: 100%;
         height: 100%;
         z-index: 6;
-        backdrop-filter: blur(5px);
     }
 
     .container{
-        width: 1240px;
-        max-height: 820px;
-        height: calc(100% - 120px);
+        max-width: 100% !important;
+        height: 100%;
         position: relative;
-        top: 80px;
         padding: 0px;
         background-color: #060B13;
         border-radius: 12px;
@@ -976,7 +1123,7 @@
     }
 
     .container-right{
-        width: 896px;
+        width: calc(100% - 364px);
         height: 100%;
         position: relative;
     }
@@ -986,7 +1133,7 @@
         gap: 24px;
         align-items: center;
         width: 100%;
-        padding: 24px 32px;
+        padding: 25px 32px;
         border-bottom: 1px solid #212830;
     }
  
