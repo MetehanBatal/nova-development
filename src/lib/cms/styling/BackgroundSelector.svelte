@@ -15,10 +15,11 @@
 
     function getProperties() {
         selectionChangeInProgress = true;
-        backgroundColorValue = $selectedInstance.styling?.['background-color'] ? $selectedInstance.styling['background-color'] : '';
         
         setTimeout(() =>{
             selectionChangeInProgress = false;
+
+            backgroundColorValue = $selectedInstance.styling?.['background-color'] ? $selectedInstance.styling['background-color'] : '';
         }, 120);
     }
 
@@ -47,20 +48,6 @@
 </div>
 
 <style>
-    .styling-group {
-        padding: 1rem;
-
-        border-bottom: .1rem solid #2e2e2e;
-    }
-
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        font-size: 1.4rem;
-    }
-
     .options {
         width: 100%;
         display: flex;

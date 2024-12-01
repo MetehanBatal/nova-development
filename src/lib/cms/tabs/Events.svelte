@@ -16,8 +16,6 @@
             const eventsRes = await eventsReq.json();
             
             $events = eventsRes.data.docs;
-
-            console.log($events, $pages);
         } catch (error) {
             console.error('Error fetching events:', error);
         }

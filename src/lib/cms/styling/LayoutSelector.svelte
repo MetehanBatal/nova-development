@@ -10,7 +10,7 @@
     import { onMount } from "svelte";
     import { instances } from "../../../stores/cms/instances";
 
-    let dropdownExpanded = true;
+    let dropdownExpanded = false;
 
     let layoutOptions = [
         {
@@ -43,10 +43,15 @@
 
     function getProperties() {
         selectionChangeInProgress = true;
-        selectedLayoutIndex = $selectedInstance.styling?.['display'] ? layoutOptions.findIndex((opt) => opt.value === $selectedInstance.styling['display']) : 0;
+        initialized = false;
         
         setTimeout(() =>{
-            selectionChangeInProgress = false;
+            selectedLayoutIndex = $selectedInstance.styling?.['display'] ? layoutOptions.findIndex((opt) => opt.value === $selectedInstance.styling['display']) : 0;
+            
+            setTimeout(() => {
+                selectionChangeInProgress = false;
+                initialized = true;
+            }, 120);
         }, 120);
     }
 
@@ -83,20 +88,6 @@
 </div>
 
 <style>
-    .styling-group {
-        padding: 1rem;
-
-        border-bottom: .1rem solid #2e2e2e;
-    }
-
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        font-size: 1.4rem;
-    }
-
     :global(.options .flex) {
         display: grid;
         grid-auto-flow: column;

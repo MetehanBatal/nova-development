@@ -121,30 +121,30 @@ const handleElementAppend = async function (event, overwrites) {
 
     // Find the current instance
     let currentInstance = currentInstances.find((i) => i.instanceId === id);
-    let prevInstanceId = overwrites?.parentId ? '' : currentInstance.nestedInstanceIds.length > 0 
-        ? currentInstance.nestedInstanceIds[currentInstance.nestedInstanceIds.length - 1] 
-        : '';
+    
+    let lastSiblingOrder = currentInstances.filter((i) => i.parentId === currentInstance.instanceId).sort((a,b) => a.order - b.order);
+        lastSiblingOrder = lastSiblingOrder[lastSiblingOrder.length - 1].order;
 
     let schema = {
         instanceId: overwrites?.instanceId || newInstanceId,
         pageId: currentInstance.pageId,
         componentId: currentInstance.componentId,
         nodeName: event.detail.nodeName,
-        prevInstanceId: prevInstanceId,
-        nextInstanceId: '',
         parentInstanceId: overwrites?.parentId || currentInstance.instanceId,
-        nestedInstanceIds: subsequentElementId || [],
         attributes: event.detail.attributes || [],
-        content: event.detail.content || ''
+        content: event.detail.content || '',
+        order: lastSiblingOrder + 1,
+        depth: currentInstance.depth + 1
     };
 
-    let sibling = currentInstances.find((i) => i.instanceId === prevInstanceId);
-    if (!overwrites) {
-        currentInstance.nestedInstanceIds.push(newInstanceId);
-    }
-    if (sibling && prevInstanceId.length > 0) {
-        sibling.nextInstanceId = newInstanceId;
-    }
+    // Find and update instances with order >= schema.order
+    const instancesToReorder = currentInstances.filter(
+        instance => instance.order >= schema.order && instance.instanceId !== schema.instanceId
+    );
+    
+    instancesToReorder.forEach(instance => {
+        instance.order += 1;
+    });
 
     // Add the new instance to the current instances array
     currentInstances.push(schema);
@@ -152,17 +152,28 @@ const handleElementAppend = async function (event, overwrites) {
     // Update the instances store with the new data
     instances.set([...currentInstances]);
 
-    let instancesToUpdate = [sibling, currentInstance, schema].filter(instance => instance !== undefined);
+    // Prepare instances for backend update with only necessary properties
+    const backendUpdates = [];
 
-    let newVisibleIds = drawInstances();
-    visibleIds.set(newVisibleIds);
-    computeOrders();
+    // Add schema with all fields
+    backendUpdates.push(schema);
+
+    // Add reordered instances with only instanceId and order
+    instancesToReorder.forEach(instance => {
+        backendUpdates.push({
+            instanceId: instance.instanceId,
+            order: instance.order
+        });
+    });
+
+    // let newVisibleIds = drawInstances();
+    // visibleIds.set(newVisibleIds);
 
     // Notify via postMessage
-    postMessage('elementAppended', { instances: currentInstances });
+    postMessage('elementAppended', { instance: schema });
 
-    // Upsert instances in the database
-    let updatedInstances = await dbActions(instancesToUpdate, 'instances', 'upsert');
+    // Upsert instances in the database with minimal data
+    let updatedInstances = await dbActions(backendUpdates, 'instances', 'upsert');
 
     // If there is a subsequent element, recursively append it
     if (subsequentElement) {
@@ -179,7 +190,7 @@ const getInstancesToDelete = (instanceId) => {
     if (!instance) return [];
 
     // Get all nested instances recursively
-    let nestedInstances = instance.nestedInstanceIds.flatMap(id => getInstancesToDelete(id));
+    let nestedInstances = currentInstances.filter((i) => i.parentInstanceId === instance.instanceId).map(({instanceId}) => instanceId).flatMap(id => getInstancesToDelete(id));
 
     return [instance, ...nestedInstances];
 }
@@ -201,42 +212,53 @@ const handleKeyDown = async function (event) {
 
         if (instancesToDelete.length === 0) return;
 
+        // Get the order of the first instance to be deleted
+        const deletedInstanceOrder = instancesToDelete[0].order;
+
+        // Find instances that need order updates (those with higher order than the deleted instance)
+        const instancesToReorder = currentInstances.filter(instance => 
+            instance.order > deletedInstanceOrder && 
+            !instancesToDelete.some(delInstance => delInstance.instanceId === instance.instanceId)
+        );
+
+        // Decrease order by the number of instances being deleted at their level
+        instancesToReorder.forEach(instance => {
+            instance.order -= 1;
+        });
+
         // Remove instances from the main instances array
-        currentInstances = currentInstances.filter(i => !instancesToDelete.some(delInstance => delInstance.instanceId === i.instanceId));
-
-        // Update parent and sibling relationships if necessary
-        let parentInstance = currentInstances.find(i => i.instanceId === instancesToDelete[0].parentInstanceId);
-        if (parentInstance) {
-            parentInstance.nestedInstanceIds = parentInstance.nestedInstanceIds.filter(id => id !== selectedInstanceId);
-        }
-
-        let prevInstance = currentInstances.find(i => i.instanceId === instancesToDelete[0].prevInstanceId);
-        let nextInstance = currentInstances.find(i => i.instanceId === instancesToDelete[0].nextInstanceId);
-        if (prevInstance) prevInstance.nextInstanceId = instancesToDelete[0].nextInstanceId;
-        if (nextInstance) nextInstance.prevInstanceId = instancesToDelete[0].prevInstanceId;
-
-        let instancesToUpdate = [parentInstance, prevInstance, nextInstance].filter(instance => instance !== undefined);
+        currentInstances = currentInstances.filter(i => 
+            !instancesToDelete.some(delInstance => delInstance.instanceId === i.instanceId)
+        );
+        
+        // Prepare minimal data for backend updates
+        const backendUpdates = [];
+        // Add reordered instances with only instanceId and order
+        instancesToReorder.forEach(instance => {
+            backendUpdates.push({
+                instanceId: instance.instanceId,
+                order: instance.order
+            });
+        });
 
         // Update the selectedInstance store (clearing its values)
-        selectedInstance.update(value => {
-            return {
-                instanceId: '',
-                componentId: '',
-                pageId: '',
-                nodeName: '',
-                breakpoint: 'desktop',
-                class: '',
-                styling: {},
-                attributes: {},
-                content: ''
-            };
-        });
+        selectedInstance.update(value => ({
+            instanceId: '',
+            componentId: '',
+            pageId: '',
+            nodeName: '',
+            breakpoint: 'desktop',
+            class: '',
+            styling: {},
+            attributes: {},
+            content: ''
+        }));
 
         // Update the writable store with the new instances array
         instances.set([...currentInstances]);
 
-        // Update the database for the deletion and sibling updates
-        await dbActions(instancesToUpdate, 'instances', 'upsert');
+        // Update the database for the relationship updates and reordering
+        await dbActions(backendUpdates, 'instances', 'upsert');
         await dbActions(instancesToDelete, 'instances', 'delete');
 
         // Notify the canvas
@@ -312,51 +334,82 @@ const alterStyling = () => {
     // Optionally, perform further actions with styleToUpload
 };
 
-// Function to inject class
 async function injectClass(data, classList, from) {
-    if (!data || data === 'undefined') {
-        return; }
-    // Add class name to instance within the store
-    let selectedInstanceToUpdate = currentInstances.find((i) => i.instanceId === selectedInstanceId);
+    // Early return for invalid data
+    if (!data || data === 'undefined') {
+        return;
+    }
 
-    if (selectedInstanceToUpdate) {
-        let hasClassAttr = selectedInstanceToUpdate.attributes.find((attr) => attr.name === 'class');
-        if (hasClassAttr && hasClassAttr.value.includes(data)) {
-            console.warn('Same class found.');
-            return; }
-        if (!hasClassAttr) {
-            selectedInstanceToUpdate.attributes.push({ name: 'class', value: data });
-        } else {
-            selectedInstanceToUpdate.attributes.find((attr) => attr.name === 'class').value += ` ${data}`;
-        }
+    console.log('Class inj.:', data, classList);
 
-        // Update the instances store after modifying the instance attributes
-        instances.set([...currentInstances]);
-        selectedInstanceClass = classList.length > 1 ? classList : data;
+    // Find the instance to update
+    const selectedInstanceToUpdate = currentInstances.find((i) => i.instanceId === selectedInstanceId);
+    if (!selectedInstanceToUpdate) {
+        return;
+    }
 
+    // Create merged class string
+    const mergedClasses = classList.length > 0 ? `${classList.join(' ')} ${data}` : data;
+
+    // Check if class already exists in the stylesheet
+    const classExistsInStylesheet = currentStyleSheet.some(style => 
+        style.name === mergedClasses
+    );
+
+    // Handle class attribute manipulation
+    const classAttr = selectedInstanceToUpdate.attributes.find(attr => attr.name === 'class');
+    
+    // If the class is already present on the element, return early
+    if (classAttr && classList.includes(data)) {
+        console.warn('Same class found.');
+        return;
+    }
+
+    // Update or add class attribute
+    if (!classAttr) {
+        selectedInstanceToUpdate.attributes.push({ name: 'class', value: mergedClasses });
+    } else if (classAttr.value !== mergedClasses) {
+        classAttr.value = mergedClasses;
+    }
+
+    // Update instances store
+    instances.set([...currentInstances]);
+    // Update the selectedInstance store
+    selectedInstance.update(current => ({
+        ...current,
+        attributes: selectedInstanceToUpdate.attributes,
+        class: mergedClasses,
+        styling: currentStyleSheet.find(attr => attr.name === data)?.attributes || {}
+    }));
+
+    selectedInstanceClass = mergedClasses;
+
+    // Only create and store CSS schema if the class doesn't exist in stylesheet
+    if (!classExistsInStylesheet) {
         const cssSchema = {
-            "name": classList.length > 1 ? classList : data,
+            name: mergedClasses,
             breakpoint: breakpoint,
-            "attributes": {},
-            "combos": [],
-            "type": "class"
+            attributes: {},
+            combos: [],
+            type: "class"
         };
 
-        // Initialize empty CSS data in styleSheet store
         currentStyleSheet.push(cssSchema);
-
-        // Update the styleSheet store with the new class
         styleSheet.set([...currentStyleSheet]);
 
-        // Update instance in DB
-        await dbActions(selectedInstanceToUpdate, 'instances', 'upsert');
-        
-        // Notify iframe about the change
-        postMessage('classChanged', { target: selectedInstanceId, className: data });
-
-        // Update the stylesheet in DB
+        // Update stylesheet in DB only if new class was added
         await dbActions(cssSchema, 'style', 'upsert');
     }
+
+    // Update instance in DB
+    await dbActions(selectedInstanceToUpdate, 'instances', 'upsert');
+
+    console.log('Class list: ', classList);
+    // Notify iframe about the change
+    postMessage('classChanged', { 
+        target: selectedInstanceId, 
+        className: mergedClasses
+    });
 }
 
 // Function to remove class
@@ -386,16 +439,23 @@ async function removeClass(classToRemove) {
             // Update the instances store
             instances.set([...currentInstances]);
 
+            // update the $selectedInstance 
+            selectedInstance.update(current => ({
+                ...current,
+                attributes: selectedInstanceToUpdate.attributes,
+                styling: currentStyleSheet.find((attr) => attr.name === classes.join(' '))?.attributes || {}
+            }));
+
             // Remove the class from styleSheet if it exists
-            styleSheet.update(sheet => {
-                return sheet.filter(style => style.name !== classToRemove);
-            });
+            // styleSheet.update(sheet => {
+            //     return sheet.filter(style => style.name !== classToRemove);
+            // });
 
             // Update instance in DB
             await dbActions(selectedInstanceToUpdate, 'instances', 'upsert');
 
             // Notify iframe about the change
-            postMessage('classChanged', { target: selectedInstanceId, className: classToRemove });
+            postMessage('classChanged', { target: selectedInstanceId, className: classes.join(' ') });
         }
     }
 }
@@ -404,6 +464,9 @@ async function removeClass(classToRemove) {
 const alterStylingProperty = async function (prop, value, from) {
     if (prop.length < 1 || value.length < 1) {
         return; }
+    
+    console.log('Selected Class: ', selectedInstanceClass, prop, value, from);
+    selectedInstanceClass = selectedInstanceClass.trim().replace(/\s+/g, ' ');
 
     // If the element is brand new and doesn't have a class
     if (selectedInstanceClass?.length < 1) {
@@ -417,6 +480,7 @@ const alterStylingProperty = async function (prop, value, from) {
 
     // Find matching CSS object within styleSheet and update its styling property
     let styleToUpdate = currentStyleSheet.find((ss) => ss.name === selectedInstanceClass && ss.breakpoint === breakpoint);
+    console.log(currentStyleSheet);
     if (styleToUpdate) {
         styleToUpdate.attributes[prop] = value;
 
@@ -428,9 +492,13 @@ const alterStylingProperty = async function (prop, value, from) {
         // Update the stylesheet in DB
         await dbActions(styleToUpdate, 'style', 'upsert');
     } else {
-        await injectClass(selectedInstanceClass, [], 'second alter');
-
+        console.log('Else');
+        if (selectedInstanceClass?.length < 1) {
+            await injectClass(selectedInstanceClass, [], 'second alter');
+        }
+        
         let diffBreakpoint = currentStyleSheet.find((ss) => ss.name === selectedInstanceClass && ss.breakpoint === breakpoint);
+        console.log('diff b: ', diffBreakpoint);
         if (diffBreakpoint) {
             diffBreakpoint.attributes[prop] = value;
 
@@ -444,7 +512,13 @@ const alterStylingProperty = async function (prop, value, from) {
         }
     }
 
-    
+    // update the $selectedInstance 
+    selectedInstance.update(current => ({
+        ...current,
+        styling: currentStyleSheet.find((attr) => attr.name === selectedInstanceClass)?.attributes || {}
+    }));
+
+    console.log('SSS: ', currentStyleSheet.find((attr) => attr.name === selectedInstanceClass)?.attributes)
 };
 
 const alterContent = async function (value) {
@@ -471,121 +545,28 @@ const postMessage = (action, data) => {
 
 // Draw Instances function
 const drawInstances = () => {
-    // Subscribe to get the current value of instances
-    let currentInstances;
-    instances.subscribe(value => {
-        currentInstances = value;
-    })();
-
-    // Step 1: Create a map for quick lookup
-    instanceMap = new Map();
-    currentInstances.forEach(instance => {
-        instanceMap.set(instance.instanceId, instance);
-    });
-
-    console.log('C: ', currentInstances);
-
     // Step 3: Compute depth for each instance and add it as a property
-    const updatedInstances = currentInstances.map(instance => {
-        const { instanceId, ...rest } = instance;
-
-        return {
-            ...rest,
-            instanceId,
-            id: instanceId,
-            depth: computeDepth(instance)
-        }
-    });
-
-    console.log('U: ', updatedInstances);
-
     // Step 4: Initialize visibleIds with root elements (depth === 1)
-    dVisibleIds = updatedInstances
-        .filter(instance => instance.depth === 1)
+    console.log(currentInstances);
+    dVisibleIds = currentInstances
+        .filter(instance => instance.depth < 2)
         .map(instance => instance.instanceId)
-    
-    console.log(dVisibleIds);
 
     // Update the store with the new instances array
-    instances.set(updatedInstances);
+    visibleIds.set(dVisibleIds);
 
     return dVisibleIds;
 }
 
 
-// Step 2: Function to compute depth (starting at 1 for root elements)
-const computeDepth = (instance) => {
-    let depth = 1; // Root elements start at depth 1
-    let current = instance;
-    while (current.parentInstanceId && instanceMap.has(current.parentInstanceId)) {
-        depth += 1;
-        current = instanceMap.get(current.parentInstanceId);
-    }
-    return depth;
-}
-
-const computeOrders = () => {
-    let order = 0;
-
-    // Get the current value of the `instances` store
-    let currentInstances;
-    instances.subscribe(value => {
-        currentInstances = value;
-    })();
-
-    // Filter top-level instances
-    let topLevelInstances = dCMSMode !== 'component' ?
-                                    currentInstances.filter((i) => i.parentInstanceId === 'BODY') :
-                                    currentInstances.filter(instance => !currentInstances.some(potential => potential.instanceId === instance.parentInstanceId));
-    
-    // Assign order to top-level instances and their children
-    topLevelInstances.forEach((tInstance) => {
-        assignOrder(tInstance, currentInstances);  // Make sure `assignOrder` works with currentInstances
-    });
-
-    console.log('Current Instances: ', currentInstances);
-
-    // Sort instances by their `order` property
-    const sortedInstances = currentInstances.sort((a, b) => a.order - b.order);
-
-    // Update the store with the sorted instances
-    instances.set(sortedInstances);
-
-    console.log('Current Instances: ', sortedInstances);
-};
-
-const assignOrder = (instance, currentInstances) => {
-    order += 1;
-    instance.order = order;
-
-    // If the instance has nestedInstanceIds, recursively assign order to each child instance
-    if (instance.nestedInstanceIds && instance.nestedInstanceIds.length > 0) {
-        instance.nestedInstanceIds.forEach((nId) => {
-            let childInstance = '';
-            console.log(nId, nId.startsWith('c-'));
-            if (nId.startsWith('c-')) {
-                childInstance = currentInstances.filter((inst) => inst.componentId === nId && inst.parentInstanceId === instance.instanceId)[0];
-            } else {
-                childInstance = currentInstances.find((inst) => inst.instanceId === nId);
-            }
-
-            console.log('Child Instance: ', childInstance);
-            
-            if (childInstance) {
-                assignOrder(childInstance, currentInstances); // Recursively assign order to child
-            }
-        });
-    }
-};
-
 // Step 5: Function to get all descendant IDs of a given ID
 function getDescendantIds(id) {
     let descendants = [];
-    const instance = instanceMap.get(id);
-    if (instance && Array.isArray(instance.nestedInstanceIds)) {
-        instance.nestedInstanceIds.forEach(childId => {
-            descendants.push(childId);
-            descendants = descendants.concat(getDescendantIds(childId));
+    const instance = currentInstances.find((ins) => ins.instanceId === id);
+    if (instance) {
+        currentInstances.filter((i) => i.parentInstanceId === instance.instanceId).forEach(({instanceId}) => {
+            descendants.push(instanceId);
+            descendants = descendants.concat(getDescendantIds(instanceId));
         });
     }
 
@@ -594,13 +575,15 @@ function getDescendantIds(id) {
 
 // Step 6: Function to toggle expansion
 function toggleExpand(id) {
-    const instance = instanceMap.get(id);
+    const instance = currentInstances.find((ins) => ins.instanceId === id);
     if (!instance) return;
 
-    // Determine if the element is currently expanded by checking if any children are visible
-    const isExpanded = instance.nestedInstanceIds.some(childId => dVisibleIds.includes(childId));
+    let children = currentInstances.filter((i) => i.parentInstanceId === instance.instanceId);
 
-    console.log('exp: ', isExpanded);
+    // Determine if the element is currently expanded by checking if any children are visible
+    const isExpanded = children.some(({instanceId}) => dVisibleIds.includes(instanceId));
+
+    console.log(dVisibleIds, isExpanded);
 
     if (isExpanded) {
         // Collapse: Remove all descendants
@@ -608,13 +591,72 @@ function toggleExpand(id) {
         dVisibleIds = dVisibleIds.filter(vid => !descendants.includes(vid));
     } else {
         // Expand: Add direct children
-        if (instance.nestedInstanceIds && instance.nestedInstanceIds.length > 0) {
-            console.log(instance.nestedInstanceIds);
-            dVisibleIds = [...dVisibleIds, ...instance.nestedInstanceIds];
+        if (currentInstances.some((i) => i.parentInstanceId === instance.instanceId)) {
+            let childrenIds = children.map(({instanceId}) => instanceId);
+            console.log(childrenIds);
+            dVisibleIds = [...dVisibleIds, ...childrenIds];
+            console.log(children, dVisibleIds);
         }
     }
 
+    visibleIds.set(dVisibleIds);
+
     return dVisibleIds;
+}
+
+function toggleInstances(instanceIdToFind) {
+    let instancesToBeVisible = [];
+    // Helper function to find instance by ID
+    function findInstanceById(instanceId) {
+        return currentInstances.find(instance => instance.instanceId === instanceId);
+    }
+
+    // Helper function to traverse up the parent chain
+    function traverseUpwards(startingInstance) {
+        let currentInstance = startingInstance;
+
+        while (currentInstance) {
+            // If we found a visible ID, we can stop traversing
+            if (dVisibleIds.includes(currentInstance.instanceId)) {
+                return true;
+            }
+
+            // Find the parent instance
+            const parentInstance = findInstanceById(currentInstance.parentInstanceId);
+            
+            // If parent exists and has nested instances, add them to visible array
+            if (currentInstances.filter((i) => i.parentInstanceId === parentInstance.instanceId)?.length) {
+                currentInstances.filter((i) => i.parentInstanceId === parentInstance.instanceId).forEach(({instanceId}) => {
+                    instancesToBeVisible.push(instanceId);
+                });
+            }
+
+            // Move up to the parent
+            currentInstance = parentInstance;
+        }
+
+        return false; // No visible ID found in the chain
+    }
+
+    // Find the starting instance
+    const targetInstance = findInstanceById(instanceIdToFind);
+    
+    // If instance not found, return false
+    if (!targetInstance) {
+        return false;
+    }
+
+    // Start traversing up from the target instance
+    const found = traverseUpwards(targetInstance);
+    
+    // If we found a visible parent, update the visibleIds set
+    if (found) {
+        visibleIds.set([...instancesToBeVisible, ...dVisibleIds]);
+
+        console.log(instancesToBeVisible, dVisibleIds);
+    }
+
+    return found;
 }
 
 function changeSelection(event, instanceId) {
@@ -622,9 +664,13 @@ function changeSelection(event, instanceId) {
         return; }
 
     page.subscribe((value) => pageData = value);
+
+    // Find selected instance
     let instance = currentInstances.find((ins) => ins.instanceId === instanceId);
 
-    let styleSheet = pageData.data.stylesRes.data.docs || [];
+    // get the current stylings
+    // and the selected instance's class name
+    let styleSheet = pageData.data.stylesRes?.data?.docs || [];
         selectedInstanceClass = instance.attributes.find((attr) => attr.name === 'class')?.value || '';
     
     // $blockerInProgress = true;
@@ -651,16 +697,19 @@ const alterTagName = async function(instanceId, value) {
     instances.set([...currentInstances]);
 
     // Notify via postMessage
-    postMessage('elementAppended', { instances: currentInstances });
+    postMessage('elementTagChanged', { instanceId: currentInstance.instanceId, nodeName: value });
+
+    // update the $selectedInstance 
+    selectedInstance.update(current => ({
+        ...current,
+        nodeName: value
+    }));
 
     // Upsert instances in the database
     let updatedInstance = await dbActions(currentInstance, 'instances', 'upsert');
 }
 
 const alterAttribute = async function(attr, value) {
-    if (!value) {
-        return; }
-
     let currentInstance = currentInstances.find((i) => i.instanceId === selectedInstanceId);
 
     // Find the index of the attribute with the given name
@@ -678,8 +727,42 @@ const alterAttribute = async function(attr, value) {
 
     instances.set([...currentInstances]);
 
+    // update the $selectedInstance 
+    selectedInstance.update(current => ({
+        ...current,
+        attributes: currentInstance.attributes || []
+    }));
+
     // Notify via postMessage
-    postMessage('elementAppended', { instances: currentInstances });
+    postMessage('elementAttributeAdded', { instanceId: currentInstance.instanceId, attribute: {name: attr,value: value} });
+
+    // Upsert instances in the database
+    let updatedInstance = await dbActions(currentInstance, 'instances', 'upsert');
+}
+
+const deleteAttribute = async function(attr) {
+    if (!attr) {
+        return; }
+
+    let currentInstance = currentInstances.find((i) => i.instanceId === selectedInstanceId);
+
+    // Find the index of the attribute with the given name
+    const index = currentInstance.attributes.findIndex(a => a.name === attr);
+    if (index !== -1) {
+        // Remove the attribute at the found index
+        currentInstance.attributes.splice(index, 1);
+    }
+
+    instances.set([...currentInstances]);
+
+    // update the $selectedInstance 
+    selectedInstance.update(current => ({
+        ...current,
+        attributes: currentInstance.attributes || []
+    }));
+
+    // Notify via postMessage
+    postMessage('elementAttributeRemoved', { instanceId: currentInstance.instanceId, attribute: {name: attr} });
 
     // Upsert instances in the database
     let updatedInstance = await dbActions(currentInstance, 'instances', 'upsert');
@@ -692,16 +775,17 @@ export {
     handleKeyDown,
     postMessage,
     drawInstances,
-    computeOrders,
     toggleExpand,
     changeSelection,
     alterStylingProperty,
     alterTagName,
     alterAttribute,
+    deleteAttribute,
     alterContent,
     dbActions,
     injectClass,
     removeClass,
+    toggleInstances,
     generateRandomString,
     generateRandomNumber
 }

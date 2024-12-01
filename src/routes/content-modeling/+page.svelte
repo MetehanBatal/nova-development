@@ -10,7 +10,7 @@
     import { cmsMode } from '../../stores/cms/cmsMode';
 
     import { nodeTags } from '../../stores/cms/nodeTags';
-    import { handleElementAppend, handleKeyDown, postMessage, dbActions } from '../../stores/cms/functions';
+    import { handleElementAppend, handleKeyDown, postMessage, dbActions, toggleInstances } from '../../stores/cms/functions';
 
     import NavbarModule from '$lib/cms/Navbar.svelte';
     import Navigator from '$lib/cms/Navigator.svelte';
@@ -26,8 +26,8 @@
     const settingsAvailableTags = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P', 'A', 'BUTTON', 'FORM', 'IMG', 'VIDEO']
 
     $pages.pages = data.pagesRes.data.docs || [];
-    let components = data.componentsRes.data.docs || [];
-    $styleSheet = data.stylesRes.data.docs || [];
+    let components = data.componentsRes.data?.docs || [];
+    $styleSheet = data.stylesRes.data?.docs || [];
 
     let innerWidth;
     let innerHeight;
@@ -35,8 +35,6 @@
     let canvas;
     let canvasWidth;
     let canvasHeight = null;
-
-    console.log('STYLESHEET: ', $styleSheet);
 
     let baseFrameURL = dev ? 'http://localhost:5174' : 'https://preview-preconvert.vercel.app';
 
@@ -98,6 +96,7 @@
                     $selectedInstance.class = instance.attributes.find((attr) => attr.name === 'class')?.value || '';
                     $selectedInstance.styling = $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === $selectedBreakpoint)?.attributes || {};
                     $selectedInstance.content = instance.content;
+                    toggleInstances(selectedElementDetails.id);
                 }
             }
 
@@ -131,12 +130,6 @@
         };
     })
 
-    function iframeLoaded() {
-        initialized = true;
-
-        postMessage('initialization', {page: $pages.pages[$pages.selectedPageIndex], components, instances: $instances, styleSheet: $styleSheet});
-    }
-
     function checkInstanceDetails() {
         if (initialized && $selectedInstance.instanceId.length < 1) {
             selectedElementDetails = {};
@@ -144,7 +137,6 @@
     }
 
     $: $selectedInstance, checkInstanceDetails();
-    $: $cmsMode, console.log('CMS M: ', $cmsMode);
 </script>
 
 <svelte:window bind:innerWidth={innerWidth} bind:innerHeight={innerHeight}></svelte:window>
@@ -164,7 +156,7 @@
         <iframe
             bind:this={canvas}
             style={`height: ${$cmsMode === 'component' ? canvasHeight ? `${canvasHeight}px` : 'auto' : `${innerHeight - 64}px`}; width: ${$selectedBreakpoint === 'tablet' ? '768px' : $selectedBreakpoint === 'mobile' ? '468px' : '100%'}`}
-            src={`${baseFrameURL}/preview?editMode=true`}
+            src={`${baseFrameURL}/preview?editMode=true&pageId=${$pages.pages[$pages.selectedPageIndex].pageId}`}
             frameborder="0"
             title="Main frame"
         ></iframe>
@@ -255,6 +247,8 @@
 
     .iframe-controller {
         position: absolute;
+
+        overflow: hidden;
 
         pointer-events: none;
     }

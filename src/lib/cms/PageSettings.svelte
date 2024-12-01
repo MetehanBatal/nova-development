@@ -76,10 +76,7 @@
                 ...instance,
                 instanceId: newId,
                 pageId: selectedPage.pageId,
-                nextInstanceId: idMap.get(instance.nextInstanceId) || instance.nextInstanceId,
-                prevInstanceId: idMap.get(instance.prevInstanceId) || instance.prevInstanceId,
-                parentInstanceId: idMap.get(instance.parentInstanceId) || instance.parentInstanceId,
-                nestedInstanceIds: instance.nestedInstanceIds.map(id => idMap.get(id) || id)
+                parentInstanceId: idMap.get(instance.parentInstanceId) || instance.parentInstanceId
             };
         });
     }
@@ -87,20 +84,13 @@
     async function handleSave() {
         let pageUpdate = await dbActions(selectedPage, 'pages', 'upsert');
 
-        console.log(pageUpdate, selectedPage);
-
         if (pageUpdate.status === 200) {
             $pages.pages = [...$pages.pages, selectedPage];
-
-            console.log($pages);
             
             if (duplicatedPage) {
                 let duplicatedArray = duplicateInstanceArray($instances);
-                console.log(duplicatedArray, $instances);
 
                 let updatedInstances = await dbActions(duplicatedArray, 'instances', 'upsert');
-
-                console.log(updatedInstances);
 
                 if (updatedInstances.status === 200) {
                     $toastMessage = {
@@ -115,8 +105,6 @@
     }
 
     function duplicatePage() {
-        console.log(selectedPage);
-
         selectedPage.pageName += ' Copy';
         selectedPage.slug += '-copy';
         selectedPage.pageId = generateRandomString();

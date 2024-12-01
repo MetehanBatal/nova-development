@@ -25,16 +25,18 @@
 
     function getProperties() {
         selectionChangeInProgress = true;
-        marginTopValue = $selectedInstance.styling?.['margin-top'] ? $selectedInstance.styling['margin-top'] : '';
-		marginLeftValue = $selectedInstance.styling?.['margin-left'] ? $selectedInstance.styling['margin-left'] : '';
-		marginRightValue = $selectedInstance.styling?.['margin-right'] ? $selectedInstance.styling['margin-right'] : '';
-		marginBottomValue = $selectedInstance.styling?.['margin-bottom'] ? $selectedInstance.styling['margin-bottom'] : '';
-		paddingTopValue = $selectedInstance.styling?.['padding-top'] ? $selectedInstance.styling['padding-top'] : '';
-		paddingLeftValue = $selectedInstance.styling?.['padding-left'] ? $selectedInstance.styling['padding-left'] : '';
-		paddingRightValue = $selectedInstance.styling?.['padding-right'] ? $selectedInstance.styling['padding-right'] : '';
-		paddingBottomValue = $selectedInstance.styling?.['padding-bottom'] ? $selectedInstance.styling['padding-bottom'] : '';
         
         setTimeout(() =>{
+			marginTopValue = $selectedInstance.styling?.['margin-top'] ? $selectedInstance.styling['margin-top'] : '';
+			marginLeftValue = $selectedInstance.styling?.['margin-left'] ? $selectedInstance.styling['margin-left'] : '';
+			marginRightValue = $selectedInstance.styling?.['margin-right'] ? $selectedInstance.styling['margin-right'] : '';
+			marginBottomValue = $selectedInstance.styling?.['margin-bottom'] ? $selectedInstance.styling['margin-bottom'] : '';
+			/* ********************** */
+			paddingTopValue = $selectedInstance.styling?.['padding-top'] ? $selectedInstance.styling['padding-top'] : '';
+			paddingLeftValue = $selectedInstance.styling?.['padding-left'] ? $selectedInstance.styling['padding-left'] : '';
+			paddingRightValue = $selectedInstance.styling?.['padding-right'] ? $selectedInstance.styling['padding-right'] : '';
+			paddingBottomValue = $selectedInstance.styling?.['padding-bottom'] ? $selectedInstance.styling['padding-bottom'] : '';
+
             selectionChangeInProgress = false;
         }, 120);
     }
@@ -107,12 +109,6 @@
 </div>
 
 <style>
-    .styling-group {
-        padding: 1rem;
-
-        border-bottom: .1rem solid #2e2e2e;
-    }
-
     .header {
         display: flex;
         justify-content: space-between;

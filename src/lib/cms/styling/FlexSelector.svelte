@@ -34,11 +34,11 @@
     let flexDirectionOptions = [
         {
             icon: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.2929 7.00004L9.14645 3.85359L9.85355 3.14648L14.2071 7.50004L9.85355 11.8536L9.14645 11.1465L12.2929 8.00004H3V7.00004H12.2929Z" fill="currentColor"></path></svg>',
-            value: 'column'
+            value: 'row'
         },
         {
             icon: '<svg  width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.00001 12.2929L4.85356 9.14645L4.14645 9.85355L8.50001 14.2071L12.8536 9.85355L12.1465 9.14645L9.00001 12.2929L9.00001 3H8.00001L8.00001 12.2929Z" fill="currentColor"></path></svg>',
-            value: 'row'
+            value: 'column'
         }
     ];
     let selectedFlexDirectionIndex = 0;
@@ -100,13 +100,14 @@
 
     function getProperties() {
         selectionChangeInProgress = true;
-        selectedFlexDirectionIndex = $selectedInstance.styling?.['flex-direction'] ? flexDirectionOptions.findIndex((opt) => opt.value === $selectedInstance.styling['flex-direction']) : 0;
-        selectedJustifyContentOptionIndex = $selectedInstance.styling?.['justify-content'] ? justifyContentOptions.findIndex((opt) => opt.value === $selectedInstance.styling['justify-content']) : 0;
-        selectedAlignItemsOptionIndex = $selectedInstance.styling?.['align-items'] ? alignItemsOptions.findIndex((opt) => opt.value === $selectedInstance.styling['align-items']) : 0;
-        gapRowValue = $selectedInstance.styling?.['gap-row'] ? $selectedInstance.styling['gap-row'] : '';
-        gapColumnValue = $selectedInstance.styling?.['gap-column'] ? $selectedInstance.styling['gap-column'] : '';
         
         setTimeout(() =>{
+            selectedFlexDirectionIndex = $selectedInstance.styling?.['flex-direction'] ? flexDirectionOptions.findIndex((opt) => opt.value === $selectedInstance.styling['flex-direction']) : 0;
+            selectedJustifyContentOptionIndex = $selectedInstance.styling?.['justify-content'] ? justifyContentOptions.findIndex((opt) => opt.value === $selectedInstance.styling['justify-content']) : 0;
+            selectedAlignItemsOptionIndex = $selectedInstance.styling?.['align-items'] ? alignItemsOptions.findIndex((opt) => opt.value === $selectedInstance.styling['align-items']) : 0;
+            gapRowValue = $selectedInstance.styling?.['gap-row'] ? $selectedInstance.styling['gap-row'] : '';
+            gapColumnValue = $selectedInstance.styling?.['gap-column'] ? $selectedInstance.styling['gap-column'] : '';
+
             selectionChangeInProgress = false;
         }, 120);
     }

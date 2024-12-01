@@ -10,6 +10,7 @@
     import { selectedInstance } from "../../../stores/cms/selectedInstance";
 	import { alterStylingProperty } from '../../../stores/cms/functions';
 
+    import Dropdown from "$lib/toolkit/Dropdown.svelte";
 	import { onMount } from "svelte";
 
 	let initialized = false;
@@ -26,6 +27,35 @@
     let selectedMaxHeightValue = '';
     let selectedMinWidthValue = '';
     let selectedMaxWidthValue = '';
+    // ***************** //
+    let fillOptions = [
+        {
+            name: 'Fill',
+            value: 'fill',
+            index: 0
+        },
+        {
+            name: 'Contain',
+            value: 'contain',
+            index: 1
+        },
+        {
+            name: 'Cover',
+            value: 'cover',
+            index: 2
+        },
+        {
+            name: 'None',
+            value: 'none',
+            index: 3
+        },
+        {
+            name: 'Scale Down',
+            value: 'scale-down',
+            index: 4
+        }
+    ];
+    let selectedFillIndex = 0;
 
     function getProperties() {
         selectionChangeInProgress = true;
@@ -41,11 +71,18 @@
         }, 120);
     }
 
+    function handleFillChange() {
+        if (initialized && !selectionChangeInProgress) {
+            alterStylingProperty('object-fit', fillOptions[selectedFillIndex].value);
+        }
+    }
+
 	function handleStylingChange(target) {
         alterStylingProperty(target.getAttribute('name'), target.value);
     }
 
 	$: $selectedInstance.instanceId, getProperties();
+    $: selectedFillIndex, handleFillChange();
 </script>
 
 <div class="styling-group">
@@ -83,17 +120,19 @@
                 <label for="max-width">Max W</label>
                 <input type="text" name="max-width" bind:value={selectedMaxWidthValue} on:blur={(e) => { handleStylingChange(e.target)}} />
             </div>
+
+            {#if $selectedInstance.nodeName === 'IMG'}
+            <div class="options">
+                <p>Fill</p>
+                
+                <Dropdown options={fillOptions} bind:selectedStatusIndex={selectedFillIndex} />
+            </div>
+            {/if}
         </div>
     {/if}
 </div>
 
 <style>
-    .styling-group {
-        padding: 1rem;
-
-        border-bottom: .1rem solid #2e2e2e;
-    }
-
     .header {
         display: flex;
         justify-content: space-between;

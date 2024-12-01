@@ -7,7 +7,7 @@
     import { styleSheet } from '../../../stores/cms/styleSheet';
     import { nodeTags } from '../../../stores/cms/nodeTags';
     import { visibleIds } from '../../../stores/cms/visibleIds';
-    import { changeSelection, toggleExpand, postMessage, computeOrders, drawInstances } from '../../../stores/cms/functions';
+    import { changeSelection, toggleExpand, postMessage } from '../../../stores/cms/functions';
     import { onMount } from 'svelte';
 
     let selectedComponent = {};
@@ -17,10 +17,10 @@
         // Fetch components
         //
         try {
-            const componentsReq = await fetch(`https://preconvert.novus.studio/staging/components/view?limit=100&offset=0`);
+            const componentsReq = await fetch(`http://localhost:3030/staging/components/view?limit=100&offset=0`);
             const componentsRes = await componentsReq.json();
             
-            $components = componentsRes.data.docs;
+            $components = componentsRes.data?.docs || [];
         } catch (error) {
             console.error('Error fetching components:', error);
         }
@@ -30,23 +30,16 @@
         if (!layerInitReady) {
             return; }
 
-        $visibleIds = drawInstances();
-        computeOrders();
-
         postMessage('initialization', {page: {pageId: 'component'}, components: [selectedComponent], instances: $instances.filter((i) => i.variantId === $variants.selectedVariantId), styleSheet: $styleSheet});
     }
 
     async function focusOnComponent(component) {
-        console.log($cmsMode);
-
         try {
             const compInstancesReq = await fetch(`http://localhost:3030/staging/instances/view?componentId=${component.componentId}`);
             const compInstancesRes = await compInstancesReq.json();
 
             const compVariantsReq = await fetch(`http://localhost:3030/staging/variants/view?componentId=${component.componentId}`);
             const compVariantsRes = await compVariantsReq.json();
-
-            console.log(compVariantsRes);
             
             selectedComponent = component;
             $instances = compInstancesRes.data.instances;

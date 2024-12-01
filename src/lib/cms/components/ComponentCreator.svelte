@@ -3,18 +3,20 @@
     import { pages } from '../../../stores/cms/pages';
     import { selectedInstance } from '../../../stores/cms/selectedInstance';
     import { instances } from '../../../stores/cms/instances';
+  import { toastMessage } from "../../../stores/toast";
 
     let componentMenuRevealed = false;
     let componentName = '';
 
     let newComponentId = `c-${generateRandomString()}`;
     let newVariantId = `v-${generateRandomString()}`;
-    let currentInstance = $instances.find((ins) => ins.instanceId === $selectedInstance.instanceId);
+    let currentInstance;
+    $: $selectedInstance.instanceId, currentInstance = $instances.find((ins) => ins.instanceId === $selectedInstance.instanceId);
 
     let instancesToUpdate = [];
     function updateChildInstances(topInstance, id) {
         topInstance.nestedInstanceIds.forEach((ins) => {
-            let child = $instances.find((i) => i.instanceId === ins.instanceId);
+            let child = $instances.find((i) => i.instanceId === ins);
             child.componentId = newComponentId;
 
             instancesToUpdate.push(child);
@@ -26,16 +28,14 @@
     }
 
     async function saveComponent() {
-        console.log('Current Instance: ', currentInstance);
-
         let schema = {
             componentId: newComponentId,
             name: componentName,
             occurrences: [
                 {
                     pageId: $pages.pages[$pages.selectedPageIndex].pageId,
-                    prevInstanceId: currentInstance.prevInstanceId,
-                    nextInstanceId: currentInstance.nextInstanceId,
+                    order: currentInstance.order,
+                    depth: currentInstance.depth,
                     parentInstanceId: currentInstance.parentInstanceId,
                     defaultVariantId: newVariantId
                 }
@@ -46,8 +46,8 @@
         };
 
         currentInstance.componentId = newComponentId;
-        currentInstance.pageId = 'component';
         currentInstance.variantId = newVariantId;
+        currentInstance.nodeName = 'COMPONENT';
 
         updateChildInstances(currentInstance, newComponentId);
 
@@ -90,7 +90,10 @@
         let updatedComponent = await dbActions(schema, 'components', 'upsert');
         let updatedVariant = await dbActions(variantSchema, 'variants', 'upsert');
 
-        console.log(updatedInstances, updatedComponent, updatedVariant);
+        $toastMessage = {
+            type: 'success',
+            content: 'Component created!'
+        }
     }
 </script>
 
@@ -120,6 +123,8 @@
 
         width: 3.2rem;
         height: 3.2rem;
+
+        margin-left: auto;
 
         border-radius: .4rem;
 

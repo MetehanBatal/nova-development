@@ -199,12 +199,6 @@
 </div>
 
 <style>
-    .styling-group {
-        padding: 1rem;
-
-        border-bottom: .1rem solid #2e2e2e;
-    }
-
     .header {
         display: flex;
         justify-content: space-between;

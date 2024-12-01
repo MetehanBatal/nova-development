@@ -28,6 +28,11 @@ export const nodeTags = [
         icon: '<svg data-wf-icon="ElementImageIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 7C6.55228 7 7 6.55228 7 6C7 5.44772 6.55228 5 6 5C5.44772 5 5 5.44772 5 6C5 6.55228 5.44772 7 6 7Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M2 3C2 2.44772 2.44772 2 3 2H13C13.5523 2 14 2.44772 14 3V13C14 13.5523 13.5523 14 13 14H3C2.44772 14 2 13.5523 2 13V3ZM13 3L3 3V12.2929L8 7.29289L13 12.2929V3ZM8 8.70711L12.2929 13H3.70711L8 8.70711Z" fill="currentColor"></path></svg>'
     },
 
+    {
+        name: 'CUSTOM',
+        icon: '<svg data-wf-icon="ElementEmbedIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 3C2 2.44772 2.44772 2 3 2H13C13.5523 2 14 2.44772 14 3V13C14 13.5523 13.5523 14 13 14H3C2.44772 14 2 13.5523 2 13V3ZM3 13V3H13V13H3ZM8.26565 4.5H9.29004L7.73458 11.5H6.71018L8.26565 4.5ZM5.20711 8L6.35355 6.85355L5.64645 6.14645L4.14645 7.64645L3.79289 8L4.14645 8.35355L5.64645 9.85355L6.35355 9.14645L5.20711 8ZM10.3536 6.14645L11.8536 7.64645L12.2071 8L11.8536 8.35355L10.3536 9.85355L9.64645 9.14645L10.7929 8L9.64645 6.85355L10.3536 6.14645Z" fill="currentColor"></path></svg>'
+    },
+
     // Typography
     {
         name: 'H1',
@@ -84,5 +89,11 @@ export const nodeTags = [
     {
         name: 'LI',
         icon: '<svg data-wf-icon="ElementListItemIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path opacity="0.4" d="M6 3.5H14" stroke="currentColor"></path><path d="M6 7.5H14" stroke="currentColor"></path><path opacity="0.4" d="M6 11.5H14" stroke="currentColor"></path><rect opacity="0.4" x="2.5" y="10.5" width="2" height="2" rx="0.5" fill="currentColor"></rect><rect x="2.5" y="6.5" width="2" height="2" rx="0.5" fill="currentColor"></rect><rect opacity="0.4" x="2.5" y="2.5" width="2" height="2" rx="0.5" fill="currentColor"></rect></svg>'
+    },
+
+    // FORM
+    {
+        name: 'LABEL',
+        icon: '<svg data-wf-icon="ElementSpanIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 5H11.5V4H4.5V5H7.5V12H8.5V5Z" fill="currentColor"></path></svg>'
     }
 ]

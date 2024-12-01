@@ -361,7 +361,7 @@
 
         position: relative;
 
-        padding: .4rem 2.4rem;
+        padding: .65rem 2.4rem;
 
         cursor: pointer;
 
@@ -381,7 +381,7 @@
         justify-content: center;
         align-items: center;
 
-        width: 1.6rem;
+        min-width: 1.6rem;
         height: 1.6rem;
 
         padding: 0;
@@ -392,17 +392,19 @@
         line-height: 1.8rem;
         text-transform: capitalize;
         transform: translateY(.05rem);
+        white-space: nowrap;
     }
 
     :global(.depth) {
         position: relative;
 
-        width: 2rem;
+        min-width: 2rem;
+        height: 1.8rem;
     }
 
     :global(.depth::after) {
         position: absolute;
-        top: -.4rem;
+        top: -.65rem;
         bottom: 0;
         left: 35%;
 
@@ -412,7 +414,7 @@
         opacity: 0;
 
         width: .1rem;
-        height: calc(100% + .8rem);
+        height: calc(100% + 1.3rem);
         
         background: rgba( 230, 230, 230, .2 );
     }

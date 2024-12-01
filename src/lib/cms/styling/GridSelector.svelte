@@ -56,7 +56,7 @@
 
     /* ********************** */
 
-    let alignContentOptions = [
+    let alignItemsOptions = [
         {
             icon : `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 3L11 3V5.5C11 5.77614 10.7761 6 10.5 6H9.5C9.22386 6 9 5.77614 9 5.5V3L8 3L8 5.5C8 5.77614 7.77614 6 7.5 6H6.5C6.22386 6 6 5.77614 6 5.5L6 3L2 3V2H15V3Z" fill="currentColor"></path><path d="M6.5 7C6.22386 7 6 7.22386 6 7.5L6 9.5C6 9.77614 6.22386 10 6.5 10H7.5C7.77614 10 8 9.77614 8 9.5L8 7.5C8 7.22386 7.77614 7 7.5 7H6.5Z" fill="currentColor"></path><path d="M9.5 7C9.22386 7 9 7.22386 9 7.5V9.5C9 9.77614 9.22386 10 9.5 10H10.5C10.7761 10 11 9.77614 11 9.5V7.5C11 7.22386 10.7761 7 10.5 7H9.5Z" fill="currentColor"></path></svg>`,
             value : "start"
@@ -82,27 +82,28 @@
             value : "space-around"
         }, 
     ];
-    let selectedAlignContentIndex = 0;
+    let selectedAlignItemsIndex = 0;
 
     /* ********************** */
 
-    let columnCountValue = 2;
-    let rowCountValue = 2;
+    let columnCountValue = '2fr';
+    let rowCountValue = 'auto';
 
     let gapRowValue = '';
     let gapColumnValue = '';
 
     function getProperties() {
         selectionChangeInProgress = true;
-        gridDirectionIndex = $selectedInstance.styling?.['grid-auto-flow'] ? gridDirectionOptions.findIndex((opt) => opt.value === $selectedInstance.styling['grid-auto-flow']) : 0;
-        selectedJustifyContentIndex = $selectedInstance.styling?.['justify-content'] ? justifyContentOptions.findIndex((opt) => opt.value === $selectedInstance.styling['justify-content']) : 0;
-        selectedAlignContentIndex = $selectedInstance.styling?.['align-items'] ? alignContentOptions.findIndex((opt) => opt.value === $selectedInstance.styling['align-content']) : 0;
-        gapRowValue = $selectedInstance.styling?.['gap-row'] ? $selectedInstance.styling['gap-row'] : '';
-        gapColumnValue = $selectedInstance.styling?.['gap-column'] ? $selectedInstance.styling['gap-column'] : '';
-        rowCountValue = $selectedInstance.styling?.['grid-template-rows'] ? $selectedInstance.styling['grid-template-rows'].match(/\bauto\b/g)?.length : 2
-        columnCountValue = $selectedInstance.styling?.['grid-template-columns'] ? $selectedInstance.styling['grid-template-columns'].match(/\b1fr\b/g)?.length : 2;
         
         setTimeout(() =>{
+            gridDirectionIndex = $selectedInstance.styling?.['grid-auto-flow'] ? gridDirectionOptions.findIndex((opt) => opt.value === $selectedInstance.styling['grid-auto-flow']) : 0;
+            selectedJustifyContentIndex = $selectedInstance.styling?.['justify-content'] ? justifyContentOptions.findIndex((opt) => opt.value === $selectedInstance.styling['justify-content']) : 0;
+            selectedAlignItemsIndex = $selectedInstance.styling?.['align-items'] ? alignItemsOptions.findIndex((opt) => opt.value === $selectedInstance.styling['align-items']) : 0;
+            gapRowValue = $selectedInstance.styling?.['gap-row'] ? $selectedInstance.styling['gap-row'] : '';
+            gapColumnValue = $selectedInstance.styling?.['gap-column'] ? $selectedInstance.styling['gap-column'] : '';
+            rowCountValue = $selectedInstance.styling?.['grid-template-rows'] ? $selectedInstance.styling['grid-template-rows'] : 'auto'
+            columnCountValue = $selectedInstance.styling?.['grid-template-columns'] ? $selectedInstance.styling['grid-template-columns'] : '1fr';
+            
             selectionChangeInProgress = false;
         }, 120);
     }
@@ -125,19 +126,20 @@
     
     function handleACChange() {
         if (initialized && !selectionChangeInProgress) {
-            $selectedInstance.styling['align-content'] = alignContentOptions[selectedAlignContentIndex];
+            $selectedInstance.styling['align-items'] = alignItemsOptions[selectedAlignItemsIndex];
 
-            alterStylingProperty('align-content', alignContentOptions[selectedAlignContentIndex].value);
+            alterStylingProperty('align-items', alignItemsOptions[selectedAlignItemsIndex].value);
         }
     }
 
     function handleCountChange(target) {
-        const prop = target.getAttribute('name');
-        let valueTemplate = prop === 'grid-template-columns' ? '1fr ' : 'auto ';
-        let count = parseInt(target.value, 10);
-        let value = valueTemplate.repeat(count).trim();
+        if (initialized && !selectionChangeInProgress) {
+            const prop = target.getAttribute('name');
 
-        alterStylingProperty(prop, value);
+            $selectedInstance.styling[prop] = target.value;
+
+            alterStylingProperty(prop, target.value);
+        }
     }
 
     function handleGapChange(target) {
@@ -147,7 +149,7 @@
     $: $selectedInstance.instanceId, getProperties();
     $: gridDirectionIndex, handleDirectionChange();
     $: selectedJustifyContentIndex, handleJCChange();
-    $: selectedAlignContentIndex, handleACChange();
+    $: selectedAlignItemsIndex, handleACChange();
 </script>
 
 <div class="options">
@@ -157,10 +159,10 @@
 </div>
 <div class="options">
     <p>Columns</p>
-    <input type="number" min="0" name="grid-template-columns" bind:value={columnCountValue} on:blur={(e) => {handleCountChange(e.target)}}  />
+    <input type="text" name="grid-template-columns" bind:value={columnCountValue} on:blur={(e) => {handleCountChange(e.target)}}  />
 
     <p>Rows</p>
-    <input type="number" min="0" name="grid-template-rows" bind:value={rowCountValue} on:blur={(e) => { handleCountChange(e.target) }} />
+    <input type="text" name="grid-template-rows" bind:value={rowCountValue} on:blur={(e) => { handleCountChange(e.target) }} />
 </div>
 
 <div class="options aligns">
@@ -168,7 +170,7 @@
     <Switch options={justifyContentOptions} bind:selectedIndex={selectedJustifyContentIndex} gap="0" />
 
     <p>Y - Axis</p>
-    <Switch options={alignContentOptions} bind:selectedIndex={selectedAlignContentIndex} gap="0" />
+    <Switch options={alignItemsOptions} bind:selectedIndex={selectedAlignItemsIndex} gap="0" />
 </div>
 
 <div class="options">

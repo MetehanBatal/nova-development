@@ -12,6 +12,8 @@
     let newClassName = '';
     let selectionBox;
 
+    let lastSelectedId = '';
+
     // Helper functions
     const parseClassAttribute = (attribute) => 
         attribute?.value
@@ -20,7 +22,10 @@
             .filter(Boolean)
             .map(name => ({ name })) ?? [];
 
-    const updateClassSelections = () => {
+    const updateClassSelections = (from) => {
+        if (from === 'elementChange' && lastSelectedId === JSON.stringify($selectedInstance.instanceId)) {
+            return; }
+        lastSelectedId = JSON.stringify($selectedInstance.instanceId);
         const classAttribute = $selectedInstance.attributes.find(attr => attr.name === 'class');
         classSelections = parseClassAttribute(classAttribute);
     };
@@ -50,17 +55,22 @@
             handleClassAdd();
         } else if (event.key === 'Backspace' && selectionMode && !newClassName) {
             const lastClass = classSelections[classSelections.length - 1]?.name;
+            console.log('Last class: ', lastClass);
             if (lastClass) {
                 removeClass(lastClass);
                 classSelections = classSelections.slice(0, -1);
+                console.log('Class s: ', classSelections);
+                console.log('Ins after removal: ', $selectedInstance);
             }
         }
     };
 
     const handleClassAdd = () => {
+        console.log($selectedInstance);
         if (newClassName) {
-            injectClass(newClassName.toLowerCase().replace(/\s+/g, '-'), classSelections, 'handle class add');
-            updateClassSelections();
+            console.log('NEW CLASS TO CADD: ', newClassName.toLowerCase().replace(/\s+/g, '-'), classSelections);
+            injectClass(newClassName.toLowerCase().replace(/\s+/g, '-'), classSelections.map(({name}) => name ), 'handle class add');
+            updateClassSelections('handleClassAdd');
             newClassName = '';
         }
         selectionMode = false;
@@ -81,7 +91,7 @@
     }
 
     $: suggestedClassNames = getSuggestedClasses(newClassName);
-    $: if ($selectedInstance.instanceId) updateClassSelections();
+    $: $selectedInstance.instanceId, updateClassSelections('elementChange');
 
     onDestroy(() => {
         document.removeEventListener('click', handleClickOutside);
@@ -89,9 +99,11 @@
     });
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="selection-box">
     <div class="selections" on:click={() => selectionMode = true}>
-        {#if classSelections.length}
+        {#if classSelections.length > 0}
             {#each classSelections as selection}
                 <div class="selection">
                     <p>{selection.name}</p>
@@ -111,9 +123,11 @@
 </div>
 
 {#if selectionMode}
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="class-selection-box" bind:this={selectionBox}>
         <div>
-            <p class="subtitle">New Class</p>
+            <p class="subtitle">New Class</p>            
             <p on:click={handleClassAdd}>
                 {newClassName || 'Type in to create a new class'}
             </p>
@@ -127,13 +141,7 @@
         <div>
             <p class="subtitle">Existing Classes</p>
             {#each suggestedClassNames as className}
-                <p 
-                    class="tag blue" 
-                    on:click={() => {
-                        newClassName = className;
-                        handleClassAdd();
-                    }}
-                >
+                <p  class="tag blue"  on:click={() => { newClassName = className; handleClassAdd(); }} >
                     {className}
                 </p>
             {/each}
@@ -215,11 +223,15 @@
 
     .tag {
         width: fit-content;
+        
         line-height: 2.4rem;
         padding: 0 0.6rem;
         margin-bottom: 0.4rem;
+        
         background-color: rgba(0, 125, 240, 0.25);
         border-radius: 0.2rem;
+
+        cursor: pointer;
     }
 
     .blue {

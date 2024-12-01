@@ -109,8 +109,6 @@
         let newInstanceId = generateRandomString();
         let newVariantId = `v-${generateRandomString()}`;
 
-        console.log('Instances before variant creation: ', JSON.parse(JSON.stringify($instances)));
-
         let newInstances = $instances.map(inst => {
             const { instanceId, variantId, id, ...rest } = inst;
 
@@ -130,8 +128,6 @@
         }
 
         $instances = [...$instances, ...newInstances];
-
-        console.log('Instances after variant creation: ', JSON.parse(JSON.stringify(instances)));
 
         let updatedInstances = await dbActions(newInstances, 'instances', 'upsert');
         let updatedVariant = await dbActions(newVariantSchema, 'variants', 'upsert');
@@ -153,9 +149,6 @@
 
     $: selectedBreakpointIndex, alterBreakpoint();
     $: designMode, $cmsMode = designMode ? 'design' : 'edit';
-    $: $components, console.log('Comps: ', $components);
-    $: $instances, console.log('Ins: ', $instances);
-    $: $variants, console.log('Vars: ', $variants);
     $: selectedVariantIndex, handleVariantSwitch();
 </script>
 
