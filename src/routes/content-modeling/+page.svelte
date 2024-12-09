@@ -61,8 +61,10 @@
         }
 
         window.addEventListener('message', async (message) => {
-            if (message.origin !== 'https://preconvert.vercel.app' && message.origin !== 'http://localhost:5174') {
+            if (message.origin !== 'https://miracle-rebuild.vercel.app' && message.origin !== 'http://localhost:5174') {
                 return; }
+
+            console.log('Message receivedd');
 
             if (!message.data) {
                 return; }
