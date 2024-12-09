@@ -21,7 +21,7 @@ let dCMSMode;
 let dVariants;
 let order = 0;
 let pageData;
-let baseFrameURL = dev ? 'http://localhost:5174' : 'https://preview-preconvert.vercel.app';
+let baseFrameURL = dev ? 'http://localhost:5174' : 'https://miracle-rebuild.vercel.app';
 
 cmsMode.subscribe((value) => {
     dCMSMode = value;

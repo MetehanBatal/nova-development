@@ -38,7 +38,7 @@
     let canvasWidth;
     let canvasHeight = null;
 
-    let baseFrameURL = dev ? 'http://localhost:5174' : 'https://preview-preconvert.vercel.app';
+    let baseFrameURL = dev ? 'http://localhost:5174' : 'https://miracle-rebuild.vercel.app';
 
     $pages.selectedPageIndex = 0;
 
