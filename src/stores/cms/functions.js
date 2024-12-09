@@ -247,11 +247,11 @@ const handleKeyDown = async function (event) {
 
         // Get the order of the first instance to be deleted
         const deletedInstanceOrder = instancesToDelete[0].order;
-
+        
         // Find instances that need order updates (those with higher order than the deleted instance)
         const instancesToReorder = currentInstances.filter(instance => 
             instance.order > deletedInstanceOrder && 
-            instance.parentInstanceId === deletedInstanceOrder.parentInstanceId && 
+            instance.parentInstanceId === instancesToDelete[0].parentInstanceId && 
             !instancesToDelete.some(delInstance => delInstance.instanceId === instance.instanceId)
         );
 
