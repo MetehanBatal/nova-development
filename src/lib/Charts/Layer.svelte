@@ -1,9 +1,9 @@
 <script>
     import Dropdown from '$lib/toolkit/Dropdown.svelte';
-    import DropdownType2 from './DropdownType2.svelte';
-    import Formula from "./Formula.svelte";
-    import SideMenu from "./SideMenu.svelte";
-    import FancyDropDown from "./FancyDropDown.svelte";
+    import DropdownType2 from '$lib/Charts/DropdownType2.svelte';
+    import Formula from "$lib/Charts/Formula.svelte";
+    import SideMenu from "$lib/Charts/SideMenu.svelte";
+    import FancyDropDown from "$lib/Charts/FancyDropDown.svelte";
     import {
         events,
         dataType,
@@ -13,7 +13,7 @@
         session,
         events_session,
         traitOperator,
-    } from "./customChartText"
+    } from "$lib/Charts/customChartText"
 
     export let main
     export let isMultple

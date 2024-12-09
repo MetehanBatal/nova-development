@@ -1,8 +1,8 @@
 <script>
 
-    import Yaxis from './Yaxis.svelte'
-	import Xaxis from './Xaxis.svelte'
-    import Bar from './Bar.svelte'
+    import Yaxis from '$lib/experiments/charts/Bars/Yaxis.svelte'
+	import Xaxis from '$lib/experiments/charts/Bars/Xaxis.svelte'
+    import Bar from '$lib/experiments/charts/Bars/Bar.svelte'
 	import { scaleBand, scaleLinear } from 'd3'
 
 	export let allDataFunnel

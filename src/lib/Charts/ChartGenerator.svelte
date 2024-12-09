@@ -1,5 +1,5 @@
 <script>
-    import Layer from "./Layer.svelte"
+    import Layer from "$lib/Charts/Layer.svelte"
     import {
         measurementType,
         events,
@@ -16,7 +16,7 @@
     import {parsePeriod, selectableDays} from '../../stores/functions';
     import { colors } from "../../stores/colors";
     import {sum, descending} from 'd3'
-    import DropdownType2 from "./DropdownType2.svelte"
+    import DropdownType2 from "$lib/Charts/DropdownType2.svelte"
     import { onMount } from "svelte";
     import { toastMessage } from '../../stores/toast';
 

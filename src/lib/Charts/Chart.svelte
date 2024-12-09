@@ -1,8 +1,8 @@
 <script>
     import DatePicker from '$lib/toolkit/DatePicker.svelte';
-    import BarLine  from "./BarLine/BarLine.svelte"
-    import Radial from './Radial/Radial.svelte';
-    import Legend from './components/Legend.svelte';
+    import BarLine  from "$lib/Charts/BarLine/BarLine.svelte"
+    import Radial from '$lib/Charts/Radial/Radial.svelte';
+    import Legend from '$lib/Charts/components/Legend.svelte';
     import {parsePeriod, selectableDays} from '../../stores/functions';
     import { colors } from "../../stores/colors";
     import {sum, descending} from 'd3'
