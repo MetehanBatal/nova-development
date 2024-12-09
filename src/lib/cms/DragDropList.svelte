@@ -267,6 +267,7 @@
             class="drag-drop-item cms-line {$visibleIds.includes(item.instanceId) ? '' : 'hidden'} {item.componentId && $cmsMode !== 'component' ? 'component-line' : ''}"
             class:selected={item.instanceId === $selectedInstance.instanceId}
             class:dragging={i === draggedIndex}
+            style={`order: ${item.layerOrder}`}
             on:click={(e) => {changeSelection(e, item.instanceId)} }
             on:dblclick={(e) => {
                 if (item.componentId?.length > 0) {
