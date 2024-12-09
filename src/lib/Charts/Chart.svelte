@@ -46,7 +46,7 @@
     let tabTogglerSection = "all";
     let dateElement = {}
     let dateRange = {}
-    let windowWidth = window.innerWidth
+    let windowWidth;
     let hasRangeSelector = otherParams.hasRangeSelector
     let headline = otherParams.headline
     let showLegend = otherParams.showLegend
@@ -64,7 +64,7 @@
 	let strokeColor2 = "#ffffff"
     let legendData
 
-    let ENDPOINT = `https://mve.novus.studio/prod/analytics/test`
+    let ENDPOINT = `https://preconvert.novus.studio/prod/mAnalytics/test`
 
     const handleRangeSelection = () => {
         if(daySelection != "custom"){
@@ -222,6 +222,9 @@
     $: daySelection, dataOptions, selectedComparisonIndexes, processData()
 
 </script>
+
+<svelte:window bind:innerWidth={windowWidth}></svelte:window>
+
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
         {#if hasRangeSelector}

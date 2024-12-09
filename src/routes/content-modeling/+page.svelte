@@ -29,6 +29,8 @@
     let components = data.componentsRes.data?.docs || [];
     $styleSheet = data.stylesRes.data?.docs || [];
 
+    console.log('PAGE DATA: ', data);
+
     let innerWidth;
     let innerHeight;
     let navigatorFixed;
@@ -94,7 +96,14 @@
                     $selectedInstance.componentId = instance.componentId;
                     $selectedInstance.pageId = instance.pageId;
                     $selectedInstance.class = instance.attributes.find((attr) => attr.name === 'class')?.value || '';
-                    $selectedInstance.styling = $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === $selectedBreakpoint)?.attributes || {};
+                    $selectedInstance.styling = {
+                        "xxl": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'xxl')?.attributes || {},
+                        "xl": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'xl')?.attributes || {},
+                        "desktop": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'desktop')?.attributes || {},
+                        "tablet": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'tablet')?.attributes || {},
+                        "mobile": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'mobile')?.attributes || {},
+                        "landscape": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'landscape')?.attributes || {},
+                    },
                     $selectedInstance.content = instance.content;
                     toggleInstances(selectedElementDetails.id);
                 }
@@ -131,6 +140,7 @@
     })
 
     function checkInstanceDetails() {
+        console.log('SELECTED INSTANCE: ', $selectedInstance, $styleSheet);
         if (initialized && $selectedInstance.instanceId.length < 1) {
             selectedElementDetails = {};
         }
@@ -162,11 +172,11 @@
         ></iframe>
     </div>
 
-    <div class="iframe-controller" style={`height: ${$cmsMode === 'component' ? 'auto' : `${innerHeight - 64}px`}; left: ${canvas?.offsetLeft}px; width: ${canvasWidth}px; top: ${canvas?.offsetTop}px;`}>
+    <div class="iframe-controller" class:component={$selectedInstance.componentId?.length > 0} style={`height: ${`${innerHeight - 64}px`}; left: ${canvas?.offsetLeft}px; width: ${canvasWidth}px; top: ${canvas?.offsetTop}px;`}>
         {#if selectedElementDetails.id}
         <div class="element-outliner" style={`width: ${selectedElementDetails.width}px; height: ${selectedElementDetails.height}px; transform: translate3d(${selectedElementDetails.offsetLeft}px, ${selectedElementDetails.offsetTop}px, 0); z-index: 2;`}>
             <div class="breadcrumb active" style={`transform: translateY(${selectedElementDetails.offsetTop < 26 ? '0%' : '-100%'})`}>
-                {@html nodeTags.find((tag) => tag.name === $instances.find((i) => i.instanceId === selectedElementDetails.id)?.nodeName)?.icon}
+                {@html nodeTags.find((tag) => tag.name === ($selectedInstance.componentId?.length > 0 ? 'COMPONENT' : $instances.find((i) => i.instanceId === selectedElementDetails.id)?.nodeName))?.icon}
 
                 <p>{$instances.find((i) => i.instanceId === selectedElementDetails.id)?.attributes.some((attr) => attr.name === 'class') ? $instances.find((i) => i.instanceId === selectedElementDetails.id)?.attributes.find((attr) => attr.name === 'class').value.replace('-', ' ') : $instances.find((i) => i.instanceId === selectedElementDetails.id)?.nodeName}</p>
 
@@ -182,9 +192,9 @@
         {#if hoveredElementDetails.id}
         <div class="element-outliner" style={`width: ${hoveredElementDetails.width}px; height: ${hoveredElementDetails.height}px; transform: translate3d(${hoveredElementDetails.offsetLeft}px, ${hoveredElementDetails.offsetTop}px, 0)`}>
             <div class="breadcrumb">
-                {@html nodeTags.find((tag) => tag.name === $instances.find((i) => i.instanceId === hoveredElementDetails.id).nodeName)?.icon}
+                {@html nodeTags.find((tag) => tag.name === $instances.find((i) => i.instanceId === hoveredElementDetails.id)?.nodeName)?.icon}
 
-                <p>{$instances.find((i) => i.instanceId === hoveredElementDetails.id).attributes.some((attr) => attr.name === 'class') ? $instances.find((i) => i.instanceId === hoveredElementDetails.id).attributes.find((attr) => attr.name === 'class').value.replace('-', ' ') : $instances.find((i) => i.instanceId === hoveredElementDetails.id).nodeName}</p>
+                <p>{$instances.find((i) => i.instanceId === hoveredElementDetails.id)?.attributes?.some((attr) => attr.name === 'class') ? $instances.find((i) => i.instanceId === hoveredElementDetails.id).attributes.find((attr) => attr.name === 'class').value.replace('-', ' ') : $instances.find((i) => i.instanceId === hoveredElementDetails.id)?.nodeName}</p>
             </div>
         </div>
         {/if}
@@ -275,6 +285,10 @@
         border-top-left-radius: .4rem;
     }
 
+    .iframe-controller.component .breadcrumb.active {
+        background-color: rgb(41, 199, 94);
+    }
+
     .breadcrumb p {
         white-space: nowrap;
     }
@@ -285,6 +299,10 @@
         left: 0;
 
         border: .1rem solid #947AF0;
+    }
+
+    .iframe-controller.component .element-outliner {
+        border-color: rgba(27, 223, 93, 1)
     }
 
     .settings-icon-holder {

@@ -118,7 +118,7 @@
 					redirect: 'follow'
 				};
 
-				fetch("http://localhost:3030/prod/experiments/create", requestOptions)
+				fetch("https://preconvert.novus.studio/prod/mExperiments/create", requestOptions)
 					.then(response => response.json())
 					.then(result => {
 						if (result.err && result.err.length > 0) {

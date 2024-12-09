@@ -31,6 +31,18 @@
 
             <input type="text" bind:value={selectedPage.slug}>
         </div>
+
+        <div class="input-holder">
+            <p class="label">Page Type</p>
+
+            <input type="text" bind:value={selectedPage.pageType}>
+        </div>
+
+        <div class="input-holder">
+            <p class="label">Offered Product</p>
+
+            <input type="text" bind:value={selectedPage.productName}>
+        </div>
     </div>
     {/if}
 </div>

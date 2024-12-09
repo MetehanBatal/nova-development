@@ -7,7 +7,7 @@
     import SEO from '$lib/cms/pageSettings/SEO.svelte';
     import Tracking from '$lib/cms/pageSettings/Tracking.svelte';
     import CustomCodes from '$lib/cms/pageSettings/CustomCodes.svelte';
-  import { toastMessage } from '../../stores/toast';
+    import { toastMessage } from '../../stores/toast';
 
     export let revealedSettingsId;
 
@@ -27,6 +27,8 @@
         },
         folder: "",
         pageName: "Untitled",
+        pageType: "lander",
+        productType: "sheets",
         seoSettings: {
             title: "",
             metaDescription: "",
@@ -37,6 +39,18 @@
     };
 
     let selectedPage;
+
+    let topInstanceSchema = {
+        instanceId: generateRandomString(),
+        pageId: newPageId,
+        componentId: "",
+        nodeName: "BODY",
+        prevInstanceId: "",
+        attributes: [],
+        content: null,
+        order: 0,
+        depth: 0
+    };
 
     $: {
         selectedPage = revealedSettingsId === 'new-page' ? emptyPageSchema : $pages.pages.find((page) => page.pageId === revealedSettingsId);
@@ -83,8 +97,11 @@
 
     async function handleSave() {
         let pageUpdate = await dbActions(selectedPage, 'pages', 'upsert');
+        let instanceUpdate = await dbActions(topInstanceSchema, 'instances', 'upsert');
 
         if (pageUpdate.status === 200) {
+            revealedSettingsId = '';
+            
             $pages.pages = [...$pages.pages, selectedPage];
             
             if (duplicatedPage) {
@@ -100,8 +117,6 @@
                 }
             }
         }
-
-        revealedSettingsId = '';
     }
 
     function duplicatePage() {

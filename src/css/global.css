@@ -663,7 +663,6 @@ p.error-message {
 /* DROPDOWN CSS */
 
 .dropdown-content.checkbox-dropdown {
-	transform: translateY(15%);
 	border: .1rem solid #383C42;
 	background-color: #0D121A;
 	max-height: 30rem;

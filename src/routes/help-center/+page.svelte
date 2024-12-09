@@ -81,7 +81,7 @@
                 redirect: 'follow'
             };
     
-            fetch("https://mve.novus.studio/prod/users/update", requestOptions)
+            fetch("https://preconvert.novus.studio/prod/users/update", requestOptions)
                 .then(response => response.json())
                 .then(result => {})
                 .catch(error => console.error('error', error));

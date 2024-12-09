@@ -3,7 +3,7 @@ export async function load({fetch, url}) {
 	if(id == "add-new"){
 		return {}
 	}
-	const productReq = await fetch(`https://mve.novus.studio/prod/products/viewProducts?id=${id}`);
+	const productReq = await fetch(`https://preconvert.novus.studio/prod/products/viewProducts?id=${id}`);
 	const productRes = await productReq.json();
 	return {productRes};
 }

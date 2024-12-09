@@ -8,7 +8,7 @@ export const selectedInstance = writable(
 		nodeName: '',
 		class: '',
 		styling: {},
-		attributes: {},
+		attributes: [],
 		content: '',
 		breakpoint: 'desktop'
 	}

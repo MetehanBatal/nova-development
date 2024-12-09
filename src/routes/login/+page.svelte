@@ -57,7 +57,7 @@
 			redirect: 'follow'
 		};
 
-		fetch(`https://mve.novus.studio/prod/users${fetchEndpoint}`, requestOptions)
+		fetch(`https://preconvert.novus.studio/prod/users${fetchEndpoint}`, requestOptions)
 			.then(response => response.json())
 			.then((result) => {
 				if (result.msg && forgottenPassword) {
@@ -101,7 +101,7 @@
 
 				if (result.msg && result.msg === 'success') {
 
-					fetch(`https://mve.novus.studio/prod/users/view?emailAddress=${emailAddress}`, { method: 'GET', redirect: 'follow'})
+					fetch(`https://preconvert.novus.studio/prod/users/view?emailAddress=${emailAddress}`, { method: 'GET', redirect: 'follow'})
 						.then(response => response.json())
   						.then(result => {
   							result = result.msg;

@@ -50,7 +50,7 @@
 			redirect: "follow"
 		};
 
-		fetch("https://mve.novus.studio/prod/users/uploadPhoto", requestOptions)
+		fetch("https://preconvert.novus.studio/prod/users/uploadPhoto", requestOptions)
 			.then((response) => response.json())
 			.then((result) => {			
 				inProgress = false;

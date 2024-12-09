@@ -7,13 +7,20 @@
 	import ChartGenerator from "$lib/Charts/ChartGenerator.svelte";
 	import Chart from "$lib/Charts/Chart.svelte"
 
-	let isModalOpened = false
-	let currentData
-    let dom
+	import { onMount } from 'svelte';
 
-    sessionStorage.setItem("customCharts", JSON.stringify([]));
+	let initialized = false;
+	let isModalOpened = false;
+	let currentData;
+    let dom;
+
+	onMount(() => {
+		initialized = true;
+		sessionStorage.setItem("customCharts", JSON.stringify([]));
+	})
+	
 	const handlePlotCustomChart = () => {
-		if(isModalOpened) return
+		if(isModalOpened || !initialized) return;
 		currentData  = JSON.parse(sessionStorage.getItem("customCharts"));
 		dom && console.log(dom);
 		setTimeout(() => {
@@ -25,7 +32,6 @@
 	}
 
 	$:isModalOpened, handlePlotCustomChart()
-
 </script>
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -129,6 +135,7 @@
 		</div>
 
 		<!-- CUSTOM CHARTS -->
+		 {#if currentData?.length > 0}
 		 {#each currentData as d, i}
 		  	<div class="chart-holder custom-chart" style={`grid-area: ${6 + i}/1/${6 + i}/${6 + i}`}>
 				<Chart
@@ -138,6 +145,7 @@
 				/>
 			</div>
 		 {/each}
+		 {/if}
 	</div>
 	<Experiments />
 	<div class="line"></div>

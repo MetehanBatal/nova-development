@@ -1,5 +1,6 @@
 <script>
     import { selectedInstance } from "../../../stores/cms/selectedInstance";
+    import { selectedBreakpoint } from '../../../stores/cms/selectedBreakpoint';
     import { alterStylingProperty } from '../../../stores/cms/functions';
 
     import { onMount } from "svelte";
@@ -96,13 +97,13 @@
         selectionChangeInProgress = true;
         
         setTimeout(() =>{
-            gridDirectionIndex = $selectedInstance.styling?.['grid-auto-flow'] ? gridDirectionOptions.findIndex((opt) => opt.value === $selectedInstance.styling['grid-auto-flow']) : 0;
-            selectedJustifyContentIndex = $selectedInstance.styling?.['justify-content'] ? justifyContentOptions.findIndex((opt) => opt.value === $selectedInstance.styling['justify-content']) : 0;
-            selectedAlignItemsIndex = $selectedInstance.styling?.['align-items'] ? alignItemsOptions.findIndex((opt) => opt.value === $selectedInstance.styling['align-items']) : 0;
-            gapRowValue = $selectedInstance.styling?.['gap-row'] ? $selectedInstance.styling['gap-row'] : '';
-            gapColumnValue = $selectedInstance.styling?.['gap-column'] ? $selectedInstance.styling['gap-column'] : '';
-            rowCountValue = $selectedInstance.styling?.['grid-template-rows'] ? $selectedInstance.styling['grid-template-rows'] : 'auto'
-            columnCountValue = $selectedInstance.styling?.['grid-template-columns'] ? $selectedInstance.styling['grid-template-columns'] : '1fr';
+            gridDirectionIndex = $selectedInstance.styling?.[$selectedBreakpoint]?.['grid-auto-flow'] ? gridDirectionOptions.findIndex((opt) => opt.value === $selectedInstance.styling[$selectedBreakpoint]?.['grid-auto-flow']) : 0;
+            selectedJustifyContentIndex = $selectedInstance.styling?.[$selectedBreakpoint]?.['justify-content'] ? justifyContentOptions.findIndex((opt) => opt.value === $selectedInstance.styling[$selectedBreakpoint]?.['justify-content']) : 0;
+            selectedAlignItemsIndex = $selectedInstance.styling?.[$selectedBreakpoint]?.['align-items'] ? alignItemsOptions.findIndex((opt) => opt.value === $selectedInstance.styling[$selectedBreakpoint]?.['align-items']) : 0;
+            gapRowValue = $selectedInstance.styling?.[$selectedBreakpoint]?.['gap-row'] ? $selectedInstance.styling[$selectedBreakpoint]?.['gap-row'] : '';
+            gapColumnValue = $selectedInstance.styling?.[$selectedBreakpoint]?.['gap-column'] ? $selectedInstance.styling[$selectedBreakpoint]?.['gap-column'] : '';
+            rowCountValue = $selectedInstance.styling?.[$selectedBreakpoint]?.['grid-template-rows'] ? $selectedInstance.styling[$selectedBreakpoint]?.['grid-template-rows'] : 'auto'
+            columnCountValue = $selectedInstance.styling?.[$selectedBreakpoint]?.['grid-template-columns'] ? $selectedInstance.styling[$selectedBreakpoint]?.['grid-template-columns'] : '1fr';
             
             selectionChangeInProgress = false;
         }, 120);

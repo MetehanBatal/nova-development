@@ -21,7 +21,7 @@
         var oneWeekAgo = currentDate - (7 * 24 * 60 * 60 * 1000);
         var twoWeeksAgo = currentDate - (14 * 24 * 60 * 60 * 1000);
     
-        fetch(`https://mve.novus.studio/prod/analytics/dashboard?funnel=kit&event=PageView&comparison=${twoWeeksAgo}&startDate=${oneWeekAgo}&endDate=${currentDate}&accuracy=day`, requestOptions)
+        fetch(`https://preconvert.novus.studio/prod/mAnalytics/dashboard?funnel=kit&event=PageView&comparison=${twoWeeksAgo}&startDate=${oneWeekAgo}&endDate=${currentDate}&accuracy=day`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 users[0] = result.analytics.present.reduce((acc, usersByDay) => acc + usersByDay.value, 0);
@@ -29,7 +29,7 @@
             })
             .catch((error) => console.error(error));
     
-        fetch(`https://mve.novus.studio/prod/analytics/dashboard?funnel=kit&event=Purchase&comparison=${twoWeeksAgo}&startDate=${oneWeekAgo}&endDate=${currentDate}&accuracy=day`, requestOptions)
+        fetch(`https://preconvert.novus.studio/prod/mAnalytics/dashboard?funnel=kit&event=Purchase&comparison=${twoWeeksAgo}&startDate=${oneWeekAgo}&endDate=${currentDate}&accuracy=day`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 purchases[0] = result.analytics.present.reduce((acc, purchasesByDay) => acc + purchasesByDay.uniquePurchases, 0);

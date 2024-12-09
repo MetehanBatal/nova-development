@@ -1,18 +1,24 @@
 import { page } from '$app/stores';
 import { selectedInstance } from './selectedInstance';
 import { selectedBreakpoint } from './selectedBreakpoint';
+import { selectedCMSTabIndex } from './selectedCMSTabIndex';
 import { cmsMode } from './cmsMode';
 import { visibleIds } from './visibleIds';
 import { instances } from './instances';
+import { components } from './components';
+import { variants } from './variants';
 import { styleSheet } from './styleSheet';  // Import styleSheet as a store
 import { dev } from '$app/environment';
 
 let selectedInstanceId = '';
+let layerInitReady = false;
+let selectedComponent = {};
 let selectedInstanceClass = '';
 let breakpoint = '';
 let instanceMap;
 let dVisibleIds;
 let dCMSMode;
+let dVariants;
 let order = 0;
 let pageData;
 let baseFrameURL = dev ? 'http://localhost:5174' : 'https://preview-preconvert.vercel.app';
@@ -27,6 +33,10 @@ selectedBreakpoint.subscribe((value) => {
 
 visibleIds.subscribe((value) => {
     dVisibleIds = value;
+});
+
+variants.subscribe((value) => {
+    dVariants = value;
 });
 
 // Subscribing to selectedInstance to get its values
@@ -47,9 +57,17 @@ styleSheet.subscribe((value) => {
     currentStyleSheet = value;
 });
 
+const breakpointCascades = {
+    mobile: ['mobile', 'tablet', 'desktop'],
+    tablet: ['tablet', 'desktop'],
+    desktop: ['desktop'],
+    xl: ['xl', 'desktop'],
+    xxl: ['xxl', 'xl', 'desktop']
+};
+
 const dbActions = async function (data, endpoint, action) {
     try {
-        const response = await fetch(`http://localhost:3030/staging/${endpoint}/${action}`, {
+        const response = await fetch(`https://preconvert.novus.studio/staging/${endpoint}/${action}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -93,6 +111,18 @@ const generateRandomString = () => {
     return `${segment1}-${segment2}-${segment3}-${segment4}`;
 };
 
+const getStyleValueFromCascade = (styling, property, currentBreakpoint) => {
+    if (!styling || !breakpointCascades[currentBreakpoint]) return null;
+
+    // Check each breakpoint in the cascade order
+    for (const breakpoint of breakpointCascades[currentBreakpoint]) {
+        if (styling[breakpoint] && styling[breakpoint][property] !== undefined) {
+            return styling[breakpoint][property];
+        }
+    }
+    return null;
+};
+
 const generateRandomNumber = (digits) => {
     if (digits <= 0) return 0; // Invalid input, return 0
 
@@ -122,8 +152,9 @@ const handleElementAppend = async function (event, overwrites) {
     // Find the current instance
     let currentInstance = currentInstances.find((i) => i.instanceId === id);
     
-    let lastSiblingOrder = currentInstances.filter((i) => i.parentId === currentInstance.instanceId).sort((a,b) => a.order - b.order);
-        lastSiblingOrder = lastSiblingOrder[lastSiblingOrder.length - 1].order;
+    let siblings = currentInstances.filter((i) => i.parentInstanceId === currentInstance.instanceId).sort((a,b) => a.order - b.order);
+    console.log(siblings, currentInstance);
+    let lastSiblingOrder = siblings.length > 0 ? siblings[siblings.length - 1].order : 0;
 
     let schema = {
         instanceId: overwrites?.instanceId || newInstanceId,
@@ -133,18 +164,18 @@ const handleElementAppend = async function (event, overwrites) {
         parentInstanceId: overwrites?.parentId || currentInstance.instanceId,
         attributes: event.detail.attributes || [],
         content: event.detail.content || '',
-        order: lastSiblingOrder + 1,
+        order: siblings.length > 0 ? lastSiblingOrder + 1 : 0,
         depth: currentInstance.depth + 1
     };
 
     // Find and update instances with order >= schema.order
-    const instancesToReorder = currentInstances.filter(
-        instance => instance.order >= schema.order && instance.instanceId !== schema.instanceId
-    );
+    // const instancesToReorder = currentInstances.filter(
+    //     instance => instance.order >= schema.order && instance.instanceId !== schema.instanceId
+    // );
     
-    instancesToReorder.forEach(instance => {
-        instance.order += 1;
-    });
+    // instancesToReorder.forEach(instance => {
+    //     instance.order += 1;
+    // });
 
     // Add the new instance to the current instances array
     currentInstances.push(schema);
@@ -159,12 +190,12 @@ const handleElementAppend = async function (event, overwrites) {
     backendUpdates.push(schema);
 
     // Add reordered instances with only instanceId and order
-    instancesToReorder.forEach(instance => {
-        backendUpdates.push({
-            instanceId: instance.instanceId,
-            order: instance.order
-        });
-    });
+    // instancesToReorder.forEach(instance => {
+    //     backendUpdates.push({
+    //         instanceId: instance.instanceId,
+    //         order: instance.order
+    //     });
+    // });
 
     // let newVisibleIds = drawInstances();
     // visibleIds.set(newVisibleIds);
@@ -207,6 +238,8 @@ const handleKeyDown = async function (event) {
     if (event.key === 'Delete' || event.key === 'Backspace') {
         if (selectedInstanceId.length < 1) return;
 
+        const initialId = selectedInstanceId;
+
         // Get all instances to delete, including nested instances
         let instancesToDelete = getInstancesToDelete(selectedInstanceId);
 
@@ -218,6 +251,7 @@ const handleKeyDown = async function (event) {
         // Find instances that need order updates (those with higher order than the deleted instance)
         const instancesToReorder = currentInstances.filter(instance => 
             instance.order > deletedInstanceOrder && 
+            instance.parentInstanceId === deletedInstanceOrder.parentInstanceId && 
             !instancesToDelete.some(delInstance => delInstance.instanceId === instance.instanceId)
         );
 
@@ -249,7 +283,7 @@ const handleKeyDown = async function (event) {
             nodeName: '',
             breakpoint: 'desktop',
             class: '',
-            styling: {},
+            styling: {"xxl": {}, "xl": {}, "desktop": {}, "tablet": {}, "mobile": {}, "landscape": {}},
             attributes: {},
             content: ''
         }));
@@ -262,7 +296,7 @@ const handleKeyDown = async function (event) {
         await dbActions(instancesToDelete, 'instances', 'delete');
 
         // Notify the canvas
-        postMessage('elementDeleted', { instances: currentInstances });
+        postMessage('elementDeleted', { instanceId: initialId });
     }
 };
 
@@ -379,7 +413,13 @@ async function injectClass(data, classList, from) {
         ...current,
         attributes: selectedInstanceToUpdate.attributes,
         class: mergedClasses,
-        styling: currentStyleSheet.find(attr => attr.name === data)?.attributes || {}
+        styling: {
+            "xxl": currentStyleSheet.find(attr =>  attr.name === data && attr.breakpoint === 'xxl')?.attributes || {},
+            "xl": currentStyleSheet.find(attr =>  attr.name === data && attr.breakpoint === 'xl')?.attributes || {},
+            "desktop": currentStyleSheet.find(attr =>  attr.name === data && attr.breakpoint === 'desktop')?.attributes || {},
+            "mobile": currentStyleSheet.find(attr =>  attr.name === data && attr.breakpoint === 'mobile')?.attributes || {},
+            "landscape": currentStyleSheet.find(attr =>  attr.name === data && attr.breakpoint === 'landscape')?.attributes || {},
+        }
     }));
 
     selectedInstanceClass = mergedClasses;
@@ -443,7 +483,13 @@ async function removeClass(classToRemove) {
             selectedInstance.update(current => ({
                 ...current,
                 attributes: selectedInstanceToUpdate.attributes,
-                styling: currentStyleSheet.find((attr) => attr.name === classes.join(' '))?.attributes || {}
+                styling: {
+                    "xxl": currentStyleSheet.find(attr =>  attr.name === classes.join(' ') && attr.breakpoint === 'xxl')?.attributes || {},
+                    "xl": currentStyleSheet.find(attr =>  attr.name === classes.join(' ') && attr.breakpoint === 'xl')?.attributes || {},
+                    "desktop": currentStyleSheet.find(attr =>  attr.name === classes.join(' ') && attr.breakpoint === 'desktop')?.attributes || {},
+                    "mobile": currentStyleSheet.find(attr =>  attr.name === classes.join(' ') && attr.breakpoint === 'mobile')?.attributes || {},
+                    "landscape": currentStyleSheet.find(attr =>  attr.name === classes.join(' ') && attr.breakpoint === 'landscape')?.attributes || {},
+                }
             }));
 
             // Remove the class from styleSheet if it exists
@@ -462,63 +508,90 @@ async function removeClass(classToRemove) {
 
 // Function to alter a styling property
 const alterStylingProperty = async function (prop, value, from) {
-    if (prop.length < 1 || value.length < 1) {
-        return; }
+    // Early return for invalid inputs
+    if (!prop?.length || !value?.length) return;
     
     console.log('Selected Class: ', selectedInstanceClass, prop, value, from);
-    selectedInstanceClass = selectedInstanceClass.trim().replace(/\s+/g, ' ');
+    
+    // Normalize class name
+    selectedInstanceClass = selectedInstanceClass?.trim().replace(/\s+/g, ' ') || '';
 
-    // If the element is brand new and doesn't have a class
-    if (selectedInstanceClass?.length < 1) {
-        // Generate a class name from the tag name and some random numbers
-        let selectedInstanceToUpdate = currentInstances.find((i) => i.instanceId === selectedInstanceId);
+    // Handle new elements without a class
+    if (!selectedInstanceClass) {
+        const selectedInstanceToUpdate = currentInstances.find(i => i.instanceId === selectedInstanceId);
         if (selectedInstanceToUpdate) {
             selectedInstanceClass = `${selectedInstanceToUpdate.nodeName.toLowerCase()}-${generateRandomNumber(6)}`;
-            await injectClass(selectedInstanceClass, [], 'first alter'); // Ensure that the class is injected
+            await injectClass(selectedInstanceClass, [], 'first alter');
         }
     }
 
-    // Find matching CSS object within styleSheet and update its styling property
-    let styleToUpdate = currentStyleSheet.find((ss) => ss.name === selectedInstanceClass && ss.breakpoint === breakpoint);
-    console.log(currentStyleSheet);
-    if (styleToUpdate) {
-        styleToUpdate.attributes[prop] = value;
+    // Find or create style object
+    let styleToUpdate = await getOrCreateStyle(selectedInstanceClass, breakpoint);
+    console.log('STU: ', styleToUpdate);
+    if (!styleToUpdate) return;
 
-        // Update the styleSheet store with the modified styles
-        styleSheet.set([...currentStyleSheet]);
+    // Update style properties
+    styleToUpdate.attributes[prop] = value;
+    console.log('sync changed');
+    // Sync changes
+    await syncStyleChanges(styleToUpdate);
+    
+    // Update selected instance
+    updateSelectedInstance();
+};
 
-        postMessage('stylingChanged', { styleSheet: currentStyleSheet });
-
-        // Update the stylesheet in DB
-        await dbActions(styleToUpdate, 'style', 'upsert');
-    } else {
-        console.log('Else');
-        if (selectedInstanceClass?.length < 1) {
-            await injectClass(selectedInstanceClass, [], 'second alter');
-        }
-        
-        let diffBreakpoint = currentStyleSheet.find((ss) => ss.name === selectedInstanceClass && ss.breakpoint === breakpoint);
-        console.log('diff b: ', diffBreakpoint);
-        if (diffBreakpoint) {
-            diffBreakpoint.attributes[prop] = value;
-
-            // Update the styleSheet store with the modified styles
-            styleSheet.set([...currentStyleSheet]);
-
-            postMessage('stylingChanged', { styleSheet: currentStyleSheet });
-
-            // Update the stylesheet in DB
-            await dbActions(diffBreakpoint, 'style', 'upsert');
-        }
+// Helper functions to break down the complexity
+const getOrCreateStyle = async (className, breakpoint) => {
+    if (!className) {
+        await injectClass(className, [], 'second alter');
+        return null;
     }
 
-    // update the $selectedInstance 
+    // Check for existing style with matching class and breakpoint
+    let styleToUpdate = currentStyleSheet.find(ss => 
+        ss.name === className && ss.breakpoint === breakpoint
+    );
+
+    console.log('Style to update: ', styleToUpdate);
+
+    // If no matching breakpoint found but class exists, create new breakpoint variation
+    if (!styleToUpdate && currentStyleSheet.some(ss => ss.name === className)) {
+        styleToUpdate = {
+            name: className,
+            breakpoint: breakpoint,
+            attributes: {},
+            combos: [],
+            type: "class"
+        };
+        console.log('push new breakpoint: ', styleToUpdate);
+        currentStyleSheet.push(styleToUpdate);
+    }
+
+    return styleToUpdate;
+};
+
+const syncStyleChanges = async (styleToUpdate) => {
+    // Update stylesheet store
+    styleSheet.set([...currentStyleSheet]);
+    
+    // Notify about styling changes
+    postMessage('stylingChanged', { styleSheet: currentStyleSheet });
+    
+    // Persist changes to DB
+    await dbActions(styleToUpdate, 'style', 'upsert');
+};
+
+const updateSelectedInstance = () => {
     selectedInstance.update(current => ({
         ...current,
-        styling: currentStyleSheet.find((attr) => attr.name === selectedInstanceClass)?.attributes || {}
+        styling: {
+            "xxl": currentStyleSheet.find(attr =>  attr.name === selectedInstanceClass && attr.breakpoint === 'xxl')?.attributes || {},
+            "xl": currentStyleSheet.find(attr =>  attr.name === selectedInstanceClass && attr.breakpoint === 'xl')?.attributes || {},
+            "desktop": currentStyleSheet.find(attr =>  attr.name === selectedInstanceClass && attr.breakpoint === 'desktop')?.attributes || {},
+            "mobile": currentStyleSheet.find(attr =>  attr.name === selectedInstanceClass && attr.breakpoint === 'mobile')?.attributes || {},
+            "landscape": currentStyleSheet.find(attr =>  attr.name === selectedInstanceClass && attr.breakpoint === 'landscape')?.attributes || {},
+        }
     }));
-
-    console.log('SSS: ', currentStyleSheet.find((attr) => attr.name === selectedInstanceClass)?.attributes)
 };
 
 const alterContent = async function (value) {
@@ -593,9 +666,9 @@ function toggleExpand(id) {
         // Expand: Add direct children
         if (currentInstances.some((i) => i.parentInstanceId === instance.instanceId)) {
             let childrenIds = children.map(({instanceId}) => instanceId);
-            console.log(childrenIds);
+            // console.log(childrenIds);
             dVisibleIds = [...dVisibleIds, ...childrenIds];
-            console.log(children, dVisibleIds);
+            // console.log(children, dVisibleIds);
         }
     }
 
@@ -653,7 +726,7 @@ function toggleInstances(instanceIdToFind) {
     if (found) {
         visibleIds.set([...instancesToBeVisible, ...dVisibleIds]);
 
-        console.log(instancesToBeVisible, dVisibleIds);
+        // console.log(instancesToBeVisible, dVisibleIds);
     }
 
     return found;
@@ -671,7 +744,7 @@ function changeSelection(event, instanceId) {
     // get the current stylings
     // and the selected instance's class name
     let styleSheet = pageData.data.stylesRes?.data?.docs || [];
-        selectedInstanceClass = instance.attributes.find((attr) => attr.name === 'class')?.value || '';
+        selectedInstanceClass = instance.attributes?.find((attr) => attr.name === 'class')?.value || '';
     
     // $blockerInProgress = true;
     selectedInstance.set({
@@ -682,10 +755,19 @@ function changeSelection(event, instanceId) {
         pageId: instance.pageId,
         breakpoint: breakpoint,
         class: selectedInstanceClass,
-        styling: styleSheet.find((attr) => attr.name === selectedInstanceClass)?.attributes || {},
+        styling: {
+            "xxl": styleSheet.find((attr) => attr.name === selectedInstanceClass && attr.breakpoint === 'xxl')?.attributes || {},
+            "xl": styleSheet.find((attr) => attr.name === selectedInstanceClass && attr.breakpoint === 'xl')?.attributes || {},
+            "desktop": styleSheet.find((attr) => attr.name === selectedInstanceClass && attr.breakpoint === 'desktop')?.attributes || {},
+            "tablet": styleSheet.find((attr) => attr.name === selectedInstanceClass && attr.breakpoint === 'tablet')?.attributes || {},
+            "mobile": styleSheet.find((attr) => attr.name === selectedInstanceClass && attr.breakpoint === 'mobile')?.attributes || {},
+            "landscape": styleSheet.find((attr) => attr.name === selectedInstanceClass && attr.breakpoint === 'landscape')?.attributes || {},
+        },
         content: instance.content
     });
 
+    if (instance.componentId?.length > 0) {
+        return; }
     postMessage('selectionChanged', { instanceId: instance.instanceId })
     // dispatch('selectionChanged');
 }
@@ -768,9 +850,78 @@ const deleteAttribute = async function(attr) {
     let updatedInstance = await dbActions(currentInstance, 'instances', 'upsert');
 }
 
+function sanitizeComponentName(componentName) {
+    // Remove special characters and replace with empty string
+    // Keep alphanumeric characters and spaces
+    let sanitized = componentName.replace(/[^a-zA-Z0-9\s]/g, '');
+    
+    // Remove extra spaces and trim
+    sanitized = sanitized.replace(/\s+/g, ' ').trim();
+    
+    // Split into words
+    const words = sanitized.split(' ');
+    
+    // Capitalize first letter of each word and join
+    return words.map(word => {
+        if (!word) return '';
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join('');
+}
+
+function initLayers() {
+    if (!layerInitReady) {
+        return; }
+
+    postMessage('componentFocused', {page: {pageId: 'component'}, components: [selectedComponent], instances: currentInstances.filter((i) => i.variantId === dVariants.selectedVariantId), styleSheet: currentStyleSheet});
+}
+
+async function focusOnComponent(componentId, overwrites) {
+    try {
+        const compReq = await fetch(`https://preconvert.novus.studio/staging/components/view?componentId=${componentId}`);
+        const compRes = await compReq.json();
+
+        const compVariantsReq = await fetch(`https://preconvert.novus.studio/staging/variants/view?componentId=${componentId}`);
+        const compVariantsRes = await compVariantsReq.json();
+
+        const selectedVariantId = overwrites ? overwrites.selectedVariantId : compVariantsRes.data[0].variantId;
+
+        const compInstancesReq = await fetch(`https://preconvert.novus.studio/staging/instances/view?variantId=${selectedVariantId}`);
+        const compInstancesRes = await compInstancesReq.json();
+
+        selectedComponent = compRes.data;
+        console.log('SEL COMP: ', selectedComponent);
+        variants.set({
+            selectedVariantId: selectedVariantId,
+            variants: compVariantsRes.data
+        })
+        components.set([selectedComponent]);
+
+        if (selectedComponent[0].type !== 'preset') {
+            instances.set(compInstancesRes.data.instances.filter(((i) => i.pageId === 'COMPONENT')));
+
+            layerInitReady = true;
+
+            initLayers();
+
+            drawInstances();
+
+            // selectedCMSTabIndex.set(0);
+
+            cmsMode.set('component');
+
+            layerInitReady = false;
+        } else {
+            console.log('PRESET TO GO');
+        }
+    } catch (error) {
+        console.error('Error fetching components:', error);
+    }
+}
+
 export {
     handleElementAppend,
     getInstancesToDelete,
+    getStyleValueFromCascade,
     compareInstances,
     handleKeyDown,
     postMessage,
@@ -787,5 +938,8 @@ export {
     removeClass,
     toggleInstances,
     generateRandomString,
+    focusOnComponent,
+    initLayers,
+    sanitizeComponentName,
     generateRandomNumber
 }

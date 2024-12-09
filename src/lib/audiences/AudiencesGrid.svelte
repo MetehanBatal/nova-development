@@ -15,7 +15,7 @@
 	// let audiences = [];
 
 	onMount(async () => {
-		const audiencesReq = await fetch("https://mve.novus.studio/prod/audiences/view?limit=20&offset=0");
+		const audiencesReq = await fetch("https://preconvert.novus.studio/prod/audiences/view?limit=20&offset=0");
 		const audiencesRes = await audiencesReq.json();
 		audiences = audiencesRes.docs;
 	});
@@ -50,7 +50,7 @@
 			redirect: "follow"
 		};
 
-		fetch("https://mve.novus.studio/prod/experiments/update", requestOptions)
+		fetch("https://preconvert.novus.studio/prod/mExperiments/update", requestOptions)
 			.then((response) => response.json())
 			.then((result) => {
 				location.reload();

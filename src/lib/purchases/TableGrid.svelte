@@ -192,8 +192,8 @@
 
 			const url =
 				showFilterResetButton
-				? `https://mve.novus.studio/prod/purchases/view?offset=${(currentPage - 1) * 40}&limit=40&startDate=${dateRangeFilter.start}&endDate=${dateRangeFilter.end}`
-				: `https://mve.novus.studio/prod/purchases/view?offset=${(currentPage - 1) * 40}&limit=40`;
+				? `https://preconvert.novus.studio/prod/mPurchases/view?offset=${(currentPage - 1) * 40}&limit=40&startDate=${dateRangeFilter.start}&endDate=${dateRangeFilter.end}`
+				: `https://preconvert.novus.studio/prod/mPurchases/view?offset=${(currentPage - 1) * 40}&limit=40`;
 			const response = await fetch(url);
 			const newData = await response.json();
 			orders = newData.docs;
@@ -238,8 +238,8 @@
 
 		isExporting = true
 		let url = isDateFilterActive
-			? `https://mve.novus.studio/prod/export/purchases?email=${exportEmail}&startDate=${dateRangeExport.start}&endDate=${dateRangeExport.end}`
-			: `https://mve.novus.studio/prod/export/purchases?email=${exportEmail}`
+			? `https://preconvert.novus.studio/prod/export/purchases?email=${exportEmail}&startDate=${dateRangeExport.start}&endDate=${dateRangeExport.end}`
+			: `https://preconvert.novus.studio/prod/export/purchases?email=${exportEmail}`
 		const req = await fetch(url);
 		const res = await req;
 

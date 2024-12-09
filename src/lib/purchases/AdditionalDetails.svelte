@@ -8,7 +8,7 @@
 	export let shippingAddress;
 
 	// onMount(() => {
-	// 	fetch(`https://mve.novus.studio/prod/analytics/view?userId=${params.slug}`);
+	// 	fetch(`https://preconvert.novus.studio/prod/mAnalytics/view?userId=${params.slug}`);
 	// });
 </script>
 

@@ -1,6 +1,7 @@
 <script>
     import { selectedInstance } from "../../../stores/cms/selectedInstance";
-    import { alterStylingProperty } from "../../../stores/cms/functions";
+    import { selectedBreakpoint } from '../../../stores/cms/selectedBreakpoint';
+    import { alterStylingProperty, getStyleValueFromCascade } from "../../../stores/cms/functions";
     import Dropdown from "$lib/toolkit/Dropdown.svelte";
     import Switch from "$lib/toolkit/Switch.svelte";
     import { onMount } from "svelte";
@@ -12,6 +13,19 @@
     onMount(() => {
         initialized = true;
     });
+
+    let typographyState = {
+        fontFamily: '',
+        fontWeight: '',
+        fontSize: '',
+        lineHeight: '',
+        textAlign: '',
+        fontStyle: '',
+        textDecoration: '',
+        direction: '',
+        textTransform: '',
+        color: ''
+    };
 
     let fontOptions = [
         {
@@ -30,37 +44,37 @@
     let weightOptions = [
         {
             name: '300',
-            value: 300,
+            value: '300',
             index: 0
         },
         {
             name: '400',
-            value: 400,
+            value: '400',
             index: 1
         },
         {
             name: '500',
-            value: 500,
+            value: '500',
             index: 2
         },
         {
             name: '600',
-            value: 600,
+            value: '600',
             index: 3
         },
         {
             name: '700',
-            value: 700,
+            value: '700',
             index: 4
         },
         {
             name: '800',
-            value: 800,
+            value: '800',
             index: 5
         },
         {
             name: '900',
-            value: 900,
+            value: '900',
             index: 6
         }
     ];
@@ -154,20 +168,40 @@
     let lineHeight = '';
     let textColorValue = '';
 
-    function getProperties() {
+    function updateState(breakpoint, styling) {
+        const getValueWithFallback = (property) => getStyleValueFromCascade(styling, property, breakpoint) || '';
+
+        typographyState = {
+            fontFamily: getValueWithFallback('font-family'),
+            fontWeight: getValueWithFallback('font-weight'),
+            fontSize: getValueWithFallback('font-size'),
+            lineHeight: getValueWithFallback('line-height'),
+            textAlign: getValueWithFallback('text-align'),
+            fontStyle: getValueWithFallback('font-style'),
+            textDecoration: getValueWithFallback('text-decoration'),
+            direction: getValueWithFallback('direction'),
+            textTransform: getValueWithFallback('text-transform'),
+            color: getValueWithFallback('color')
+        };
+
+        // Update all indices based on the new state
+        fontIndex = typographyState.fontFamily ? fontOptions.findIndex((opt) => opt.value === typographyState.fontFamily) : 0;
+        weightIndex = typographyState.fontWeight ? weightOptions.findIndex((opt) => opt.value === typographyState.fontWeight) : 0;
+        textAlignIndex = typographyState.textAlign ? textAlignOptions.findIndex((opt) => opt.value === typographyState.textAlign) : 0;
+        fontStyleIndex = typographyState.fontStyle ? fontStyleOptions.findIndex((opt) => opt.value === typographyState.fontStyle) : 0;
+        fontDecorationIndex = typographyState.textDecoration ? fontDecorationOptions.findIndex((opt) => opt.value === typographyState.textDecoration) : 0;
+        fontDirectionIndex = typographyState.direction ? fontDirectionOptions.findIndex((opt) => opt.value === typographyState.direction) : 0;
+        fontTransformIndex = typographyState.textTransform ? fontTransformOptions.findIndex((opt) => opt.value === typographyState.textTransform) : 0;
+
+        fontSize = typographyState.fontSize;
+        lineHeight = typographyState.lineHeight;
+        textColorValue = typographyState.color;
+    }
+
+    function handleInstanceChange() {
         selectionChangeInProgress = true;
-        fontIndex = $selectedInstance.styling?.['font-family'] ? fontOptions.findIndex((opt) => opt.value === $selectedInstance.styling['font-family']) : 0;
-        weightIndex = $selectedInstance.styling?.['font-weight'] ? weightOptions.findIndex((opt) => opt.value === $selectedInstance.styling['font-weight']) : 0;
-        textAlignIndex = $selectedInstance.styling?.['text-align'] ? textAlignOptions.findIndex((opt) => opt.value === $selectedInstance.styling['text-align']) : 0;
-        fontStyleIndex = $selectedInstance.styling?.['font-style'] ? fontStyleOptions.findIndex((opt) => opt.value === $selectedInstance.styling['font-style']) : 0;
-        fontDecorationIndex = $selectedInstance.styling?.['text-decoration'] ? fontDecorationOptions.findIndex((opt) => opt.value === $selectedInstance.styling['text-decoration']) : 0;
-        fontDirectionIndex = $selectedInstance.styling?.['direction'] ? fontDirectionOptions.findIndex((opt) => opt.value === $selectedInstance.styling['direction']) : 0;
-        fontTransformIndex = $selectedInstance.styling?.['text-transform'] ? fontTransformOptions.findIndex((opt) => opt.value === $selectedInstance.styling['text-transform']) : 0;
-        fontSize = $selectedInstance.styling?.['font-size'] ? $selectedInstance.styling['font-size'] : '';
-        lineHeight = $selectedInstance.styling?.['line-height'] ? $selectedInstance.styling['line-height'] : '';
-        textColorValue = $selectedInstance.styling?.['color'] ? $selectedInstance.styling['color'] : '';
-        
-        setTimeout(() =>{
+        updateState($selectedBreakpoint, $selectedInstance.styling);
+        setTimeout(() => {
             selectionChangeInProgress = false;
         }, 120);
     }
@@ -178,7 +212,8 @@
         }
     }
 
-    $: $selectedInstance.instanceId, getProperties();
+    $: $selectedInstance.instanceId, handleInstanceChange();
+
     $: fontIndex, handleStylingChange('font-family', fontOptions[fontIndex].value);
     $: weightIndex, handleStylingChange('font-weight', weightOptions[weightIndex].value);
     $: textAlignIndex, handleStylingChange('text-align', textAlignOptions[textAlignIndex].value);

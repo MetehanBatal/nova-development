@@ -23,7 +23,7 @@
     export let handleModalClose
     const spinner = `<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>`;
 
-    const ENDPOINT = `https://mve.novus.studio/prod/analytics/test`
+    const ENDPOINT = `https://preconvert.novus.studio/prod/mAnalytics/test`
     const now = new Date().getTime() - (60 * 24 * 60 * 60 * 1000)
 
     const {

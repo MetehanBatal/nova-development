@@ -92,7 +92,7 @@
 
 	const resetData = async (fromMount = false) => {
 		if(fromMount || (!isInitalized && isLoaded) ){
-			const eventsReq = await fetch(`http://localhost:3030/prod/experiments/analytics?experimentId=${$page.params.slug}`);
+			const eventsReq = await fetch(`https://preconvert.novus.studio/prod/mExperiments/analytics?experimentId=${$page.params.slug}`);
 			const eventsRes = await eventsReq.json();
 			processData(eventsRes.analytics?.data)
 			fetchInProgress = false
@@ -107,8 +107,8 @@
 
 		// Fetching both requests concurrently using Promise.all
 		// const [eventsReq, reportsReq] = await Promise.all([
-		// 	fetch(`https://mve.novus.studio/prod/experiments/analytics?experimentId=${$page.params.slug}`),
-		// 	fetch(`https://mve.novus.studio/prod/experiments/reporting?experimentId=${$page.params.slug}&type=insights&event=PageView&breakdown=VariantId&startDate=${currentTime - (1000 * 60 * 60 * 24 * 60)}&endDate=${currentTime}&accuracy=hour`)
+		// 	fetch(`https://preconvert.novus.studio/prod/mExperiments/analytics?experimentId=${$page.params.slug}`),
+		// 	fetch(`https://preconvert.novus.studio/prod/mExperiments/reporting?experimentId=${$page.params.slug}&type=insights&event=PageView&breakdown=VariantId&startDate=${currentTime - (1000 * 60 * 60 * 24 * 60)}&endDate=${currentTime}&accuracy=hour`)
 		// ]);
 
 
@@ -127,7 +127,7 @@
 		if(activeStep != 1) return
 		if(!isInitalized) return
 		fetchInProgress = true
-		const eventsReq = await fetch(`http://localhost:3030/prod/experiments/analytics?experimentId=${$page.params.slug}&startDate=${dateRangeReport.start}&endDate=${dateRangeReport.end}`);
+		const eventsReq = await fetch(`https://preconvert.novus.studio/prod/mExperiments/analytics?experimentId=${$page.params.slug}&startDate=${dateRangeReport.start}&endDate=${dateRangeReport.end}`);
 		const eventsRes = await eventsReq.json();
 
 		processData(eventsRes.analytics?.data)

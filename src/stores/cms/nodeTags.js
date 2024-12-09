@@ -67,6 +67,10 @@ export const nodeTags = [
         icon: '<svg data-wf-icon="ElementVideoIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 3.41905C4 2.63812 4.8551 2.15855 5.52145 2.56577L13.0626 7.17424C13.7007 7.56417 13.7007 8.49087 13.0626 8.8808L5.52145 13.4893C4.8551 13.8965 4 13.4169 4 12.636V3.41905ZM12.5411 8.02752L5 3.41905V12.636L12.5411 8.02752Z" fill="currentColor"></path></svg>'
     },
     {
+        name: 'SOURCE',
+        icon: '<svg data-wf-icon="ElementVideoIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 3.41905C4 2.63812 4.8551 2.15855 5.52145 2.56577L13.0626 7.17424C13.7007 7.56417 13.7007 8.49087 13.0626 8.8808L5.52145 13.4893C4.8551 13.8965 4 13.4169 4 12.636V3.41905ZM12.5411 8.02752L5 3.41905V12.636L12.5411 8.02752Z" fill="currentColor"></path></svg>'
+    },
+    {
         name: 'FORM',
         icon: '<svg data-wf-icon="ElementFormBlockIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 5H2V4H14V5Z" fill="currentColor"></path><path d="M14 8H2V7H14V8Z" fill="currentColor"></path><path d="M2.5 11C2.22386 11 2 11.2239 2 11.5V12.5C2 12.7761 2.22386 13 2.5 13H7.5C7.77614 13 8 12.7761 8 12.5V11.5C8 11.2239 7.77614 11 7.5 11H2.5Z" fill="currentColor"></path></svg>'
     },
@@ -95,5 +99,10 @@ export const nodeTags = [
     {
         name: 'LABEL',
         icon: '<svg data-wf-icon="ElementSpanIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 5H11.5V4H4.5V5H7.5V12H8.5V5Z" fill="currentColor"></path></svg>'
+    },
+
+    {
+        name: 'COMPONENT',
+        icon: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="s-8d1-x3ARTLd2"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.47885 1.69144C8.18037 1.52863 7.81963 1.52863 7.52115 1.69144L2.52115 4.41871C2.19989 4.59395 2 4.93066 2 5.29661V10.703C2 11.0689 2.19989 11.4056 2.52115 11.5809L7.52115 14.3081C7.81963 14.471 8.18037 14.471 8.47885 14.3081L8.5 14.2966V13.1575V11.5V8.29661L13 5.84206V8H14V5.29661C14 4.93066 13.8001 4.59395 13.4789 4.41871L8.47885 1.69144ZM3.54416 4.99979L8 2.56934L12.4558 4.99979L8 7.43025L3.54416 4.99979ZM3 5.84206L3 10.703L7.5 13.1575V8.29661L3 5.84206ZM13 9V11H15V12H13V14H12V12H10V11H12V9H13Z" fill="currentColor" class="s-8d1-x3ARTLd2"></path></svg>'
     }
 ]

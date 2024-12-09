@@ -27,7 +27,7 @@
 		fetchInProgress = true;
 
 		console.time('fetchStartI');
-		const eventsReq = await fetch(`https://mve.novus.studio/prod/experiments/analytics?experimentId=${experimentData[selectedExperimentIndex].id}&route=dashboard`)
+		const eventsReq = await fetch(`https://preconvert.novus.studio/prod/mExperiments/analytics?experimentId=${experimentData[selectedExperimentIndex].id}&route=dashboard`)
 		let eventsRes = await eventsReq.json();
 		eventsData = eventsRes.analytics;
 		console.timeEnd('fetchStartI');
@@ -273,7 +273,7 @@
 						{#each selectedVariantIndexes as key, _index}
 						<div>
 							{#if !fetchInProgress}
-							<span class:uptick={ (eventsData.dropOff[key].lander / eventsData.dropOff[key].advertorial) > (eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]].lander / eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]].advertorial) }>
+							<span class:uptick={ (eventsData.dropOff[key].lander / eventsData.dropOff[key].advertorial) > (eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]]?.lander / eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]]?.advertorial) }>
 								{eventsData.dropOff[key].advertorial > 0 ? parseFloat((eventsData.dropOff[key].lander / eventsData.dropOff[key].advertorial) * 100).toFixed(2) + '%' : ''}
 							</span>
 							<p>{eventsData.dropOff[key].lander}</p>
@@ -298,7 +298,7 @@
 						<div>
 							{#if !fetchInProgress}
 							{#if eventsData.dropOff[key].lander > 0}
-							<span class:uptick={ (eventsData.dropOff[key].checkout / eventsData.dropOff[key].lander) > (eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]].checkout / eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]].lander) }>
+							<span class:uptick={ (eventsData.dropOff[key].checkout / eventsData.dropOff[key].lander) > (eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]]?.checkout / eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]]?.lander) }>
 								{parseFloat((eventsData.dropOff[key].checkout / eventsData.dropOff[key].lander) * 100).toFixed(2)}%
 							</span>
 							{/if}
@@ -324,7 +324,7 @@
 						{#each selectedVariantIndexes as key, _index}
 						<div>
 							{#if !fetchInProgress}
-							<span class:uptick={ (eventsData.dropOff[key].upsell / eventsData.dropOff[key].checkout) > (eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]].upsell / eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]].checkout) }>
+							<span class:uptick={ (eventsData.dropOff[key].upsell / eventsData.dropOff[key].checkout) > (eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]]?.upsell / eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]]?.checkout) }>
 								{parseFloat((eventsData.dropOff[key].upsell / eventsData.dropOff[key].checkout) * 100).toFixed(2)}%
 							</span>
 
@@ -350,7 +350,7 @@
 						<div>
 							{#if !fetchInProgress}
 							{#if eventsData.dropOff[key].upsell > 0}
-							<span class:uptick={ (eventsData.dropOff[key].receipt / eventsData.dropOff[key].upsell) > (eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]].receipt / eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]].upsell) }>
+							<span class:uptick={ (eventsData.dropOff[key].receipt / eventsData.dropOff[key].upsell) > (eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]]?.receipt / eventsData.dropOff[Object.keys(eventsData.dropOff)[selectedVariantIndexes[_index === 0 ? 1 : 0]]]?.upsell) }>
 								{parseFloat((eventsData.dropOff[key].receipt / eventsData.dropOff[key].upsell) * 100).toFixed(2)}%
 							</span>
 							{/if}

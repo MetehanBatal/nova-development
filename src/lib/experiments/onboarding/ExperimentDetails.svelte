@@ -243,9 +243,9 @@
     onMount(async () => {
         try {
             const [pagesResponse, componentsResponse, variantsResponse] = await Promise.all([
-                fetch('http://localhost:3030/staging/pages/view?limit=100&offset=0'),
-                fetch('http://localhost:3030/staging/components/view?limit=100&offset=0'),
-                fetch('http://localhost:3030/staging/variants/view?limit=100&offset=0')
+                fetch('https://preconvert.novus.studio/staging/pages/view?limit=100&offset=0'),
+                fetch('https://preconvert.novus.studio/staging/components/view?limit=100&offset=0'),
+                fetch('https://preconvert.novus.studio/staging/variants/view?limit=100&offset=0')
             ]);
 
             // Check all responses for success

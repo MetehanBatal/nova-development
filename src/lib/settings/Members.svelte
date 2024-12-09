@@ -40,7 +40,7 @@
     
         inProgress = true;
     
-        fetch("https://mve.novus.studio/prod/users/create", requestOptions)
+        fetch("https://preconvert.novus.studio/prod/users/create", requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 inProgress = false;
@@ -121,7 +121,7 @@
         };
     
         fetch(
-            `https://mve.novus.studio/prod/users/update?emailAddress=${selectedUser.emailAddress}`,
+            `https://preconvert.novus.studio/prod/users/update?emailAddress=${selectedUser.emailAddress}`,
             requestOptions
         )
             .then((response) => response.text())

@@ -7,19 +7,48 @@
     import { onMount } from 'svelte';
 
     let visibleIds = [];
+    let eventCounts = new Map();
+
+    let initialized = false;
 
     onMount(async() => {
         // Fetch components
         //
+        initialized = true;
+
+        fetchEvents();
+    });
+
+    async function fetchEvents() {
+        if (!initialized) {
+            return; }
+
         try {
-            const eventsReq = await fetch(`http://localhost:3030/staging/cmsEvents/view?limit=100&offset=0&pageId=${$pages.pages[$pages.selectedPageIndex].pageId}`);
+            const eventsReq = await fetch(`https://preconvert.novus.studio/staging/cmsEvents/view?limit=100&offset=0&pageSlug=${$pages.pages[$pages.selectedPageIndex].slug}`);
             const eventsRes = await eventsReq.json();
             
             $events = eventsRes.data.docs;
         } catch (error) {
             console.error('Error fetching events:', error);
         }
-    });
+    }
+
+    async function fetchEventDetails(eventId, eventName) {
+        visibleIds = visibleIds.includes(eventId) 
+                ? visibleIds.filter(id => id !== eventId) 
+                : [...visibleIds, eventId]
+            
+        if (!eventCounts.get(eventId)) {
+            const eventsReq = await fetch(`https://preconvert.novus.studio/staging/cmsEvents/report?eventName=${eventName}`);
+            const eventsRes = await eventsReq.json();
+
+            console.log(eventsRes);
+
+            eventCounts.set(eventId, eventsRes.data);
+        }
+    }
+
+    $: $pages.selectedPageIndex, fetchEvents();
 </script>
 
 <ul class="events-holder">
@@ -27,18 +56,20 @@
     <li>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div class="header" on:click={() => { 
-            visibleIds = visibleIds.includes(event.eventId) 
-                ? visibleIds.filter(id => id !== event.eventId) 
-                : [...visibleIds, event.eventId] 
-        }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9.33333 2.7334L8 4.00007" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M3.40001 5.33338L1.46667 4.80005" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M4 8L2.73334 9.33333" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M4.79999 1.46655L5.33332 3.39989" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6.02466 6.46002C5.9988 6.39912 5.99174 6.33189 6.00436 6.26695C6.01698 6.202 6.04872 6.14231 6.0955 6.09553C6.14228 6.04875 6.20197 6.01701 6.26692 6.00439C6.33186 5.99177 6.39909 5.99883 6.45999 6.02469L13.7933 9.02469C13.8586 9.05146 13.9137 9.09825 13.9507 9.15833C13.9876 9.2184 14.0046 9.28866 13.9991 9.35899C13.9936 9.42932 13.966 9.4961 13.9201 9.54972C13.8743 9.60333 13.8126 9.64102 13.744 9.65735L10.8447 10.3514C10.725 10.3799 10.6155 10.4411 10.5285 10.5281C10.4414 10.615 10.3801 10.7244 10.3513 10.844L9.65799 13.744C9.64183 13.8129 9.60419 13.8748 9.5505 13.9209C9.49682 13.9669 9.42987 13.9947 9.35936 14.0002C9.28884 14.0057 9.2184 13.9886 9.15823 13.9514C9.09806 13.9142 9.05128 13.8589 9.02466 13.7934L6.02466 6.46002Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+        <div class="header" on:click={() => { fetchEventDetails(event.eventId, event.name) }}>
+            <div>
+                {#if event.triggerType === 'click'}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mouse-pointer-click"><path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/></svg>
+                {:else if event.triggerType === 'scrollIntoView'}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gallery-vertical-end"><path d="M7 2h10"/><path d="M5 6h14"/><rect width="18" height="12" x="3" y="10" rx="2"/></svg>
+                {:else if event.triggerType === 'timeSpent'}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock-1"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14.5 8"/></svg>
+                {:else if event.triggerType === 'scroll'}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gallery-vertical"><path d="M3 2h18"/><rect width="18" height="12" x="3" y="6" rx="2"/><path d="M3 22h18"/></svg>
+                {:else if event.triggerType === 'submit'}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>`,
+                {/if}
+            </div>
             <p>{event.name}</p>
             
             <svg style={`transform: rotate(${visibleIds.includes(event.eventId) ? '90deg' : '0deg'});`} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -56,7 +87,7 @@
                 minute: '2-digit',
                 hour12: false
             })}</p>
-            <p>Total Event Count: 2,148</p>
+            <p>Total Event Count: {eventCounts.get(event.eventId) ? eventCounts.get(event.eventId) : '-'}</p>
             
             <div>
                 <p>Trigger: </p>

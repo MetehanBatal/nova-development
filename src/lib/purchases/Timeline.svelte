@@ -9,7 +9,7 @@
 
 	onMount(async () => {
         if (sessionId) {
-            const eventReq = await fetch(`https://mve.novus.studio/prod/events/view?sessionId=${sessionId}`);
+            const eventReq = await fetch(`https://preconvert.novus.studio/prod/mEvents/view?sessionId=${sessionId}`);
             const eventRes = await eventReq.json();
             events = eventRes.data;
         }

@@ -6,7 +6,7 @@
 
 <div class="context-menu" style={`transform: translate3d(calc(${posX}px - 100% + 34px), ${posY + 8}px, 0)`}>
     {#each options as option, _index}
-    <div class="context-menu-item" on:click={() => option.action()}>
+    <div class="context-menu-item" class:unpickable={option.selectable === false} on:click={() => option.action()}>
         {#if option.icon}
         {@html option.icon}
         {/if}
@@ -39,6 +39,11 @@
         padding: .8rem 1.2rem;
 
         cursor: pointer;
+    }
+
+    .context-menu-item.unpickable {
+        opacity: .3;
+        cursor: not-allowed;
     }
 
     :global(.context-menu-item svg){

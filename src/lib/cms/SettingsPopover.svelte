@@ -3,6 +3,7 @@
 
     import HeadingOptions from '$lib/cms/options/HeadingOptions.svelte';
     import ImageOptions from '$lib/cms/options/ImageOptions.svelte';
+    import VideoOptions from '$lib/cms/options/VideoOptions.svelte';
     import LinkOptions from '$lib/cms/options/LinkOptions.svelte';
     import ParagraphOptions from '$lib/cms/options/ParagraphOptions.svelte';
 
@@ -31,8 +32,12 @@
             component: LinkOptions
         },
         {
-            tags: ['IMG', 'VIDEO'],
+            tags: ['IMG'],
             component: ImageOptions
+        },
+        {
+            tags: ['VIDEO'],
+            component: VideoOptions
         }
     ];
 

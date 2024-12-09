@@ -32,7 +32,7 @@
 		try {
 			fetchInProgress = true;
 			const selectedTimestamp = new Date().getTime() - (filterOptions[selectedFilterIndex]['span'] * 60 * 60 * 1000);
-			const url = `https://mve.novus.studio/prod/purchases/analytics?timestamp=${selectedTimestamp}`;
+			const url = `https://preconvert.novus.studio/prod/mPurchases/analytics?timestamp=${selectedTimestamp}`;
 			const response = await fetch(url);
 			data = await response.json();
 		} catch (error) {

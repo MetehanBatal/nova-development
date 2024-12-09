@@ -10,7 +10,7 @@
 		  redirect: "follow"
 		};
 
-		fetch("https://mve.novus.studio/prod/analytics/trafficSource", requestOptions)
+		fetch("https://preconvert.novus.studio/prod/mAnalytics/trafficSource", requestOptions)
 			.then((response) => response.json())
 			.then((result) => {
 				// Create a new array by filtering and modifying the existing array

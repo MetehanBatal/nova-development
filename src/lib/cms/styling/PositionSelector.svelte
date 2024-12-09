@@ -1,5 +1,6 @@
 <script>
     import { selectedInstance } from "../../../stores/cms/selectedInstance";
+    import { selectedBreakpoint } from '../../../stores/cms/selectedBreakpoint';
     import { alterStylingProperty } from '../../../stores/cms/functions';
 
     import Dropdown from "$lib/toolkit/Dropdown.svelte";
@@ -51,14 +52,16 @@
     let rightValue = '';
     let bottomValue = '';
     let leftValue = '';
+    let zIndexValue = '';
 
     function getProperties() {
         selectionChangeInProgress = true;
-        selectedPositionIndex = $selectedInstance.styling?.['position'] ? positionOptions.findIndex((opt) => opt.value === $selectedInstance.styling['position']) : 0;
-        topValue = $selectedInstance.styling?.['top'] ? $selectedInstance.styling['top'] : '';
-		rightValue = $selectedInstance.styling?.['right'] ? $selectedInstance.styling['right'] : '';
-		bottomValue = $selectedInstance.styling?.['bottom'] ? $selectedInstance.styling['bottom'] : '';
-		leftValue = $selectedInstance.styling?.['left'] ? $selectedInstance.styling['left'] : '';
+        selectedPositionIndex = $selectedInstance.styling?.[$selectedBreakpoint]?.['position'] ? positionOptions.findIndex((opt) => opt.value === $selectedInstance.styling[$selectedBreakpoint]?.['position']) : 0;
+        topValue = $selectedInstance.styling?.[$selectedBreakpoint]?.['top'] ? $selectedInstance.styling[$selectedBreakpoint]?.['top'] : '';
+		rightValue = $selectedInstance.styling?.[$selectedBreakpoint]?.['right'] ? $selectedInstance.styling[$selectedBreakpoint]?.['right'] : '';
+		bottomValue = $selectedInstance.styling?.[$selectedBreakpoint]?.['bottom'] ? $selectedInstance.styling[$selectedBreakpoint]?.['bottom'] : '';
+		leftValue = $selectedInstance.styling?.[$selectedBreakpoint]?.['left'] ? $selectedInstance.styling[$selectedBreakpoint]?.['left'] : '';
+        zIndexValue = $selectedInstance.styling?.[$selectedBreakpoint]?.['z-index'] ? $selectedInstance.styling[$selectedBreakpoint]?.['z-index'] : '';;
         
         setTimeout(() =>{
             selectionChangeInProgress = false;
@@ -71,9 +74,17 @@
 
     function handlePositionChange() {
         if (initialized && !selectionChangeInProgress) {
-            $selectedInstance.styling['position'] = positionOptions[selectedPositionIndex];
+            $selectedInstance.styling[$selectedBreakpoint]['position'] = positionOptions[selectedPositionIndex];
 
             alterStylingProperty('position', positionOptions[selectedPositionIndex].value);
+        }
+    }
+
+    function handleZIndexChange(target) {
+        if (initialized && !selectionChangeInProgress) {
+            $selectedInstance.styling['z-index'] = target.value;
+
+            alterStylingProperty(target.getAttribute('name'), target.value);
         }
     }
 
@@ -122,6 +133,12 @@
                     <input type="text" name="bottom" bind:value={bottomValue} on:blur={(e) => { handleStylingChange(e.target) }} />
                 </div>
             </div>
+        </div>
+
+        <div class="options directions">     
+            <p>Z-Index</p>
+            
+            <input type="text" name="z-index" bind:value={zIndexValue} on:blur={(e) => {handleZIndexChange(e.target)}} />
         </div>
         {/if}
     {/if}
