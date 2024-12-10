@@ -1,8 +1,8 @@
 <script>
-    import { generateRandomString, generateRandomNumber, dbActions } from "../../../stores/cms/functions";
-    import { pages } from '../../../stores/cms/pages';
-    import { selectedInstance } from '../../../stores/cms/selectedInstance';
-    import { instances } from '../../../stores/cms/instances';
+    import { generateRandomString, generateRandomNumber, dbActions } from "$stores/cms/functions";
+    import { pages } from '$stores/cms/pages';
+    import { selectedInstance } from '$stores/cms/selectedInstance';
+    import { instances } from '$stores/cms/instances';
 
     let componentMenuRevealed = false;
     let componentName = '';

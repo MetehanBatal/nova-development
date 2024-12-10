@@ -1,14 +1,14 @@
 <script>   
-    import { selectedInstance } from "../../../stores/cms/selectedInstance";
-    import { styleSheet } from '../../../stores/cms/styleSheet';
-    import { alterStylingProperty } from '../../../stores/cms/functions';
+    import { selectedInstance } from "$stores/cms/selectedInstance";
+    import { styleSheet } from '$stores/cms/styleSheet';
+    import { alterStylingProperty } from '$stores/cms/functions';
     
 
     import Switch from "$lib/toolkit/Switch.svelte";
     import FlexSelector from "$lib/cms/styling/FlexSelector.svelte";
     import GridSelector from "$lib/cms/styling/GridSelector.svelte";
     import { onMount } from "svelte";
-    import { instances } from "../../../stores/cms/instances";
+    import { instances } from "$stores/cms/instances";
 
     let dropdownExpanded = true;
 

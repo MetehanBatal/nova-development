@@ -7,10 +7,10 @@
 
     import ChartHeader from "./ChartHeader.svelte"
     import { pointer, rgb, scaleBand, scaleLinear } from 'd3'
-    import {processDataFunc} from '../../../stores/functions.js'
+    import {processDataFunc} from '$stores/functions.js'
     import Xaxis from "$lib/experiments/charts/Bars/Xaxis.svelte";
     import Yaxis from "$lib/experiments/charts/Bars/Yaxis.svelte";
-    import { colors } from "../../../stores/colors.js";
+    import { colors } from "$stores/colors.js";
     
     let productData = {}
     let xGroupDepth = []

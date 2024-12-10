@@ -1,496 +1,536 @@
 <script>
-    import Dropdown from '$lib/toolkit/Dropdown.svelte';
-    import Dialog from '$lib/toolkit/Dialog.svelte';
-    
-    import { page } from '$app/stores';
-    import { toastMessage } from '../../stores/toast';
-    
-    let dialogResponse;
-    
-    
-    let emailAddress = "";
-    
-    let inProgress = false;
-    
-    const spinner = `<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>`;
-    
-    function sendInvite() {
-        if (emailAddress.length < 1 || memberTypes[selectedMemberTypesIndex]["name"] === 'Membership Status') {
-            $toastMessage.type = "warning";
-            $toastMessage.content = "Please enter a valid email address";
-            inProgress = false;
-    
-            return;
+  import Dialog from '$lib/toolkit/Dialog.svelte';
+  import Input from '$uiKit/components/Input.svelte';
+  import Button from '$uiKit/components/Button.svelte';
+  import Avatar from '$uiKit/components/Avatar.svelte';
+
+  import { page } from '$app/stores';
+  import * as yup from 'yup';
+  import Combobox from '$uiKit/components/combobox/Combobox.svelte';
+  import { Toast, toaster } from '$uiKit/components/toast/index';
+
+  let dialogResponse = null;
+
+  let emailAddress = '';
+  let errors = {
+    emailAddress: '',
+    selectedMember: ''
+  };
+
+  let inProgress = false;
+
+  const spinner = `<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>`;
+
+  function sendInvite() {
+    console.log('selectedMember', selectedMember);
+    console.log('memberTypes', memberTypes['key']);
+
+    const apiHeaders = new Headers();
+    apiHeaders.append('Content-Type', 'application/x-www-form-urlencoded');
+
+    const urlencoded = new URLSearchParams();
+    urlencoded.append('emailAddress', emailAddress);
+    urlencoded.append('role', selectedMember.label);
+    console.log('urlencoded', urlencoded);
+
+    const requestOptions = {
+      method: 'POST',
+      headers: apiHeaders,
+      body: urlencoded,
+      redirect: 'follow'
+    };
+
+    inProgress = true;
+
+    fetch('https://mve.novus.studio/prod/users/create', requestOptions)
+      .then((response) => response.json())
+      .then((result) => {
+        inProgress = false;
+        console.log('result', result);
+        if (result.err && result.err.length > 0) {
+          console.log('result.err', result.err);
+          toaster.error({
+            title: 'Error',
+            content: 'Something went wrong while sending invite.',
+            duration: 5000
+          });
+          selectedMember = '';
+          emailAddress = '';
+        } else {
+          toaster.success({
+            title: 'Success',
+            content: 'Invite sent successfully.',
+            duration: 5000
+          });
+          selectedMember = '';
+          emailAddress = '';
         }
-        
-        const apiHeaders = new Headers();
-        apiHeaders.append("Content-Type", "application/x-www-form-urlencoded");
-    
-        const urlencoded = new URLSearchParams();
-        urlencoded.append("emailAddress", emailAddress);
-        urlencoded.append("role", memberTypes[selectedMemberTypesIndex]["name"]);
-    
-    
-        const requestOptions = {
-            method: "POST",
-            headers: apiHeaders,
-            body: urlencoded,
-            redirect: "follow"
+      })
+      .catch((error) => {
+        console.error(error);
+        toaster.error({
+          title: 'Error',
+          content: 'Something went wrong!',
+          duration: 5000
+        });
+        inProgress = false;
+      });
+  }
+
+  let members = $page.data.membersRes.msg;
+
+  const memberTypes = [
+    { key: 'admin', label: 'Admin' },
+    { key: 'projectManager', label: 'Project Manager' },
+    { key: 'member', label: 'Member' },
+    { key: 'editor', label: 'Editor' },
+    { key: 'tester', label: 'Tester' }
+  ];
+
+  let dialogData = '';
+  let dialogModal = false;
+  let storedRole;
+  let selectedUser;
+  let selectedUserOption;
+
+  let selectedMember = '';
+
+  $: if (dialogResponse === 'confirmed') {
+    updateRole();
+    dialogResponse = null;
+  }
+
+  function memberRoleHandler(item, newOption, index) {
+    dropdownOpened[index] = false;
+    selectedUser = item;
+    selectedUserOption = newOption;
+    storedRole = item.role;
+    dialogModal = true;
+    dialogData = {
+      icon: '/assets/icons/dialog-icon.svg',
+      title: `Are you sure you want to update access?`,
+      content: `This will update the priviliges of ${item.firstName}.`,
+      confirmText: 'Yes',
+      declineText: `Cancel`
+    };
+  }
+
+  function updateRole() {
+    selectedUser.role = selectedUserOption;
+
+    const myHeaders = new Headers();
+    myHeaders.append('Content-Type', 'application/x-www-form-urlencoded');
+
+    const urlencoded = new URLSearchParams();
+    urlencoded.append('emailAddress', selectedUser.emailAddress);
+    urlencoded.append('role', selectedUserOption);
+
+    const requestOptions = {
+      method: 'PUT',
+      headers: myHeaders,
+      body: urlencoded,
+      redirect: 'follow'
+    };
+
+    fetch(`https://mve.novus.studio/prod/users/update?emailAddress=${selectedUser.emailAddress}`, requestOptions)
+      .then((response) => response.text())
+      .then((result) => {
+        if (result.err && result.err.length > 0) {
+          toaster.error({
+            title: 'Error',
+            content: 'Something went wrong while updating User Access.',
+            duration: 5000
+          });
+        } else {
+          toaster.success({
+            title: 'Success',
+            content: 'User type updated successfully. Please Refresh the page.',
+            duration: 5000
+          });
+        }
+      })
+      .catch((error) => console.error(error));
+  }
+
+  let dropdownOpened = Array(memberTypes.length).fill(false);
+
+  function toggleDropdown(index) {
+    dropdownOpened[index] = !dropdownOpened[index];
+  }
+
+  const schema = yup.object({
+    emailAddress: yup.string().email('Invalid email').required('Field is required'),
+    selectedMember: yup
+      .object()
+      .test('is-not-empty', 'Choose  member', (value) => value && Object.keys(value).length > 0)
+      .typeError('Choose member')
+      .required('Field is required')
+  });
+
+  const validateForm = async (fieldName, value) => {
+    if (fieldName) {
+      try {
+        const fieldSchema = yup.reach(schema, fieldName);
+        await fieldSchema.validate(value);
+        errors[fieldName] = '';
+      } catch (validationErrors) {
+        console.log(`Validation error for "${fieldName}":`, validationErrors.message);
+        errors[fieldName] = validationErrors.message;
+      }
+    } else {
+      const data = {
+        emailAddress: emailAddress,
+        selectedMember: selectedMember
+      };
+      try {
+        await schema.validate(data, { abortEarly: false });
+        errors = {
+          emailAddress: '',
+          selectedMember: ''
         };
-    
-        inProgress = true;
-    
-        fetch("https://mve.novus.studio/prod/users/create", requestOptions)
-            .then((response) => response.json())
-            .then((result) => {
-                inProgress = false;
-                if (result.err && result.err.length > 0) {
-                    $toastMessage.type = "error";
-                    $toastMessage.content = 'Something went wrong while sending invite.'				
-                } else {
-                    $toastMessage.type = "success";
-                    $toastMessage.content = "Invite sent successfully.";				
-                }
-            })
-            .catch((error) => {
-                 console.error(error)
-                $toastMessage.type = "error";
-                $toastMessage.content = "Something Went Wrong!";
-                inProgress = false;
-    
-                setTimeout(() => {
-                    $toastMessage.type = "";
-                    $toastMessage.content = "";
-                },5000)
-            });
-    }
-    
-    
-    let members = $page.data.membersRes.msg;
-    
-    const memberTypes = [
-        { id: 'admin', name: 'Admin'},
-        { id: 'projectManager', name: 'Project Manager' },
-        { id: 'member', name: 'Member' },
-        { id: 'editor', name: 'Editor' },
-        { id: 'tester', name: 'Tester' }
-    ];
-    
-    let dialogData = '';
-    let dialogModal = false;
-    let storedRole;
-    let selectedUser;
-    let selectedUserOption;
-    
-    let selectedMemberTypesIndex = 0;
-    
-    $: if (dialogResponse === 'confirmed') {
-        updateRole();
-    }
-    
-    function memberRoleHandler(item, newOption, index) {	
-            dropdownOpened[index] = false
-            selectedUser = item;
-            selectedUserOption = newOption;
-            storedRole = item.role;
-            dialogModal = true;
-            dialogData = {
-                icon: '/assets/icons/dialog-icon.svg',
-                title: `Are you sure you want to update access?`,
-                content: `This will update the priviliges of ${item.firstName}.`,
-                confirmText: "Yes",
-                declineText: `Cancel`
-            }  
-    }
-    
-    function updateRole() {
-        selectedUser.role = selectedUserOption;
-    
-        const myHeaders = new Headers();
-        myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
-    
-        const urlencoded = new URLSearchParams();
-        urlencoded.append("emailAddress", selectedUser.emailAddress);
-        urlencoded.append("role", selectedUserOption);
-    
-        const requestOptions = {
-            method: "PUT",
-            headers: myHeaders,
-            body: urlencoded,
-            redirect: "follow",
+        errors = { ...errors };
+        sendInvite();
+      } catch (validationErrors) {
+        errors = {
+          emailAddress: '',
+          selectedMember: ''
         };
-    
-        fetch(
-            `https://mve.novus.studio/prod/users/update?emailAddress=${selectedUser.emailAddress}`,
-            requestOptions
-        )
-            .then((response) => response.text())
-            .then((result) => {
-                if (result.err && result.err.length > 0) {
-                    $toastMessage.type = "error";
-                    $toastMessage.content = 'Something went wrong while updating User Access.'				
-                } else {
-                    $toastMessage.type = "success";
-                    $toastMessage.content = "User type updated succesfully. Please Refresh the page.";				
-                }
-            })
-            .catch((error) => console.error(error));
+        console.log('Validation errors:', validationErrors.inner);
+        validationErrors.inner.forEach((err) => {
+          errors[err.path] = err.message;
+        });
+        errors = { ...errors };
+      }
     }
-    
-    
-    
-    let dropdownOpened = Array(memberTypes.length).fill(false);
-    
-    function toggleDropdown(index) {
-        dropdownOpened[index] = !dropdownOpened[index];
-    }
-    
+  };
+
+  const handleSubmit = async (event) => {
+    console.log('$page.data.membersRes.msg', $page.data.membersRes.msg);
+    event.preventDefault();
+    await validateForm(null, null);
+  };
 </script>
 
-
 <div class="settings-container">
+  <div class="type-header">
+    <p class="type-title">Members</p>
+    <p class="type-subtitle">Add members to collaborate within a workspace</p>
+  </div>
 
-    <div class="type-header">
-        <p class="type-title">Members</p>
-        <p class="type-subtitle">Add members to collaborate within a workspace</p>
-    </div>
+  <div class="setting-divider"></div>
 
-    <div class="setting-divider"></div>
-
+  <form on:submit|preventDefault={handleSubmit}>
     <div class="settings-input-holder align-center members-holder">
-        <label for="inviteEmail">
-            Invite people to project
-        </label>
-        
-        <div class="settings-inputs">
-            <input type="text" name="inviteEmail" placeholder="Enter email" bind:value={emailAddress}>
+      <label for="inviteEmail"> Invite people to project </label>
 
-            <Dropdown options={memberTypes} bind:selectedStatusIndex={selectedMemberTypesIndex} position="left"/>
-        </div>
+      <div class="settings-inputs">
+        <Input
+          placeholder="Enter email"
+          type="text"
+          name="inviteEmail"
+          bind:value={emailAddress}
+          error={errors.emailAddress}
+          on:input={(value) => validateForm('emailAddress', value.detail)}
+        />
+
+        <Combobox
+          name="memberRole"
+          items={memberTypes}
+          placeholder="Role"
+          bind:value={selectedMember}
+          error={errors.selectedMember}
+          on:selected={(value) => validateForm('selectedMember', value.detail)}
+        />
+      </div>
     </div>
 
     <div class="setting-divider"></div>
 
     <div class="settings-button-wrapper">
-        <div class="cta-button primary" on:click={(e) => sendInvite()}>
-            {#if inProgress}
-            {@html spinner}
-            {:else}
-            Send Invite
-            {/if}
-        </div>
+      <Button size="small" type="submit">Send Invite</Button>
     </div>
+  </form>
 
-    <div class="setting-divider"></div>
+  <div class="setting-divider"></div>
 
-    <div class="manage-members">
-        <p class="manage-members-title">
-            Manage members
-        </p>
-        <div class="members">
-            
-            {#each members as member, index}
-                <div class="member-item">
-                <div class="member-description">
-                    <div class="member-image">
-                        {#if member.thumbnail}
-                            <img src={`${member.thumbnail}`} alt="">
-                            {:else}
-                            {member.firstName.slice(0,1)}
-                        {/if}
-                    </div>
-                    <p class="member-name">
-                        {`${member.firstName} ${member.lastName}`}					
-                    </p>
-                    <p class="member-email">
-                        {#if member.emailAddress === 'oakinogundeji@gmail.com'}
-                        muyiwa@novus.studio
-                        {:else if member.emailAddress === 'gabriel_scf@hotmail.com'}
-                        gabriel@novus.studio
-                        {:else}
-                        {member.emailAddress}
-                        {/if}
-                        
-                        {#if member.firstName === "" || member.lastName === ""}
-                            <div class="invite-text">
-                                Invite pending
-                            </div>
-                        {/if}
-                    </p>
-                </div>
-                <div class="status-dropdown">				
-
-                    <div class="dropdown-box">
-                        <div class="dropdown-selection" on:click={(e) => { toggleDropdown(index) }}>
-                            <div class="option-content">
-                                <p>{member.role}</p>
-                            </div>
-                    
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                    
-                        {#if dropdownOpened[index]}
-                        <div class={`dropdown left`}>
-                            {#each memberTypes as option, _index}
-                            <div class="dropdown-option" class:selected={option.name.toLowerCase() === member.role.toLowerCase() } on:click={(e) => {memberRoleHandler(member, option.name, index)}}>
-                                <div class="option-content">
-                                    <p>{option['name']}</p>
-                                </div>
-
-                                {#if option["icon"]}
-                                    <img width="16" height="16" src={option['icon']} alt={option['name']}>
-                                {/if}
-                    
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M10 3L4.5 8.5L2 6" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </div>
-                            {/each}
-                        </div>
-                        {/if}
-                    </div>
-                </div>
-                
+  <div class="manage-members">
+    <p class="manage-members-title">Manage members</p>
+    <div class="members">
+      {#each members as member, index}
+        <div class="member-item">
+          <div class="member-description">
+            <div class="member-image">
+              <Avatar
+                src={member.thumbnail}
+                alt={member.firstName}
+                placeholder={member.firstName.slice(0, 1)}
+                size="xs"
+                changeable={false}
+              />
             </div>
-            {/each}
-            
-
-            <div class="setting-divider"></div>
+            <div>
+              <p class="member-name">
+                {`${member.firstName} ${member.lastName}`}
+              </p>
+              <p class="member-email">
+                {#if member.emailAddress === 'oakinogundeji@gmail.com'}
+                  muyiwa@novus.studio
+                {:else if member.emailAddress === 'gabriel_scf@hotmail.com'}
+                  gabriel@novus.studio
+                {:else}
+                  {member.emailAddress}
+                {/if}
+              </p>
+              {#if member.firstName === '' || member.lastName === ''}
+                <div class="invite-text">Invite pending</div>
+              {/if}
+            </div>
+          </div>
+          <Combobox
+            name="role"
+            items={memberTypes}
+            placeholder="Role"
+            border={false}
+            bind:value={member.role}
+            on:selected={(e) => {
+              memberRoleHandler(member, e.detail.label, index);
+            }}
+          ></Combobox>
         </div>
-    </div>
+      {/each}
 
+      <div class="setting-divider"></div>
+    </div>
+  </div>
 </div>
+<Toast />
 
 {#if dialogModal}
-    <Dialog data={dialogData} bind:dialogResponse={dialogResponse} bind:dialogModal={dialogModal} />
+  <Dialog data={dialogData} bind:dialogResponse bind:dialogModal />
 {/if}
 
-
 <style>
-    .settings-inputs {
-        display: flex;
-    }
+  .settings-inputs {
+    display: flex;
+  }
 
-    .settings-inputs input {
-        flex: 1;
-    }
-    
-    :global(.settings-inputs .dropdown .dropdown-title) {
-        background-color: transparent;
-    }
-    
-    :global(.settings-inputs .dropdown.active .dropdown-title) {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-    }
+  .settings-inputs input {
+    flex: 1;
+  }
 
-    .manage-members {
-        display: flex;
-        align-items: flex-start;
-        gap: 2.4rem;
-    }
+  :global(.settings-inputs .dropdown .dropdown-title) {
+    background-color: transparent;
+  }
 
-    .manage-members-title {
-        flex: 1;
-    }
+  :global(.settings-inputs .dropdown.active .dropdown-title) {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
 
-    .members {
-        flex: 2;
-        max-width: 51rem;
-        margin-left: auto;
-    }
+  .manage-members {
+    align-items: flex-start;
+    gap: 2.4rem;
+  }
 
-    .member-item {
-        padding: 1.6rem 1.6rem 1.6rem .8rem;
+  .manage-members-title {
+    flex: 1;
+  }
 
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+  .members {
+    flex: 2;
+    max-width: 51rem;
+    margin-left: auto;
+  }
 
-        border-bottom: .1rem solid rgba(33, 40, 48, 1);
-    }
+  .member-item {
+    padding: 1.6rem 1.6rem 1.6rem 0.8rem;
 
-    .member-description {
-        display: grid;
-        grid-template-columns: .1fr 1fr 1fr;
-    }
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+    justify-content: space-between;
 
-    .member-image img {
-        border-radius: 50%;
-    }
+    border-bottom: 0.1rem solid rgba(33, 40, 48, 1);
+  }
 
-    .member-image {
-        width: 4rem;
-        height: 4rem;
-        
-        grid-row-start: 1;
-        grid-row-end: 3;
+  .member-description {
+    display: grid;
+    grid-template-columns: 0.1fr 1fr 1fr;
+    align-items: center;
+  }
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
+  .member-image img {
+    border-radius: 50%;
+  }
 
-        background-color: #AA96F3;
+  .member-image {
+    width: 4rem;
+    height: 4rem;
 
-        padding: .6rem;
-        margin-right: .8rem;
+    grid-row-start: 1;
+    grid-row-end: 3;
 
-        font-size: 1.4rem;
-        line-height: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-        border-radius: 50%;
-    }
+    background-color: #aa96f3;
 
-    .member-item:first-child .member-image {
-        background-color: #161616;
-    }
+    padding: 0.6rem;
+    margin-right: 0.8rem;
 
-    .member-name {
-        grid-row-start: 1;
-    }
-    .member-email {
-        grid-row-start: 2;
-        font-size: 1.2rem;
-        color: #88888A;
+    font-size: 1.4rem;
+    line-height: 1.8rem;
 
-        display: flex;
-    }
+    border-radius: 50%;
+  }
 
-    :global(.status-dropdown .dropdown-selection) {
-        background-color: transparent !important;
-        border: none !important;
-    }
+  .member-item:first-child .member-image {
+    background-color: #161616;
+  }
 
-    :global(.status-dropdown .dropdown-selection p) {
-        font-size: 1.2rem;
-    }
+  .member-name {
+    grid-row-start: 1;
+  }
+  .member-email {
+    grid-row-start: 2;
+    font-size: 1.2rem;
+    color: #88888a;
 
-    :global(.status-dropdown .dropdown p) {
-        font-size: 1.2rem;
-    }
+    display: flex;
+  }
 
-    .invite-text {	
-        padding: .2rem .4rem;
-        border-radius: .4rem;
-        font-size: 1rem;
-        display: block;
-        white-space: pre;
-        background: #88888A;
-        color: #FFF;
-        line-height: 1rem;
-        height: fit-content;
-        margin-left: .5rem;
-    }
+  :global(.status-dropdown .dropdown-selection) {
+    background-color: transparent !important;
+    border: none !important;
+  }
 
+  :global(.status-dropdown .dropdown-selection p) {
+    font-size: 1.2rem;
+  }
 
-    .cta-button {
-        min-width: 13.7rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+  :global(.status-dropdown .dropdown p) {
+    font-size: 1.2rem;
+  }
 
-    .dropdown-box {
-        position: relative;
-    }
+  .invite-text {
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.4rem;
+    font-size: 1rem;
+    display: block;
+    white-space: pre;
+    background: #88888a;
+    color: #fff;
+    line-height: 1rem;
+    height: fit-content;
+    margin-left: 0.5rem;
+    width: fit-content;
+  }
 
-    .dropdown-selection {
-        display: flex;
-        align-items: center;
-        gap: 1.4rem;
+  .cta-button {
+    min-width: 13.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-        background-color: #0D121A;
-        border: .1rem solid #383C42;
-        border-radius: .8rem;
+  .dropdown-box {
+    position: relative;
+  }
 
-        padding: 1rem 1.2rem;
+  .dropdown-selection {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
 
-        width: max-content;
+    background-color: #0d121a;
+    border: 0.1rem solid #383c42;
+    border-radius: 0.8rem;
 
-        cursor: pointer;
-    }
+    padding: 1rem 1.2rem;
 
-    .dropdown-selection svg {
-        transition: transform .24s ease-in-out;
-    }
+    width: max-content;
 
-    .dropdown-selection.opened svg {
-        transform: rotate(180deg);
-    }
+    cursor: pointer;
+  }
 
-    .dropdown {
-        position: absolute;
-        top: 100%;
-        right: 0;
+  .dropdown-selection svg {
+    transition: transform 0.24s ease-in-out;
+  }
 
-        width: max-content;
+  .dropdown-selection.opened svg {
+    transform: rotate(180deg);
+  }
 
-        background-color: #0D121A;
-        border: .1rem solid #383C42;
-        border-radius: .8rem;
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
 
-        padding: .8rem 0;
+    width: max-content;
 
-        transform: translateY(.4rem);
-        z-index: 100;
-    }
+    background-color: #0d121a;
+    border: 0.1rem solid #383c42;
+    border-radius: 0.8rem;
 
-    .dropdown.left {
-        left: 0;
-        right: auto;
-    }
+    padding: 0.8rem 0;
 
-    .dropdown-option {
-        display: flex;
-        align-items: center;
-        gap: .8rem;
+    transform: translateY(0.4rem);
+    z-index: 100;
+  }
 
-        width: 100%;
+  .dropdown.left {
+    left: 0;
+    right: auto;
+  }
 
-        padding: 1.2rem 1rem;
+  .dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
 
-        transition: all .24s ease-in-out;
-        cursor: pointer;
-    }
+    width: 100%;
 
-    .dropdown-option:hover {
-        background-color: rgba(33, 40, 48, .4);
-    }
+    padding: 1.2rem 1rem;
 
-    .dropdown-option.selected {
-        background-color: #212830;
-    }
+    transition: all 0.24s ease-in-out;
+    cursor: pointer;
+  }
 
-    .dropdown-option svg {
-        margin-left: auto;
+  .dropdown-option:hover {
+    background-color: rgba(33, 40, 48, 0.4);
+  }
 
-        opacity: 0;
-    }
+  .dropdown-option.selected {
+    background-color: #212830;
+  }
 
-    .dropdown-option.selected svg {
-        opacity: 1;
-    }
+  .dropdown-option svg {
+    margin-left: auto;
 
-    .option-content {
-        display: flex;
-        align-items: center;
-        gap: .8rem;
-    }
+    opacity: 0;
+  }
 
-    .option-content p {
-        white-space: nowrap;
-    }
+  .dropdown-option.selected svg {
+    opacity: 1;
+  }
 
-    :global(.members-holder .dropdown-box, .members-holder .dropdown-selection, .members-holder .dropdown) {
-        width: 100% !important;
-        max-width: 25rem;
-    }
+  .option-content {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
 
-    :global(.members-holder .dropdown-box .dropdown-selection) {
-        justify-content: space-between;
-    }
-    
+  .option-content p {
+    white-space: nowrap;
+  }
 
+  :global(.members-holder .dropdown-box, .members-holder .dropdown-selection, .members-holder .dropdown) {
+    width: 100% !important;
+    max-width: 25rem;
+  }
+
+  :global(.members-holder .dropdown-box .dropdown-selection) {
+    justify-content: space-between;
+  }
 </style>

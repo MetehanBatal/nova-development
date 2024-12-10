@@ -14,7 +14,7 @@
 	if ((selection === 'multiple' || selection === 'single') && selectedStatusIndex === null) {
 		console.log(options, selectedStatusIndex);
 		selectedStatusIndex = [];
-	} 
+	}
 
 	console.log('From dropdown: ', options, from, selectedStatusIndex)
 
@@ -28,7 +28,7 @@
 			selectedStatusIndex.includes(option.index)
 				? selectedStatusIndex = selectedStatusIndex.filter(index => index !== option.index)
 				: selectedStatusIndex = [...selectedStatusIndex, option.index]
-			
+
 		} else if(selection === 'single') {
 			selectedStatusIndex = [option.index]
 		} else {
@@ -44,7 +44,7 @@
 	);
 </script>
 
-<!-- 
+<!--
 @component
 ## Dropdown
 Receives an array of objects for the options and an active index
@@ -112,7 +112,7 @@ Receives an array of objects for the options and an active index
 			<input type="text" placeholder="Search" bind:value={searchTerm} on:input={(event) => searchTerm = event.target.value.toLowerCase()}>
 		</div>
 		{/if}
-		
+
 		{#if selection !== 'input-text'}
 			{#each filteredData as option, _index}
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -185,7 +185,7 @@ Receives an array of objects for the options and an active index
 	.dropdown-box.plain .dropdown-selection {
 		background-color: transparent;
 		border: 0;
-		
+
 		padding: 0;
 	}
 	.dropdown-box.eventLabel .dropdown-selection {
@@ -214,8 +214,8 @@ Receives an array of objects for the options and an active index
 
 		width: max-content;
 		max-height: 20rem;
-		
-		overflow: auto; 
+
+		overflow: auto;
 
 		background-color: #0D121A;
 		border: .1rem solid #383C42;
@@ -285,7 +285,7 @@ Receives an array of objects for the options and an active index
 	.muted {
 		font-style: italic;
 		font-size: 1.4rem;
-	} 
+	}
 
 	p.sm {
 		font-size: 1.2rem;
@@ -307,7 +307,7 @@ Receives an array of objects for the options and an active index
 		width: 100%;
 
 		padding-left: 1rem;
-		
+
 		border-bottom: 0.1rem solid #383C42;
 	}
 
@@ -334,8 +334,8 @@ Receives an array of objects for the options and an active index
 		opacity: 1;
 
 		background-color: #0D121A;
-		border: .1rem solid #383C42;   
-		
+		border: .1rem solid #383C42;
+
 		cursor: pointer;
 	}
 

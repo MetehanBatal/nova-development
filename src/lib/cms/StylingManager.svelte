@@ -1,7 +1,7 @@
 <script>
-    import { selectedInstance } from '../../stores/cms/selectedInstance';
-    import { nodeTags } from '../../stores/cms/nodeTags';
-    import { cmsMode } from '../../stores/cms/cmsMode';
+    import { selectedInstance } from '$stores/cms/selectedInstance';
+    import { nodeTags } from '$stores/cms/nodeTags';
+    import { cmsMode } from '$stores/cms/cmsMode';
 
     import LayoutSelector from '$lib/cms/styling/LayoutSelector.svelte';
     import ClassSelector from '$lib/cms/styling/ClassSelector.svelte';

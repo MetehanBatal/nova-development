@@ -11,7 +11,7 @@
   export let metricsSelected
 
   import {timeFormat} from 'd3';
-  import { colors } from "../../../stores/colors.js";
+  import { colors } from "$stores/colors.js";
   import { onMount } from "svelte";
 
   $: legendDom = "";

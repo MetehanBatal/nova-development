@@ -13,7 +13,7 @@
 	export let isTimeScale
 	
 	import { timeFormat } from "d3";
-  import { colors } from "../../../../stores/colors";
+  import { colors } from "$stores/colors";
 	let dateFormat = timeFormat("%a %b %d, %Y %I:%M%p");
 	let pastValue
 	let presentValue

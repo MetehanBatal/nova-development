@@ -1,5 +1,5 @@
 <script>
-	// import { routes } from '../../../stores/routes--dev';
+	// import { routes } from '$stores/routes--dev';
 
 	export let slug;
 

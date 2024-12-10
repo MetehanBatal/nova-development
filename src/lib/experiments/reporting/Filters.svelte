@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import Dropdown from '$lib/toolkit/Dropdown.svelte';
-	import { componentStructureFunc } from '../../../stores/functions.js'
+	import { componentStructureFunc } from '$stores/functions.js'
 
 
 	export let filters;

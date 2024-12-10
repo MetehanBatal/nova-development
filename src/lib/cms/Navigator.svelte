@@ -1,10 +1,10 @@
 <script>
-    import { toastMessage } from '../../stores/toast';
-    import { selectedCMSTabIndex } from '../../stores/cms/selectedCMSTabIndex';
-    import { assets } from '../../stores/cms/assets';
-    import { pages } from '../../stores/cms/pages';
-    import { cmsMode } from '../../stores/cms/cmsMode';
-    import { components } from '../../stores/cms/components';
+    import { toastMessage } from '$stores/toast';
+    import { selectedCMSTabIndex } from '$stores/cms/selectedCMSTabIndex';
+    import { assets } from '$stores/cms/assets';
+    import { pages } from '$stores/cms/pages';
+    import { cmsMode } from '$stores/cms/cmsMode';
+    import { components } from '$stores/cms/components';
 
     import Pages from "$lib/cms/tabs/Pages.svelte";
     import Layers from "$lib/cms/tabs/Layers.svelte";

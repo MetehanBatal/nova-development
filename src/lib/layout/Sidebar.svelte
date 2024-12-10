@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { user } from '../../stores/user';
+	import { user } from '$stores/user';
 	import Cookies from 'js-cookie';
 	import MenuItem from '$lib/layout/MenuItem.svelte';
 	

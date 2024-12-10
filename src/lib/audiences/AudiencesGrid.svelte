@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { onMount, createEventDispatcher } from 'svelte';
 
-	import { user } from '../../stores/user';
+	import { user } from '$stores/user';
 	
 	const dispatch = createEventDispatcher();
 

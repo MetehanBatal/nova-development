@@ -1,7 +1,7 @@
 <script>
-	import { colors } from '../../../stores/colors';
+	import { colors } from '$stores/colors';
 	import { page } from '$app/stores';
-	import { componentStructureFunc } from '../../../stores/functions.js'
+	import { componentStructureFunc } from '$stores/functions.js'
     import Chart from '../reporting/Chart.svelte';
 
 	export let type;

@@ -1,8 +1,8 @@
 <script>
-    import { selectedInstance } from "../../../stores/cms/selectedInstance";
-    import { instances } from "../../../stores/cms/instances";
-    import { styleSheet } from "../../../stores/cms/styleSheet";
-    import { alterStylingProperty } from '../../../stores/cms/functions';
+    import { selectedInstance } from "$stores/cms/selectedInstance";
+    import { instances } from "$stores/cms/instances";
+    import { styleSheet } from "$stores/cms/styleSheet";
+    import { alterStylingProperty } from '$stores/cms/functions';
 
     import Switch from "$lib/toolkit/Switch.svelte";
     import Dropdown from '$lib/toolkit/Dropdown.svelte';

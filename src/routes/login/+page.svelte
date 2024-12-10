@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { user } from '../../stores/user';
-	import { toastMessage } from '../../stores/toast';
+	import { user } from '$stores/user';
+	import { toastMessage } from '$stores/toast';
 
 	import Cookies from 'js-cookie';
 

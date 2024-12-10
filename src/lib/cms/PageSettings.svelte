@@ -1,13 +1,13 @@
 <script>
-    import { pages } from '../../stores/cms/pages';
-    import { instances } from '../../stores/cms/instances';
-    import { dbActions, generateRandomString } from '../../stores/cms/functions';
+    import { pages } from '$stores/cms/pages';
+    import { instances } from '$stores/cms/instances';
+    import { dbActions, generateRandomString } from '$stores/cms/functions';
     
     import General from '$lib/cms/pageSettings/General.svelte';
     import SEO from '$lib/cms/pageSettings/SEO.svelte';
     import Tracking from '$lib/cms/pageSettings/Tracking.svelte';
     import CustomCodes from '$lib/cms/pageSettings/CustomCodes.svelte';
-  import { toastMessage } from '../../stores/toast';
+  import { toastMessage } from '$stores/toast';
 
     export let revealedSettingsId;
 

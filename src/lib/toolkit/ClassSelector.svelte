@@ -1,8 +1,8 @@
 <script>
     import { onDestroy } from 'svelte';
-    import { selectedInstance } from "../../stores/cms/selectedInstance";
-    import { styleSheet } from '../../stores/cms/styleSheet';
-    import { injectClass, removeClass } from "../../stores/cms/functions";
+    import { selectedInstance } from "$stores/cms/selectedInstance";
+    import { styleSheet } from '$stores/cms/styleSheet';
+    import { injectClass, removeClass } from "$stores/cms/functions";
 
     // Component state
     let classSelections = [];

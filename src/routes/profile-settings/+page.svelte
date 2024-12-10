@@ -2,8 +2,8 @@
 	import { onMount } from "svelte";
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { user } from '../../stores/user';
-	import { toastMessage } from '../../stores/toast';
+	import { user } from '$stores/user';
+	import { toastMessage } from '$stores/toast';
 
 	const hasRequiredInfo = $page.url.searchParams.get('signup') ? true : false;
 

@@ -1,6 +1,6 @@
 <script>
-	import { audience } from '../../stores/audience';
-    import { toastMessage } from '../../stores/toast';
+	import { audience } from '$stores/audience';
+    import { toastMessage } from '$stores/toast';
 
 	import NewAudience from '$lib/audiences/NewAudience.svelte';
 	import AudienceGrid from '$lib/audiences/AudiencesGrid.svelte';

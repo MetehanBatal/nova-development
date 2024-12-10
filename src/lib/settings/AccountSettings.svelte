@@ -1,337 +1,486 @@
 <script>
-	import Dropdown from '$lib/toolkit/Dropdown.svelte';
-	import { organization } from '../../stores/organization';
+  import { organization } from '$stores/organization';
+  import Title from '$uiKit/components/Title.svelte';
+  import Input from '$uiKit/components/Input.svelte';
+  import Button from '$uiKit/components/Button.svelte';
+  import Combobox from '$uiKit/components/combobox/Combobox.svelte';
+  import Choicebox from '$uiKit/components/Choicebox.svelte';
+  import FileUploader from '$uiKit/components/FileUploader.svelte';
+  import Avatar from '$uiKit/components/Avatar.svelte';
+  import * as yup from 'yup';
 
-    import SwitchBox from '$lib/toolkit/SwitchBox.svelte';
+  let imgElement;
+  let file;
+  let loadedData = 'https://www.manvsevil.m'; // Should be change after create db.
+  let loadedName;
 
-	let imgElement;
-	let fileInput;
-	let loadedData = "https://www.manvsevil.m"; // Should be change after create db.
-	let loadedName;
-	
+  let inProgress = false;
 
-	let inProgress = false;
+  const memberTypes = [
+    { key: 'admin', label: 'Admin' },
+    { key: 'projectManager', label: 'Project Manager' },
+    { key: 'member', label: 'Member' },
+    { key: 'editor', label: 'Editor' },
+    { key: 'tester', label: 'Tester' }
+  ];
+  const choiceboxItems = [
+    { value: 0, label: 'Use Initial' },
+    { value: 1, label: 'Upload an image' }
+  ];
+  let defaultRoleKey = { key: 'member', label: 'Member' };
+  let attachmentAccessKey = {};
+  let projectAccessKey = {};
+  let aiSuggestion = false;
 
-	const memberTypes = [
-		{ id: 'admin', name: 'Admin'},
-		{ id: 'projectManager', name: 'Project Manager' },
-		{ id: 'member', name: 'Member' },
-		{ id: 'editor', name: 'Editor' },
-		{ id: 'tester', name: 'Tester' }
-	];
-	let defaultRoleIndex = 2;
-	let attachmentAccessIndex = 2;
-	let projectAccessIndex = 2;
-	let aiSuggestion = false;
+  let avatarSelection = 1;
+  let errors = {
+    slug: '',
+    displayName: '',
+    defaultRoleKey: '',
+    attachmentAccessKey: '',
+    projectAccessKey: ''
+  };
 
-	let avatarSelection = 1;
+  /*
 
-	/*
+    function saveGeneralSettings () {
+        inProgress = true;
+        loadedName = fileInput.files[0].name;
+        loadedData = fileInput.files[0].size / 1048576;
 
-	function saveGeneralSettings () {
-		inProgress = true;
-		loadedName = fileInput.files[0].name;
-		loadedData = fileInput.files[0].size / 1048576;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+        const imageSrc = e.target.result;
+            imgElement.src = imageSrc;
+        };
 
-		const reader = new FileReader();
-		reader.onload = function (e) {
-		const imageSrc = e.target.result;
-			imgElement.src = imageSrc;
-		};
+        reader.readAsDataURL(fileInput.files[0]);
 
-		reader.readAsDataURL(fileInput.files[0]);
+        const formdata = new FormData();
+        formdata.append("file", fileInput.files[0], Date.now());
 
-		const formdata = new FormData();
-		formdata.append("file", fileInput.files[0], Date.now());
+        const requestOptions = {
+            method: "POST",
+            body: formdata,
+            redirect: "follow"
+        };
 
-		const requestOptions = {
-			method: "POST",
-			body: formdata,
-			redirect: "follow"
-		};
+        fetch("https://mve.novus.studio/prod/users/uploadPhoto", requestOptions)
+            .then((response) => response.json())
+            .then((result) => {
+                inProgress = false;
+                if (result.err && result.err.length > 0) {
+                    $toastMessage.type = "error";
+                    $toastMessage.content = 'Something went wrong while updating brand image.'
+                } else {
+                    $toastMessage.type = "success";
+                    $toastMessage.content = "Image updated successfully.";
+                }
 
-		fetch("https://mve.novus.studio/prod/users/uploadPhoto", requestOptions)
-			.then((response) => response.json())
-			.then((result) => {			
-				inProgress = false;
-				if (result.err && result.err.length > 0) {
-					$toastMessage.type = "error";
-					$toastMessage.content = 'Something went wrong while updating brand image.'
-				} else {
-					$toastMessage.type = "success";
-					$toastMessage.content = "Image updated successfully.";
-				}
+                setTimeout(() => {
+                    $toastMessage.type = "";
+                    $toastMessage.content = "";
+                },5000)
+            })
+            .catch((error) => console.error(error));
+    }
 
-				setTimeout(() => {
-					$toastMessage.type = "";
-					$toastMessage.content = "";
-				},5000)
-			})
-			.catch((error) => console.error(error));
-	}
+    */
 
-	*/
+  const firstSchema = yup.object({
+    slug: yup.string().required('Organization Slug is required'),
+    displayName: yup.string().required('Display Name is required')
+  });
 
-	function readDocument() {
-		const reader = new FileReader();
-		reader.onload = function(e) {
-			const imageSrc = e.target.result;
-			imgElement.src = imageSrc;
-		};
+  const validateFormFirstForm = async (fieldName, value, values) => {
+    if (fieldName) {
+      try {
+        const fieldSchema = yup.reach(firstSchema, fieldName);
+        await fieldSchema.validate(value);
+        errors[fieldName] = '';
+      } catch (validationErrors) {
+        console.log(`Validation error for "${fieldName}":`, validationErrors.message);
+        errors[fieldName] = validationErrors.message;
+      }
+    } else {
+      try {
+        await firstSchema.validate(values, { abortEarly: false });
+        errors = {
+          slug: '',
+          displayName: '',
+          defaultRoleKey: '',
+          attachmentAccessKey: '',
+          projectAccessKey: ''
+        };
+      } catch (validationErrors) {
+        errors = {
+          slug: '',
+          displayName: '',
+          defaultRoleKey: '',
+          attachmentAccessKey: '',
+          projectAccessKey: ''
+        };
+        console.log('Validation errors:', validationErrors.inner);
+        validationErrors.inner.forEach((err) => {
+          errors[err.path] = err.message;
+        });
+      }
+    }
+  };
 
-		reader.readAsDataURL(fileInput.files[0]);
-	}
+  const handleSubmitFirstForm = async (event) => {
+    event.preventDefault();
 
+    const form = event.target;
+    const formData = new FormData(form);
+    const values = Object.fromEntries(formData.entries());
 
-	$: aiSuggestion, console.log("AI Suggestion",aiSuggestion) // SwitchBox
+    await validateFormFirstForm(null, null, values);
+
+    if (Object.keys(errors).length === 0) {
+      console.log('Form is valid! Proceeding with submission...');
+    } else {
+      console.log('Form has errors:', errors);
+    }
+  };
+
+  function handleFile(event) {
+    file = event.detail.src;
+  }
+
+  const secondSchema = yup.object({
+    defaultRoleKey: yup
+      .object()
+      .test('is-not-empty', 'Choose default role', (value) => value && Object.keys(value).length > 0)
+      .typeError('Choose default role')
+      .required('Field is required'),
+    attachmentAccessKey: yup
+      .object()
+      .test('is-not-empty', 'Choose attachment access', (value) => value && Object.keys(value).length > 0)
+      .typeError('Choose attachment access')
+      .required('Field is required'),
+    projectAccessKey: yup
+      .object()
+      .test('is-not-empty', 'Choose project access', (value) => value && Object.keys(value).length > 0)
+      .typeError('Choose project access')
+      .required('Field is required')
+  });
+
+  const validateFormSecondForm = async (fieldName, value) => {
+    if (fieldName) {
+      try {
+        const fieldSchema = yup.reach(secondSchema, fieldName);
+        await fieldSchema.validate(value);
+        errors[fieldName] = '';
+      } catch (validationErrors) {
+        console.log(`Validation error for "${fieldName}":`, validationErrors.message);
+        errors[fieldName] = validationErrors.message;
+      }
+    } else {
+      try {
+        const data = {
+          defaultRoleKey,
+          attachmentAccessKey,
+          projectAccessKey
+        };
+        await secondSchema.validate(data, { abortEarly: false });
+        errors = {
+          slug: '',
+          displayName: '',
+          defaultRoleKey: '',
+          attachmentAccessKey: '',
+          projectAccessKey: ''
+        };
+        console.log('Form is valid! Proceeding with submission...');
+      } catch (validationErrors) {
+        errors = {
+          slug: '',
+          displayName: '',
+          defaultRoleKey: '',
+          attachmentAccessKey: '',
+          projectAccessKey: ''
+        };
+        console.log('Validation errors:', validationErrors.inner);
+        validationErrors.inner.forEach((err) => {
+          errors[err.path] = err.message;
+        });
+      }
+    }
+  };
+
+  const handleSubmitSecondForm = async (event) => {
+    event.preventDefault();
+    await validateFormSecondForm(null, null);
+
+    if (Object.keys(errors).length === 0) {
+      console.log('Form is valid! Proceeding with submission...');
+      // todo
+    } else {
+      console.log('Form has errors:', errors);
+    }
+    console.log('event', event);
+  };
+
+  $: aiSuggestion, console.log('AI Suggestion', aiSuggestion);
+  $: $organization, console.log('Organization', $organization);
 </script>
 
+<form class="settings-container" on:submit|preventDefault={handleSubmitFirstForm}>
+  <div class="settings-group">
+    <div>
+      <Title size="md" title="Organization Slug" description="A unique ID used to identify this organization." />
+    </div>
+    <Input
+      name="slug"
+      error={errors.slug}
+      bind:value={$organization.slug}
+      on:input={(value) => validateFormFirstForm('slug', value.detail)}
+    />
+  </div>
 
-<div class="settings-container">
-	<div class="settings-group">
-		<div>
-			<h3>Organization Slug</h3>
-			<p class="muted">A unique ID used to identify this organization.</p>
-		</div>
+  <div class="setting-divider"></div>
 
-		<input class="input" type="text" bind:value={$organization.slug}>
-	</div>
+  <div class="settings-group">
+    <div>
+      <Title size="md" title="Display Name" description="A human-friendly name for the organization." />
+    </div>
 
-	<div class="setting-divider"></div>
+    <Input
+      name="displayName"
+      error={errors.displayName}
+      bind:value={$organization.displayName}
+      on:input={(value) => validateFormFirstForm('displayName', value.detail)}
+    />
+  </div>
 
-	<div class="settings-group">
-		<div>
-			<h3>Display Name</h3>
-			<p class="muted">A human-friendly name for the organization.</p>
-		</div>
+  <div class="setting-divider"></div>
 
-		<input class="input" type="text" bind:value={$organization.displayName}>
-	</div>
+  <div>
+    <Title
+      size="md"
+      title="AI-suggested Solution"
+      description="Opt-in to AI suggested solution to get help on how to solve an issue."
+      isChoice={true}
+      on:toggle={(event) => (aiSuggestion = event.detail)}
+    />
+  </div>
 
-	<div class="setting-divider"></div>
+  <div class="setting-divider"></div>
 
-	<div class="settings-group">
-		<div>
-			<h3>AI-suggested Solution</h3>
-			<p class="muted">Opt-in to AI suggested solution to get help on how to solve an issue.</p>
-		</div>
+  <div class="settings-button-wrapper">
+    <Button size="small" type="submit">Save Changes</Button>
+  </div>
+</form>
 
-		<SwitchBox title="" bind:status={aiSuggestion}/>
-	</div>
+<form class="settings-container" on:submit|preventDefault={handleSubmitSecondForm}>
+  <div class="settings-group">
+    <div>
+      <Title size="md" title="Default Role" description="The default role new member will receive." />
+    </div>
 
-	<div class="setting-divider"></div>
+    <Combobox
+      name="defaultRoleKey"
+      error={errors.defaultRoleKey}
+      type="select"
+      items={memberTypes}
+      placeholder="Default Role"
+      bind:value={defaultRoleKey}
+      on:selected={(value) => validateFormSecondForm('defaultRoleKey', value.detail)}
+    />
+  </div>
 
-	<div class="settings-button-wrapper">
-		<div class="cta-button primary">Save Changes</div>
-	</div>
+  <div class="setting-divider"></div>
 
-</div>
+  <div class="settings-group">
+    <div>
+      <Title size="md" title="Attachments Access" description="Role required to export the events and reports." />
+    </div>
+    <Combobox
+      name="attachmentAccessKey"
+      error={errors.attachmentAccessKey}
+      type="select"
+      items={memberTypes}
+      placeholder="Attachment access"
+      bind:value={attachmentAccessKey}
+      on:selected={(value) => validateFormSecondForm('attachmentAccessKey', value.detail)}
+    />
+  </div>
 
-<div class="settings-container">
-	<div class="settings-group">
-		<div>
-			<h3>Default Role</h3>
-			<p class="muted">The default role new member will receive.</p>
-		</div>
+  <div class="setting-divider"></div>
 
-		<Dropdown options={memberTypes} bind:selectedStatusIndex={defaultRoleIndex} />
-	</div>
+  <div class="settings-group">
+    <div>
+      <Title size="md" title="Project Access" description="Role required to access the subsequent projects." />
+    </div>
+    <Combobox
+      name="projectAccessKey"
+      error={errors.projectAccessKey}
+      type="select"
+      items={memberTypes}
+      placeholder="Project access"
+      bind:value={projectAccessKey}
+      on:selected={(value) => validateFormSecondForm('projectAccessKey', value.detail)}
+    />
+  </div>
 
-	<div class="setting-divider"></div>
+  <div class="setting-divider"></div>
 
-	<div class="settings-group">
-		<div>
-			<h3>Attachments Access</h3>
-			<p class="muted">Role required to export the events and reports.</p>
-		</div>
+  <div class="settings-group">
+    <div>
+      <Title size="md" title="Avatar" />
 
-		<Dropdown options={memberTypes} bind:selectedStatusIndex={attachmentAccessIndex} />
-	</div>
+      <div>
+        <Choicebox
+          items={choiceboxItems}
+          name="avatar"
+          isBorderVisible={false}
+          direction="column"
+          bind:radioSelected={avatarSelection}
+        />
+      </div>
+    </div>
 
-	<div class="setting-divider"></div>
+    {#if avatarSelection === 0}
+      <div class="thumbnail-wrapper">
+        <img bind:this={imgElement} class="thumbnail" src={$organization.thumbnail} />
+      </div>
+    {:else}
+      <div class="thumbnail-wrapper">
+        {#if file}
+          <Avatar src={file} placeholder="Avatar" on:fileChange={handleFile} />
+        {/if}
 
-	<div class="settings-group">
-		<div>
-			<h3>Project Access</h3>
-			<p class="muted">Role required to access the subsequent projects.</p>
-		</div>
+        <FileUploader on:file={handleFile} />
+      </div>
+    {/if}
+  </div>
 
-		<Dropdown options={memberTypes} bind:selectedStatusIndex={projectAccessIndex} />
-	</div>
+  <div class="setting-divider"></div>
 
-	<div class="setting-divider"></div>
-
-	<div class="settings-group">
-		<div>
-			<h3>Avatar</h3>
-
-			<div>
-				<div class="radio-button" class:active={avatarSelection === 0} on:click={() => avatarSelection = 0}>
-					<div class="checkbox"></div>
-
-					<p>Use Initials</p>
-				</div>
-
-				<div class="radio-button" class:active={avatarSelection === 1} on:click={() => avatarSelection = 1}>
-					<div class="checkbox"></div>
-
-					<p>Upload an image</p>
-				</div>
-			</div>
-		</div>
-
-		{#if avatarSelection === 0}
-		<div class="thumbnail-wrapper">
-			<img bind:this={imgElement} class="thumbnail" src={$organization.thumbnail}>
-		</div>
-		
-		{:else}
-		<div class="thumbnail-wrapper">
-			{#if loadedData === "https://www.manvsevil.com"}
-				<img bind:this={imgElement} class="thumbnail" src={$organization.thumbnail}>				
-				{:else}
-				<div class="thumbnail-overlay">
-					<img src="/assets/icons/upload-icon.svg" alt="upload-icon">
-					<p>Click to change image</p>
-					<input class="thumbnail-changer" bind:this={fileInput} type="file" name="fileSelector" on:change={readDocument}>
-				</div>
-				<img bind:this={imgElement} class="thumbnail" src={$organization.thumbnail}>	
-			{/if}
-		</div>
-
-		{/if}
-	</div>
-
-	<div class="setting-divider"></div>
-
-	<div class="settings-button-wrapper">
-		<div class="cta-button primary">Save Changes</div>
-	</div>
-
-</div>
-
+  <div class="settings-button-wrapper">
+    <Button size="small" type="submit">Save Changes</Button>
+  </div>
+</form>
 
 <style>
-	.settings-group {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-	}
+  .settings-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
 
-	h3 {
-		font-size: 1.8rem;
-		line-height: 2.2;
-	}
+  h3 {
+    font-size: 1.8rem;
+    line-height: 2.2;
+  }
 
-	.input {
-		padding-left: 1.2rem;
+  .input {
+    padding-left: 1.2rem;
 
-		width: 100%;
-		max-width: 25rem;
-	}
+    width: 100%;
+    max-width: 25rem;
+  }
 
-	.radio-button {
-		display: flex;
-		align-items: center;
-		justify-content: flex-start;
-		gap: 1rem;
+  .radio-button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
 
-		padding: 1.3rem 1rem;
-	}
+    padding: 1.3rem 1rem;
+  }
 
-	.radio-button .checkbox {
-		position: relative;
+  .radio-button .checkbox {
+    position: relative;
 
-		width: 1.6rem;
-		height: 1.6rem;
+    width: 1.6rem;
+    height: 1.6rem;
 
-		border: .1rem solid rgba(136, 136, 138, 1);
+    border: 0.1rem solid rgba(136, 136, 138, 1);
 
-		border-radius: 50%;
+    border-radius: 50%;
 
-		cursor: pointer;
-	}
+    cursor: pointer;
+  }
 
-	.radio-button.active .checkbox::after {
-		content: "";
+  .radio-button.active .checkbox::after {
+    content: '';
 
-		width: .6rem;
-		height: .6rem;
+    width: 0.6rem;
+    height: 0.6rem;
 
-		position: absolute;
-		top: 50%;
-		left: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
 
-		transform: translate3d( -50%, -50%, 0);
+    transform: translate3d(-50%, -50%, 0);
 
-		background-color: rgba(136, 136, 138, 1);
+    background-color: rgba(136, 136, 138, 1);
 
-		border-radius: 50%;
-	}
+    border-radius: 50%;
+  }
 
-	.thumbnail-wrapper {
-		position: relative;
+  .thumbnail-wrapper {
+    position: relative;
 
-		margin-block: auto;
-	}
+    margin-block: auto;
+    display: flex;
+    gap: 3.6rem;
+    align-items: center;
+  }
 
-	.thumbnail-wrapper  img {
-		max-width: 20rem;
-    	margin-block: auto;
-	}
+  :global(.settings-group .dropdown-box, .settings-group .dropdown-selection, .settings-group .dropdown) {
+    width: 100% !important;
+    max-width: 25rem;
+  }
 
-	:global(.settings-group .dropdown-box, .settings-group .dropdown-selection, .settings-group .dropdown) {
-		width: 100% !important;
-		max-width: 25rem;
-	}
-	:global(.settings-group .dropdown-box .dropdown-selection) {
-		justify-content: space-between;
-	}
+  :global(.settings-group .dropdown-box .dropdown-selection) {
+    justify-content: space-between;
+  }
 
+  .thumbnail-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
 
-	.thumbnail-overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
+    width: 100%;
+    height: 100%;
 
-		width: 100%;
-		height: 100%;
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.8);
 
-		opacity: 1;
-		background-color: rgba(0, 0, 0, .8);
-		
-		z-index: 1000;
-		transition: all .3s ease-in-out;
-		cursor: pointer;
-	}
+    z-index: 1000;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+  }
 
-	.thumbnail-overlay p {
-		font-size: 1.4rem;
-		color: #FFFFFF;
-	}
+  .thumbnail-overlay p {
+    font-size: 1.4rem;
+    color: #ffffff;
+  }
 
-	.thumbnail-overlay img {
-		width: 2.4rem;
-		height: 2.4rem;
-		opacity: 0;
-		visibility: hidden;
-		transition: all .3s ease-in-out;
-		margin-block: 0;
-	}
+  .thumbnail-overlay img {
+    width: 2.4rem;
+    height: 2.4rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+    margin-block: 0;
+  }
 
-	.thumbnail-overlay:hover img {
-		visibility: visible;
-		opacity: 1;
-	}
+  .thumbnail-overlay:hover img {
+    visibility: visible;
+    opacity: 1;
+  }
 
-	.thumbnail-changer {
-		width: 100%;
-		height: 100%;
-		background-color: transparent;
-	}
+  .thumbnail-changer {
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+  }
 </style>

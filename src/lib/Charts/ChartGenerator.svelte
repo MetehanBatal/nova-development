@@ -8,17 +8,17 @@
         traitOperator,
         chartTypeObj,
         sideMenuObj
-    } from "../../stores/chartData--dev.js";
+    } from "$stores/chartData--dev.js";
     import DatePicker from '$lib/toolkit/DatePicker.svelte';
     import BarLine  from "$lib/Charts/BarLine/BarLine.svelte";
     import Radial from '$lib/Charts/Radial/Radial.svelte';
     import Legend from '$lib/Charts/components/Legend.svelte';
-    import {parsePeriod, selectableDays} from '../../stores/functions';
-    import { colors } from "../../stores/colors";
+    import {parsePeriod, selectableDays} from '$stores/functions';
+    import { colors } from "$stores/colors";
     import {sum, descending} from 'd3'
     import DropdownType2 from "./DropdownType2.svelte"
     import { onMount } from "svelte";
-    import { toastMessage } from '../../stores/toast';
+    import { toastMessage } from '$stores/toast';
 
     export let handleModalClose
     const spinner = `<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>`;

@@ -1,5 +1,5 @@
 <script>
-    import { pages } from '../../stores/cms/pages';
+    import { pages } from '$stores/cms/pages';
 
     import { createEventDispatcher } from 'svelte';
     

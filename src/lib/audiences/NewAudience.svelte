@@ -1,6 +1,6 @@
 <script>
 	import Dropdown from '$lib/toolkit/Dropdown.svelte';
-	import { audience } from '../../stores/audience';
+	import { audience } from '$stores/audience';
 
 	export let data;
 

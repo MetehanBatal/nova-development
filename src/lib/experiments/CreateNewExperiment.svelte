@@ -1,14 +1,14 @@
 <script>
 	import { goto } from '$app/navigation';
 
-	import { experiment } from '../../stores/experiment';
-	import { user } from '../../stores/user';
+	import { experiment } from '$stores/experiment';
+	import { user } from '$stores/user';
 
 	import ExperimentDetails from '$lib/experiments/onboarding/ExperimentDetails.svelte';
 	import Hypothesis from '$lib/experiments/onboarding/Hypothesis.svelte';
 	import AdvancedSettings from '$lib/experiments/onboarding/AdvancedSettings.svelte';
 
-	import { toastMessage } from '../../stores/toast';
+	import { toastMessage } from '$stores/toast';
 
 	const experimentSteps = [
 		{

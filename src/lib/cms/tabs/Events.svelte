@@ -1,8 +1,8 @@
 <script>
-    import { events } from '../../../stores/cms/events';
-    import { instances } from '../../../stores/cms/instances';
-    import { pages } from '../../../stores/cms/pages';
-    import { changeSelection } from '../../../stores/cms/functions';
+    import { events } from '$stores/cms/events';
+    import { instances } from '$stores/cms/instances';
+    import { pages } from '$stores/cms/pages';
+    import { changeSelection } from '$stores/cms/functions';
 
     import { onMount } from 'svelte';
 

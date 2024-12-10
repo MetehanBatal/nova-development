@@ -1,12 +1,12 @@
 <script>
-    import { selectedInstance } from '../../../stores/cms/selectedInstance';
-    import { instances } from '../../../stores/cms/instances';
-    import { components } from '../../../stores/cms/components';
-    import { pages } from '../../../stores/cms/pages';
-    import { styleSheet } from '../../../stores/cms/styleSheet';
-    import { nodeTags } from '../../../stores/cms/nodeTags';
-    import { visibleIds } from '../../../stores/cms/visibleIds';
-    import { drawInstances, computeOrders, changeSelection, toggleExpand, postMessage } from '../../../stores/cms/functions';
+    import { selectedInstance } from '$stores/cms/selectedInstance';
+    import { instances } from '$stores/cms/instances';
+    import { components } from '$stores/cms/components';
+    import { pages } from '$stores/cms/pages';
+    import { styleSheet } from '$stores/cms/styleSheet';
+    import { nodeTags } from '$stores/cms/nodeTags';
+    import { visibleIds } from '$stores/cms/visibleIds';
+    import { drawInstances, computeOrders, changeSelection, toggleExpand, postMessage } from '$stores/cms/functions';
 
     // import { flip } from 'svelte/animate';
 	// import { dndzone } from 'svelte-dnd-action';

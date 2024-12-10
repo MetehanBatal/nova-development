@@ -1,6 +1,6 @@
 <script>
-    import { alterContent } from "../../../stores/cms/functions";
-    import { selectedInstance } from "../../../stores/cms/selectedInstance";
+    import { alterContent } from "$stores/cms/functions";
+    import { selectedInstance } from "$stores/cms/selectedInstance";
     
     let selectionChangeInProgress = false;
     let content = '';

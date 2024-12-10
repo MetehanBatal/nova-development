@@ -7,7 +7,7 @@
 	import Logs from '$lib/experiments/results/Logs.svelte';
 
 	import ResolutionWarning from '$lib/toolkit/ResolutionWarning.svelte';
-	import {spinner} from '../../../stores/functions';
+	import {spinner} from '$stores/functions';
 
 	let windowWidth;
 	let isLoaded = false

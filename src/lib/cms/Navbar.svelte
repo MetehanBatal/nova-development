@@ -1,12 +1,12 @@
 <script>
-    import { pages } from '../../stores/cms/pages';
-    import { instances } from '../../stores/cms/instances';
-    import { components } from '../../stores/cms/components';
-    import { variants } from '../../stores/cms/variants';
-    import { styleSheet } from '../../stores/cms/styleSheet';
-    import { selectedBreakpoint } from '../../stores/cms/selectedBreakpoint';
-    import { cmsMode } from '../../stores/cms/cmsMode';
-    import { generateRandomString, generateRandomNumber, dbActions } from '../../stores/cms/functions';
+    import { pages } from '$stores/cms/pages';
+    import { instances } from '$stores/cms/instances';
+    import { components } from '$stores/cms/components';
+    import { variants } from '$stores/cms/variants';
+    import { styleSheet } from '$stores/cms/styleSheet';
+    import { selectedBreakpoint } from '$stores/cms/selectedBreakpoint';
+    import { cmsMode } from '$stores/cms/cmsMode';
+    import { generateRandomString, generateRandomNumber, dbActions } from '$stores/cms/functions';
 
     import Dropdown from '$lib/toolkit/Dropdown.svelte';
     import Switch from '$lib/toolkit/Switch.svelte';
@@ -15,7 +15,7 @@
     import SplitButton from '$lib/toolkit/SplitButton.svelte';
 
     import { onMount } from 'svelte';
-  import { toastMessage } from '../../stores/toast';
+  import { toastMessage } from '$stores/toast';
 
     let visible = false;
     let navbarShrunk = false;

@@ -3,9 +3,9 @@
 	import { browser } from '$app/environment';
 	import moment from 'moment';
 
-	import { productsDictionary } from '../../stores/products--dev';
+	import { productsDictionary } from '$stores/products--dev';
 	import InnerOptions from "./InnerOptions.svelte";
-	import { toastMessage } from "../../stores/toast";
+	import { toastMessage } from "$stores/toast";
 	import DatePicker from "$lib/toolkit/DatePicker.svelte";
 
 	const spinner = `<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>`;

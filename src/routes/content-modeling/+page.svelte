@@ -2,15 +2,15 @@
     import { onMount } from 'svelte';
     import { dev } from '$app/environment';
 
-    import { selectedInstance } from '../../stores/cms/selectedInstance';
-    import { pages } from '../../stores/cms/pages';
-    import { instances } from '../../stores/cms/instances';
-    import { styleSheet } from '../../stores/cms/styleSheet';
-    import { selectedBreakpoint } from '../../stores/cms/selectedBreakpoint';
-    import { cmsMode } from '../../stores/cms/cmsMode';
+    import { selectedInstance } from '$stores/cms/selectedInstance';
+    import { pages } from '$stores/cms/pages';
+    import { instances } from '$stores/cms/instances';
+    import { styleSheet } from '$stores/cms/styleSheet';
+    import { selectedBreakpoint } from '$stores/cms/selectedBreakpoint';
+    import { cmsMode } from '$stores/cms/cmsMode';
 
-    import { nodeTags } from '../../stores/cms/nodeTags';
-    import { handleElementAppend, handleKeyDown, postMessage, dbActions } from '../../stores/cms/functions';
+    import { nodeTags } from '$stores/cms/nodeTags';
+    import { handleElementAppend, handleKeyDown, postMessage, dbActions } from '$stores/cms/functions';
 
     import NavbarModule from '$lib/cms/Navbar.svelte';
     import Navigator from '$lib/cms/Navigator.svelte';

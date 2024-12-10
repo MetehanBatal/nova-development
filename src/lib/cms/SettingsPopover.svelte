@@ -1,5 +1,5 @@
 <script>
-    import { selectedInstance } from "../../stores/cms/selectedInstance";
+    import { selectedInstance } from "$stores/cms/selectedInstance";
 
     import HeadingOptions from '$lib/cms/options/HeadingOptions.svelte';
     import ImageOptions from '$lib/cms/options/ImageOptions.svelte';

@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { experiment } from '../../../stores/experiment';
-	import { generateRandomNumber } from '../../../stores/cms/functions';
+	import { experiment } from '$stores/experiment';
+	import { generateRandomNumber } from '$stores/cms/functions';
 
     import ComboBox from '$lib/toolkit/ComboBox.svelte';
 

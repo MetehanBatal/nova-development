@@ -1,13 +1,13 @@
 <script>
-    import { selectedInstance } from '../../../stores/cms/selectedInstance';
-    import { components } from '../../../stores/cms/components';
-    import { variants } from '../../../stores/cms/variants';
-    import { instances } from '../../../stores/cms/instances';
-    import { cmsMode } from '../../../stores/cms/cmsMode';
-    import { styleSheet } from '../../../stores/cms/styleSheet';
-    import { nodeTags } from '../../../stores/cms/nodeTags';
-    import { visibleIds } from '../../../stores/cms/visibleIds';
-    import { changeSelection, toggleExpand, postMessage, computeOrders, drawInstances } from '../../../stores/cms/functions';
+    import { selectedInstance } from '$stores/cms/selectedInstance';
+    import { components } from '$stores/cms/components';
+    import { variants } from '$stores/cms/variants';
+    import { instances } from '$stores/cms/instances';
+    import { cmsMode } from '$stores/cms/cmsMode';
+    import { styleSheet } from '$stores/cms/styleSheet';
+    import { nodeTags } from '$stores/cms/nodeTags';
+    import { visibleIds } from '$stores/cms/visibleIds';
+    import { changeSelection, toggleExpand, postMessage, computeOrders, drawInstances } from '$stores/cms/functions';
     import { onMount } from 'svelte';
 
     let selectedComponent = {};

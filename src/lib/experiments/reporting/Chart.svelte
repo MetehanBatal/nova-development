@@ -15,10 +15,10 @@
 	import ChartInsight from "$lib/experiments/reporting/ChartInsight.svelte";
 	import ChartFunnelDropOff from "$lib/experiments/reporting/ChartFunnelDropOff.svelte";
 	import DatePicker from '$lib/toolkit/DatePicker.svelte';
-	import {selectableDays, spinner} from '../../../stores/functions';
+	import {selectableDays, spinner} from '$stores/functions';
 
-	import { colors } from "../../../stores/colors";
-	import { filters, breakdowns } from "../../../stores/filters--dev";
+	import { colors } from "$stores/colors";
+	import { filters, breakdowns } from "$stores/filters--dev";
 
 	import { page } from "$app/stores";
 	import { onMount } from "svelte";

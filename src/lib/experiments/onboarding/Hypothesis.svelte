@@ -1,5 +1,5 @@
 <script>
-	import { experiment } from '../../../stores/experiment';
+	import { experiment } from '$stores/experiment';
 
 	let selectedStatus = 'Draft';
 

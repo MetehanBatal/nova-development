@@ -6,8 +6,8 @@
 	import ExperimentAudiences from '$lib/experiments/experimentDetails/ExperimentAudiences.svelte';
 	import ExperimentVariants from '$lib/experiments/experimentDetails/ExperimentVariants.svelte';
 
-	import { toastMessage } from '../../../stores/toast';
-	import { user } from '../../../stores/user';
+	import { toastMessage } from '$stores/toast';
+	import { user } from '$stores/user';
 
 	import { page } from '$app/stores';
 

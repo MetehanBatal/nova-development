@@ -1,7 +1,7 @@
 <script>
-    import { alterAttribute } from '../../../stores/cms/functions';
-    import { selectedInstance } from "../../../stores/cms/selectedInstance";
-    import { selectedCMSTabIndex } from '../../../stores/cms/selectedCMSTabIndex';
+    import { alterAttribute } from '$stores/cms/functions';
+    import { selectedInstance } from "$stores/cms/selectedInstance";
+    import { selectedCMSTabIndex } from '$stores/cms/selectedCMSTabIndex';
 
     import Dropdown from "$lib/toolkit/Dropdown.svelte";
 

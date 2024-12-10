@@ -1,6 +1,6 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
-	import { toastMessage } from '../../stores/toast';
+	import { toastMessage } from '$stores/toast';
   
 	export let type;
 	export let content;

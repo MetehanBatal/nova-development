@@ -6,11 +6,11 @@
 
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
-	import { user } from '../../../stores/user';
-	import { experiment } from '../../../stores/experiment';
+	import { user } from '$stores/user';
+	import { experiment } from '$stores/experiment';
 	import DatePicker from '$lib/toolkit/DatePicker.svelte';
 
-	import { toastMessage } from '../../../stores/toast.js';
+	import { toastMessage } from '$stores/toast.js';
 
 	let experimentData = $page.data?.experimentRes?.data[0];
 	export let eventsData;

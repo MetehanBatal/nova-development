@@ -1,7 +1,7 @@
 <script>
 	import SwitchBox from "$lib/toolkit/SwitchBox.svelte";
 
-	import { experiment } from '../../../stores/experiment';
+	import { experiment } from '$stores/experiment';
 
 	import Flatpickr from 'svelte-flatpickr';
 	import 'flatpickr/dist/flatpickr.css';

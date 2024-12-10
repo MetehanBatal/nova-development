@@ -1,6 +1,6 @@
 <script>
 	import moment from 'moment';
-  	import { productsDictionary } from '../../stores/products--dev';
+  	import { productsDictionary } from '$stores/products--dev';
 
 	export let filteredOrder;
 

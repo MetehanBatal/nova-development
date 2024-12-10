@@ -1,8 +1,8 @@
 <script>
-  import { parsePeriodNum } from "../../../stores/functions.js";
+  import { parsePeriodNum } from "$stores/functions.js";
   import Xaxis from "$lib/experiments/charts/Lines/Xaxis.svelte";
   import Yaxis from "$lib/experiments/charts/Lines/Yaxis.svelte";
-  import { colors } from "../../../stores/colors.js";
+  import { colors } from "$stores/colors.js";
   import ChartHeader from "./ChartHeader.svelte"
   
 	import { page } from "$app/stores";

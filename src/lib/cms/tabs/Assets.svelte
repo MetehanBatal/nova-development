@@ -1,8 +1,8 @@
 <script>
-    import { alterAttribute } from '../../../stores/cms/functions';
-    import { selectedInstance } from '../../../stores/cms/selectedInstance';
-    import { assets } from '../../../stores/cms/assets';
-    import { toastMessage } from '../../../stores/toast';
+    import { alterAttribute } from '$stores/cms/functions';
+    import { selectedInstance } from '$stores/cms/selectedInstance';
+    import { assets } from '$stores/cms/assets';
+    import { toastMessage } from '$stores/toast';
 
     import { onMount } from 'svelte';
 

@@ -1,5 +1,5 @@
 <script>
-    import { user } from '../../stores/user';
+    import { user } from '$stores/user';
     import Notifications from '../toolkit/Notifications.svelte';
 
     export let messages;

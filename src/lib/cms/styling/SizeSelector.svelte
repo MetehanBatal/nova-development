@@ -7,8 +7,8 @@
     // max-height
 -->
 <script>
-    import { selectedInstance } from "../../../stores/cms/selectedInstance";
-	import { alterStylingProperty } from '../../../stores/cms/functions';
+    import { selectedInstance } from "$stores/cms/selectedInstance";
+	import { alterStylingProperty } from '$stores/cms/functions';
 
 	import { onMount } from "svelte";
 

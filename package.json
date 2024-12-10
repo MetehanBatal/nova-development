@@ -10,17 +10,26 @@
 	"devDependencies": {
 		"@sveltejs/adapter-vercel": "^3.0.3",
 		"@sveltejs/kit": "^1.30.4",
+		"prettier": "^3.4.1",
+		"prettier-plugin-svelte": "^3.3.2",
+		"sass": "^1.81.0",
 		"svelte": "^4.0.5",
+		"typescript": "^5.7.2",
 		"vite": "^4.4.2"
 	},
 	"type": "module",
 	"dependencies": {
+		"@iconify/svelte": "^4.0.2",
 		"d3": "^7.8.5",
 		"intl-tel-input": "^18.2.1",
 		"js-cookie": "^3.0.5",
 		"keen-slider": "^6.8.6",
 		"moment": "^2.30.1",
 		"svelte-dnd-action": "^0.9.52",
-		"svelte-flatpickr": "^3.3.4"
+		"svelte-flatpickr": "^3.3.4",
+		"svelte-portal": "^2.2.1",
+		"svelte-use-click-outside": "^1.0.0",
+		"uuid": "^11.0.3",
+		"yup": "^1.4.0"
 	}
 }

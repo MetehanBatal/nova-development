@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { colors } from '../../stores/colors';
+	import { colors } from '$stores/colors';
 
 	let trafficSources = [];
 

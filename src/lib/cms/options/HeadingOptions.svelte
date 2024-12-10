@@ -1,6 +1,6 @@
 <script>
-    import { alterTagName, alterContent } from '../../../stores/cms/functions';
-    import { selectedInstance } from "../../../stores/cms/selectedInstance";
+    import { alterTagName, alterContent } from '$stores/cms/functions';
+    import { selectedInstance } from "$stores/cms/selectedInstance";
 
     import { onMount } from "svelte";
     import Switch from "$lib/toolkit/Switch.svelte";
