@@ -13,13 +13,13 @@
     import BarLine  from "$lib/Charts/BarLine/BarLine.svelte";
     import Radial from '$lib/Charts/Radial/Radial.svelte';
     import Legend from '$lib/Charts/components/Legend.svelte';
+    import ChartGeneratorTable from "./ChartGeneratorTable.svelte"
+    import DropdownType2 from "./DropdownType2.svelte"
     import {parsePeriod, selectableDays} from '../../stores/functions';
     import { colors } from "../../stores/colors";
-    import {sum, descending} from 'd3'
-    import DropdownType2 from "./DropdownType2.svelte"
+    import {sum, descending, extent, max, ascending} from 'd3'
     import { onMount } from "svelte";
     import { toastMessage } from '../../stores/toast';
-
     export let handleModalClose
     const spinner = `<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>`;
 
@@ -63,9 +63,11 @@
     let showLegend = true
     let hasRangeSelector = true
     let type = ""
-    let minBarWidth = 150
+    let minBarWidth = 50
     let data = {}
     let dataFunnel = {}
+    let dataTable = {}
+    let dataFunnelTable = {}
     let dateElement = {}
     let dateRange = {}
     let clientHeight
@@ -73,7 +75,6 @@
 	let strokeColor2 = "#ffffff"
     let relatedBar
     let selectedComparisonIndexes
-    let controller
     let width
     let height
     let clientWidth
@@ -90,6 +91,25 @@
     let selectedSideMenuLayer = []
     let allowFetch
     let isTimeScale = true
+    let tempParse
+    let firstCurrent
+    let firstComparison
+    let isFetching
+    let dataFlat = {
+        current: {},
+        comparison: {}
+    }
+    legendData = {}
+
+    let extentFlat = {
+        current: {},
+        comparison: {}
+    }
+    let extentLen = 0
+    let rowHovered = ""
+    let numberChecked
+    let maxNumberOfitemToCheck = 10
+    let dataFlatKey
 
     let dataBody = {
         filters: [],
@@ -144,6 +164,66 @@
     onMount(() => {
         isMounted = true
     })
+
+    const handleTableCheck = (d) => {
+        console.log(d);
+    }
+    const handleNestedTimeParse = (tempData = data, key) => {
+        if(key == 'current') extentLen = 0
+       // console.log(prevBody);
+        if(JSON.parse(prevBody).breakdown.length == 1){
+            dataFlatKey = "0"
+            handleNestedTimeParse2(tempData, key, "0")
+        } else {
+            Object.keys(tempData).map((d, i) => {
+                dataFlatKey = d
+                handleNestedTimeParse2(tempData[d], key, d)
+            })
+        }
+
+    }
+    const handleNestedTimeParse2 = (tempData, key, prefix) => {
+            if(typeof tempData === 'object' && !Array.isArray(tempData)){
+                Object.keys(tempData).map((d) => {
+                    if(typeof tempData === 'object' && !Array.isArray(tempData)){
+                        dataFlatKey  = `${dataFlatKey}_${d}`
+                        handleNestedTimeParse2(tempData[d], key, dataFlatKey)
+                    } else {
+                        if(key == 'current'){
+                            if(extentLen  == maxNumberOfitemToCheck + 1){
+                                extentLen = 11
+                            } else {
+                                extentLen += 1
+                            }
+                        }
+                        dataFlat[key][dataFlatKey] = tempData
+                        extentFlat[key][dataFlatKey] = {
+                            max : max(tempData, d => +d.value),
+                            name: dataFlatKey,
+                            checked: extentLen > maxNumberOfitemToCheck ? false : true,
+                            color: colors[extentLen]
+                        }
+                    }
+                    dataFlatKey = prefix
+                })
+            } else {
+                if(key == 'current'){
+                    if(extentLen  == maxNumberOfitemToCheck + 1){
+                        extentLen = 11
+                    } else {
+                        extentLen += 1
+                    }
+                }
+                dataFlat[key][dataFlatKey] = tempData
+                extentFlat[key][dataFlatKey] = {
+                            max : max(tempData, d => +d.value),
+                            name: dataFlatKey,
+                            checked: extentLen > maxNumberOfitemToCheck ? false : true,
+                            color: colors[extentLen]
+                        }
+                dataFlatKey = prefix
+            }
+    }
 
     const handleCloseSideMenu = (d = selectedSideMenuLayerClose) => {
         if(d && d.length > 0){
@@ -218,35 +298,54 @@
             chartType = chartTypeObj[dataBody.displayOptions.chartType].id
         }
         handleSetLegend(chartType)
-        height = clientHeight  <= 600 ? clientHeight : 600
+        height = clientHeight // <= 700 ? clientHeight : 700
+        width = clientWidth - 1
+
         if(chartType == "doughnut" || chartType == "pie"){
             type = "radial"
-            margin =  {top: 0, right: 45, bottom: 0, left: 45}
+            margin =  {top: 200, right: 20, bottom: 0, left: 30}
         } else if (chartType == "line") {
             type = "multiline"
-            margin =  { top: 20, right: 45, bottom: 55, left: 45}
-            height = height - 20 - 55 - 35
+            margin =  { top: 60, right: 20, bottom: 55, left: 50}
+            height = height //- margin.top - margin.bottom
+            width = width //- margin.right - margin.left
+
         } else if (chartType == "bar" || chartType == "funnel") {
             type = "dropOff"
-            margin =  { top: 60, right: 45, bottom: 55, left: 45}
-            height = height - 55 
+            margin =  { top: 55, right: 20, bottom: 55, left: 50}
+            height = height - margin.bottom //- margin.top
         }
-        width = clientWidth
+
         if(type == "radial"){
             width = 200
             height = 300
         } else if(type == "dropOff"){
             let multiplier = hasComparison ? 2 : 1
-            let temp = width
+            let temp = clientWidth
             if(propData){
-                temp = minBarWidth * multiplier * propData.length 
-            }else if(tabSelected == "insights" && data?.current){
-                temp = minBarWidth * multiplier * data.current.length
+                let x = 1
+                let v = 1
+                //if(typeof propData === 'object' && !Array.isArray(propData)){
+                    x = sum(Object.values(extentFlat.current), d => +d.checked) //Object.keys(propData).length > 10 ? 10 : Object.keys(propData).length
+                    v = propData[Object.keys(propData)[0]].length
+                // } else{
+                //     v = propData.length
+                // }
+                console.log(x);
+                temp = minBarWidth * multiplier * x * v
+            } else if(tabSelected == "insights" && data?.current){
+                // 10 is the number of data that can be checked at once
+                let index = sum(Object.values(extentFlat.current), d => +d.checked) //Object.keys(data.current).length > 10 ? 10 : Object.keys(data.current).length
+
+                temp = minBarWidth * multiplier * index  * data.current[Object.keys(data.current)[0]].length
             } else if (tabSelected == "funnels" && dataFunnel?.current) {
                 temp = minBarWidth * multiplier * dataFunnel.current.length
             }
-            width = width > temp ? width : temp
+            width = clientWidth > temp ? clientWidth : temp
+            width = width - margin.right - margin.left
+            
         }
+
     }
 
     const handleChartType = (propData) => {
@@ -313,9 +412,6 @@
            if(temp.length > 0) {
                 body.filters = temp
             }
-            // else {
-            //     allowFetch = false
-            // }
         }
 
         if (tempBody?.traits && tempBody.traits.length > 0){
@@ -343,23 +439,18 @@
                     }
                 }
 
-                //if(type == "string"){
-                    if(value){
-                        let [event, value_session] = value.replace("]","").split("[")
-                        tempTraits.push({
-                            titleOverwrite : `${title || "UNTITLED-" + i}`,
-                            operator : traitOperator[operator].id,
-                            event,
-                            value: `${value_session ? value_session.toLowerCase() : ""}`
-                        })
-                    }
-                    if(tempTraits.length > 0){
-                        body["traits"] = tempTraits
-                    }
-                    // else {
-                    //     allowFetch = false
-                    // }
-                //}
+                if(value){
+                    let [event, value_session] = value.replace("]","").split("[")
+                    tempTraits.push({
+                        titleOverwrite : `${title || "UNTITLED-" + i}`,
+                        operator : traitOperator[operator].id,
+                        event,
+                        value: `${value_session ? value_session.toLowerCase() : ""}`
+                    })
+                }
+                if(tempTraits.length > 0){
+                    body["traits"] = tempTraits
+                }
             })
         }
 
@@ -379,7 +470,6 @@
 
 
         body["displayOptions"] = tempBody.displayOptions
-        if(hasComparison && hasDataSync && isTimeScale) body["displayOptions"]["dataSyncronization"] = hasDataSync
         if(tempBody?.steps){
             let temp = []
             tempBody.steps.map(({index, value, title, filters}, i) => {
@@ -410,9 +500,6 @@
             if(temp.length > 1){
                 body["displayOptions"]["steps"] = temp
             }
-            // else {
-            //     allowFetch = false
-            // }
 
         }
         if(tempBody?.breakdown){
@@ -425,24 +512,19 @@
             if(temp.length > 0){
                 body["breakdown"] = temp
             } else {
-                body["breakdown"] = [{ "value" : "timestamp"}]
+                body["breakdown"] =  [
+                    {"value": "country"},
+                    {"value": "timestamp"},
+                ]
             }
         }
+        if(hasComparison && hasDataSync && (body.breakdown[body.breakdown.length - 1].value != "timestamp")) body["displayOptions"]["dataSyncronization"] = hasDataSync
 
         if(chartTypeObj[tempBody.displayOptions.chartType].id != "funnels"){
             body["sort"] = [{
-                     "field": "key",
+                     "key": body.breakdown[body.breakdown.length - 1].value,
                      "direction": "asc"
                 }]
-            //["line","doughnut"].includes(chartTypeObj[tempBody.displayOptions.chartType].id)
-            // ?   [{
-            //         "field": "key",
-            //         "direction": "asc"
-            //     }]
-            // :   [{
-            //         "field": "value",
-            //         "direction": "desc"
-            //     }]
         }
 
         body["accuracy"] = {
@@ -488,7 +570,7 @@
             allowFetch = false
         }
         if(allowFetch){
-            tabSelected == "insights" ? prevBody = raw : prevBodyFunnel = raw
+            tabSelected == "insights" ? prevBody = raw : prevBodyFunnel = raw            
             const requestOptions = {
                 method: "POST",
                 headers: myHeaders,
@@ -504,6 +586,7 @@
 
     const processData = async () => {
         // FETCH DATA
+        isFetching = true
         handleSetChartType()
 
         if(prevTabSelected != tabSelected){
@@ -520,24 +603,19 @@
             if(postBody){
                 if(tabSelected == "funnels"){
                     dataFunnel = {}
+                    dataFunnelTable = {}
                 } else{
                     data = {}
+                    dataTable = {}
                 }
             }
         }
 
-        // if(controller){
-        //     //if((tabSelected == "insights" && resInsight) || (tabSelected == "funnels" && resFunnel)) controller.abort()
-        // }
-
         if(allowRefetch && (!postBody || (tabSelected == "insights" && dataBody.eventName == null))) return
         let tempMainData = {}
 
-        // controller = new AbortController()
-        // const signal = controller.signal
         try {
             if(allowRefetch){
-               //req = await fetch(ENDPOINT, {signal, ...postBody})
                 req = await fetch(ENDPOINT, postBody)
                 res = await req.json()
 
@@ -557,60 +635,108 @@
                     res = resInsight
                 }
             }
-            handleChartType(res.result.current)
+            legendData = {}
+
+            if(allowRefetch){
+                extentFlat = {
+                    current: {},
+                    comparison: {}
+                }
+                dataFlat = {
+                    current: {},
+                    comparison: {}
+                }
+
+                handleNestedTimeParse(res.result.current, "current")
+                handleNestedTimeParse(res.result.comparison, "comparison")
+                numberChecked = extentLen  == 11 ? extentLen - 1 : extentLen                
+            }
+            handleChartType(dataFlat.current)
+
+
+            firstCurrent = Object.keys(dataFlat.current)[0]
+            firstComparison = Object.keys(dataFlat.comparison)[0]
+            if(!firstCurrent) {
+                isFetching = false
+                return
+            }// no data for the selection.
             if(type == "multiline"){
-                    let tempParse = parsePeriod[accuracy]
-                    let temp = JSON.parse(JSON.stringify(res.result.current))
-                    if(tempParse(temp[0].key) == null){
+                tempMainData = JSON.parse(JSON.stringify(dataFlat))
+                tempParse = parsePeriod[accuracy]
+                let temp = JSON.parse(JSON.stringify(dataFlat.current))
+                    if(tempParse(temp[firstCurrent][0].key) == null){
                         isTimeScale = false
                     } else {
-                        temp.map((d) => d.key =  tempParse(d.key))
+                        Object.values(temp).map((f) => {
+                            f.map((d) => d.key =  tempParse(d.key))
+                            f.sort((a, b) => ascending(a.key, b.key))
+                        })
                         isTimeScale = true
                     }
-                    tempMainData.current = temp
 
-                    legendData = tempMainData?.current?.[0]?.traits
-                        ?   [
-                                "Rate Compared To Previous Value",
-                                "Value",
-                                ...Object.keys(tempMainData.current[0].traits)
-                            ]
-                        :   [
-                                "Rate Compared To Previous Value",
-                                "Value",
-                            ]
+                tempMainData.current = temp
 
-                    if(hasComparison){
-                        let tempPast = JSON.parse(JSON.stringify(res.result.comparison))
-                        tempPast = tempPast.slice(0, temp.length)
-                        isTimeScale && tempPast.map((d) => d.key =  tempParse(d.key))
-                        tempMainData.comparison = tempPast
+                legendData = tempMainData?.current?.[firstCurrent]?.[0]?.traits
+                    ?   [
+                            "Rate Compared To Previous Value",
+                            "Value",
+                            ...Object.keys(tempMainData.current[firstCurrent][0].traits)
+                        ]
+                    :   [
+                            "Rate Compared To Previous Value",
+                            "Value",
+                        ]
+
+                if(hasComparison){
+                    let tempPast = JSON.parse(JSON.stringify(dataFlat.comparison))
+                    //tempPast = tempPast.slice(0, temp.length)
+                    if(isTimeScale){
+                        Object.values(tempPast).map((f) => {
+                            f.map((d) => d.key =  tempParse(d.key))
+                            f.sort((a, b) => ascending(a.key, b.key))
+                        })
                     }
+                    tempMainData.comparison = tempPast
+                }
+                //console.log(tempMainData);
             }
 
             if(type == "dropOff"){
-                tempMainData = JSON.parse(JSON.stringify(res.result))
+                tempMainData = JSON.parse(JSON.stringify(dataFlat))
             }
 
             if (type == "radial") {
-                    let tempData = JSON.parse(JSON.stringify(res.result.current))
-                    const total = sum(tempData, d => +d.value)
-                    tempData.map((k, i) => {
-                        tempData[i] = {
-                            percentage: ((+k.value / total) * 100).toFixed(2) + "%",
-                            ...tempData[i]
-                        }
+                    let tempData = JSON.parse(JSON.stringify(dataFlat.current))
+                    Object.values(tempData).map((f) => {
+                        const total = sum(f, d => +d.value)
+                        f.map((k, i) => {
+                            f[i] = {
+                                percentage: ((+k.value / total) * 100).toFixed(2) + "%",
+                                ...f[i]
+                            }
+                        })
+                        f.sort((a, b) => ascending(a.value, b.value))
                     })
+                    // const total = sum(tempData, d => +d.value)
+                    // tempData.map((k, i) => {
+                    //     tempData[i] = {
+                    //         percentage: ((+k.value / total) * 100).toFixed(2) + "%",
+                    //         ...tempData[i]
+                    //     }
+                    // })
 
-                    tempMainData["current"] = tempData.sort((a, b) => descending(a.value, b.value))
-                    legendData = tempMainData.current
+                    tempMainData["current"] = tempData //.sort((a, b) => descending(a.value, b.value))\
+                    legendData = dataFlat.current[firstCurrent]
             }
 
             if(tabSelected == "funnels"){
                 dataFunnel = {...tempMainData}
+                dataFunnelTable = res.result
             } else{
                 data = {...tempMainData}
+                dataTable = res.result
             }
+            isFetching = false
 
         } catch (error) {
             console.warn(error);
@@ -648,7 +774,7 @@
         sessionStorage.setItem("customCharts", JSON.stringify(currentData));
     }
 
-    $: tabSelected, handleChartType()
+    $: tabSelected, numberChecked, handleChartType()
     $: dateRange, (dateRange?.start && dateRange?.end) && handleCustomDateRange()
     $: dataBody, dataBodyFunnel,  selectedDayIndexes, selectedComparisonIndexes, processData()
 
@@ -963,50 +1089,58 @@
                 </div>
 
                 <!-- CONTENT -->
-                <div class="content" bind:clientWidth={clientWidth} bind:clientHeight = {clientHeight}>
+                <div class="content content-right" bind:clientWidth={clientWidth} bind:clientHeight = {clientHeight}>
                     {#if tabSelected == "insights"}
-                        {#if data && Object.keys(data).length > 0 }
-                            {#if data.current.length < 1}
+                        {#if resInsight && !isFetching}
+                            {#if !firstCurrent}
                                 <div class="spinner">
                                     <p>Insufficient Data</p>
                                 </div>
                             {:else}
-                            {#if  (type == "multiline" && data.current.length > 1 && showLegend)|| (type == "radial" && showLegend)}
-                            <Legend
-                                data = {legendData}
-                                {colors}
-                                {width}
-                                {type}
-                                {margin}
-                                displayType = {type != "radial" ? "keyOnly" : "keyValue"}
-                                {hasComparison}
-                            />
-                        {/if}
-                        {#if type.includes("line") || type.includes("drop")}
-                            <BarLine
-                                {data}
-                                {type}
-                                {width}
-                                {height}
-                                {strokeColor1}
-                                {strokeColor2}
-                                {isTimeScale}
-                                dataProperty = {Date.now()}
-                                headline = ""
-                                {margin}
-                                {hasComparison}
-                                {relatedBar}
-                            />
-                        {:else if  type.includes("radial")}
+                                {#if  (type == "multiline" && data.current.length > 1 && showLegend)|| (type == "radial" && showLegend)}
+                                <!-- <Legend
+                                    data = {legendData}
+                                    {colors}
+                                    {width}
+                                    {type}
+                                    {margin}
+                                    displayType = {type != "radial" ? "keyOnly" : "keyValue"}
+                                    {hasComparison}
+                                    {isTimeScale}
+                                /> -->
+                                {/if}
+                            {#if type.includes("line") || type.includes("drop")}
+                                <BarLine
+                                    {data}
+                                    bind:extentFlat
+                                    {firstCurrent}
+                                    {firstComparison}
+                                    {type}
+                                    {width}
+                                    {height}
+                                    {strokeColor1}
+                                    {strokeColor2}
+                                    {isTimeScale}
+                                    dataProperty = {Date.now()}
+                                    headline = ""
+                                    {margin}
+                                    {hasComparison}
+                                    {relatedBar}
+                                    {numberChecked}
+                                    {rowHovered}
+                                />
+                            {:else if  type.includes("radial")}
                             <Radial
                                 {data}
                                 {type}
                                 {width}
                                 {height}
                                 {colors}
+                                {margin}
+                                {rowHovered}
                             />
-                        {/if}
                             {/if}
+                        {/if}
                         {:else if  resInsight}
                             <div class="spinner">
                                 {@html spinner}
@@ -1059,13 +1193,31 @@
                             </div>
                         {/if}
                     {/if}
-
                 </div>
+                {#if (tabSelected == "funnels" && Object.keys(dataFunnel).length > 0) || (tabSelected == "insights" && Object.keys(data).length > 0)}
+                    <div class="p">
+                        <ChartGeneratorTable
+                            data = {tabSelected == "funnels" ? dataFunnelTable : dataTable}
+                            body = {tabSelected == "funnels" ? JSON.parse(prevBodyFunnel) : JSON.parse(prevBody)}
+                            {isTimeScale}
+                            {accuracy}
+                            {handleTableCheck}
+                            bind:extentFlat
+                            bind:numberChecked
+                            bind:rowHovered
+                            {maxNumberOfitemToCheck}
+                    />
+                    </div>
+                {/if}
             </div>
         </div>
     </div>
 
 <style>
+    .p{
+        padding: 2rem;
+        height: calc(35% - 75px);
+    }
     .spinner{
         height: 100%;
         width: 100%;
@@ -1135,6 +1287,7 @@
         width: 100%;
         padding: 25px 32px;
         border-bottom: 1px solid #212830;
+        height: 75px;
     }
  
     .header .tab {
@@ -1166,11 +1319,17 @@
     }
 
     .container .content{
-        height: calc(100% - 80px);
+        height: calc(80% - 80px);
     }
     .container-left .content{
         overflow: auto;
         height: calc(100% - 80px);
+    }
+
+    .container-right .content{
+        overflow: auto;
+        height: 65%;
+        border-bottom: 1px solid #212830;
     }
 
     .custom-bar::-webkit-scrollbar-track {
@@ -1261,6 +1420,7 @@
 		background-color: transparent;
 		transition: all .24s ease-in-out;
 		cursor: pointer;
+        width: max-content;
 	}
 
 	.tab-toggler div.active {
@@ -1274,6 +1434,7 @@
 		align-items: center;
 		margin-inline: auto 0px;
 		gap: 8px;
+        flex-wrap: nowrap;
 	}
 	.date-picker-dash{
 		max-width: 0px;

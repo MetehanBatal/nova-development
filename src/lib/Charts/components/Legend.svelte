@@ -6,11 +6,13 @@
     export let colors
     export let displayType
     export let hasComparison
-    
+    export let isTimeScale
+
+    import {dateFormat} from "../utlis"
+
     let legendDom
 
     let scrollAmount = width/2 < 500 ? width/2 : 500
-  
     const handleClick = (direction = "right") => {
 
       let amount =
@@ -69,7 +71,7 @@
             <div class="row-1">
                     <div class="indictor" style={`background: ${colors[i]}`}></div>
                     <div>
-                      <span>{k.key == "" ? "OTHERS" : k.key.toUpperCase()} </span>
+                      <span>{k.key == "" ? "OTHERS" : `${isTimeScale ? dateFormat(new Date(k.key)) : k.toUpperCase()}`} </span>
                       <p>{k.value} ({k.percentage})</p>
                     </div>
                     
@@ -106,6 +108,7 @@
       justify-content: space-between;
       cursor: pointer;
       z-index: 10;
+      position: absolute;
     }
     .withKey{
       padding: 3rem 3rem 0rem;
@@ -126,7 +129,7 @@
       justify-content: center;
       padding: 0px;
       margin-top: 2rem;
-      padding-bottom: 1.5rem;
+      /* padding-bottom: 1.5rem; */
     }
 
     .legend p{

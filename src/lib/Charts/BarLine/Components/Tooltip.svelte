@@ -52,8 +52,8 @@
 	style="top:{y + bottom}px; 
 		  left:{
 			  left > width / 2
-				  ? left - 280 + margin.left - 15
-				  : left + margin.left + 15
+				  ? left - 280 + margin.left - 20
+				  : left + margin.left + 20
 		  }px"
   >
 	  <div class="title">{tooltipTitle}</div>

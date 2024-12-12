@@ -255,8 +255,8 @@ const processDataFunc = (d, dx = ["present", "past"], dv = "uniqueSessionCount",
 }
 
 const parsePeriod = {
-    hour: timeParse("%Y-%m-%dT%H:%M:%S.%L%Z"), // 2024-10-15T08:00:00.000Z
-    day: timeParse("%Y-%m-%dT%H:%M:%S.%L%Z"),
+    hour: timeParse("%Y-%m-%dT%H:00:00.000Z"), // 2024-10-15T08:00:00.000Z
+    day: timeParse("%Y-%m-%dT%H:00:00.000Z"),
     month: timeParse("%Y-%m-%dT%H:00:00.000Z")
 }
 

@@ -529,7 +529,7 @@ svg {
 	transition: all .2s ease-in-out;
 	position: absolute;
 	transform: translateY(4.8rem);
-	z-index: 2;
+	z-index: 20;
 }
 
 .dropdown-content .dropdown-item:first-child {
