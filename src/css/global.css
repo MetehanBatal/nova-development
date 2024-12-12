@@ -1625,14 +1625,13 @@ input::-webkit-inner-spin-button {
 .setting-logo-wrapper {
 	display: flex;
 	background-color: #212830;
-	border-radius: 1.6rem;
+	border-radius: 50%;
 	overflow: hidden;
 	border: .1rem solid #383C42;
 	padding: 0;
 	width: 100%;
 	width: 6.4rem;
 	height: 6.4rem;
-	padding: 1.4rem;
 }
 
 .settings-logo-container {

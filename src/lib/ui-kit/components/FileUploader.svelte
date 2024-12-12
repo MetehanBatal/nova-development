@@ -14,7 +14,7 @@
       uploading = true;
       const fileData = await readFileWithProgress(input.files[0]);
       uploading = false;
-      dispatch('file', fileData);
+      dispatch('file', { src: fileData.src, file: input.files[0] });
     }
   }
 

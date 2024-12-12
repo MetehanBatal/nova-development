@@ -94,6 +94,7 @@
     align-items: center;
     gap: 15px;
     font-weight: 500;
+    font-family: Inter, sans-serif;
     color: white;
     border-radius: 8px;
     position: relative;
@@ -102,7 +103,7 @@
 
   .nsuk-default {
     font-size: 14px;
-    padding: 12px 30px 12px 30px;
+    padding: 10px 30px 10px 30px;
   }
 
   .nsuk-big {

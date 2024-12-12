@@ -205,7 +205,6 @@
   };
 
   const handleSubmit = async (event) => {
-    console.log('$page.data.membersRes.msg', $page.data.membersRes.msg);
     event.preventDefault();
     await validateForm(null, null);
   };

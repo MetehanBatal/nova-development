@@ -8,9 +8,8 @@
   export let description = '';
   export let size: 'xs' | 'sm' | 'md' | 'lg' = 'sm';
   export let type: 'normal' | 'mini' | 'choice' = 'normal';
-  export let isChoice = false;
-  export let widthHalf: boolean = false;
-  export let widthThird: boolean = false;
+  export let width: 'half' | 'third' | 'full';
+  export let toggleSize: 'sm' | 'md' = 'md';
   let toggleStatus = false;
 
   function handleToggle(event: CustomEvent<boolean>) {
@@ -18,7 +17,9 @@
   }
 </script>
 
-<div class={`nsuk-flex ${widthHalf ? 'nsuk-width-half' : widthThird ? 'nsuk-width-third' : ''}`}>
+<div
+  class={`nsuk-flex ${width === 'half' ? 'nsuk-width-half' : width === 'third' ? 'nsuk-width-third' : width === 'full' ? 'nsuk-width-full' : ''}`}
+>
   <div class={type === 'mini' ? 'nsuk-flex' : ''}>
     <h2
       class={size === 'sm' && type !== 'mini'
@@ -27,15 +28,17 @@
           ? 'nsuk-title nsuk-title-md'
           : size === 'lg' && type !== 'mini'
             ? 'nsuk-title nsuk-title-lg'
-            : type === 'mini' || size === 'xs'
+            : type !== 'mini' || size === 'xs'
               ? 'nsuk-title nsuk-title-xs'
-              : ''}
+              : type === 'mini'
+                ? 'nsuk-title nsuk-title-xs'
+                : ''}
     >
       {title}
     </h2>
     {#if description}
       <p
-        class={type === 'mini' || size === 'xs'
+        class={type === 'mini'
           ? 'nsuk-description nsuk-description-mini'
           : type === 'normal' || type === 'choice'
             ? 'nsuk-description nsuk-description-normal'
@@ -45,9 +48,9 @@
       </p>
     {/if}
   </div>
-  {#if isChoice}
+  {#if type === 'choice'}
     <div>
-      <Toggle bind:value={toggleStatus} on:toggle={handleToggle} />
+      <Toggle bind:value={toggleStatus} on:toggle={handleToggle} size={toggleSize} />
     </div>
   {/if}
 </div>
@@ -90,10 +93,9 @@
   .nsuk-flex {
     min-width: 200px;
     display: flex;
-    align-items: center;
+    align-items: start;
     justify-content: space-between;
     gap: 20px;
-
     p {
       padding-bottom: 4px;
     }
@@ -105,5 +107,9 @@
 
   .nsuk-width-third {
     width: 33.33%;
+  }
+
+  .nsuk-width-full {
+    width: 100%;
   }
 </style>

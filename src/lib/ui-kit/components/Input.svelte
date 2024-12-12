@@ -5,7 +5,7 @@
   const dispatch = createEventDispatcher<{ input: string }>();
 
   export let placeholder: string = 'Placeholder';
-  export let type: 'text' | 'password' | 'email' | 'number' = 'text';
+  export let type: 'text' | 'password' | 'email' | 'number' | 'tel' = 'text';
   export let iconLeft: string | null = null;
   export let iconRight: string | null = null;
   export let disabled: boolean = false;
@@ -14,6 +14,7 @@
   export let fullWidth: boolean = false;
   export let error: string | null = null;
   export let name: string;
+  export let inputRef: HTMLInputElement | null = null;
 
   function handleInput(e: Event) {
     const input = e.target as HTMLInputElement;
@@ -32,6 +33,7 @@
     {/if}
     {#if type === 'text'}
       <input
+        bind:this={inputRef}
         bind:value
         type="text"
         {placeholder}
@@ -43,6 +45,7 @@
     {/if}
     {#if type === 'password'}
       <input
+        bind:this={inputRef}
         bind:value
         type="password"
         {placeholder}
@@ -54,6 +57,7 @@
     {/if}
     {#if type === 'email'}
       <input
+        bind:this={inputRef}
         bind:value
         type="email"
         {placeholder}
@@ -65,8 +69,21 @@
     {/if}
     {#if type === 'number'}
       <input
+        bind:this={inputRef}
         bind:value
         type="number"
+        {placeholder}
+        {disabled}
+        {name}
+        class={`${size === 'sm' ? 'nsuk-size-sm' : 'nsuk-size-md'} ${iconLeft ? 'nsuk-pl' : ''} ${iconRight ? 'nsuk-pr' : ''} ${error ? 'nsuk-error' : ''}`}
+        on:input={handleInput}
+      />
+    {/if}
+    {#if type === 'tel'}
+      <input
+        bind:this={inputRef}
+        bind:value
+        type="tel"
         {placeholder}
         {disabled}
         {name}

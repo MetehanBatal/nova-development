@@ -7,6 +7,7 @@
 
   export let value = false;
   export let isRequired = false;
+  export let size: 'sm' | 'md' = 'md';
 
   let checked = false;
   let errorMessage = '';
@@ -48,8 +49,17 @@
   }
 </script>
 
-<div class="nsuk-s nsuk-s--slider">
-  <button role="switch" aria-checked={checked} aria-labelledby={`switch-${uniqueID}`} on:click={handleClick}></button>
+<div
+  class="nsuk-s nsuk-s--slider"
+  style={`--button-before-width: ${size === 'sm' ? '16px' : '20px'}; --button-before-height: ${size === 'sm' ? '16px' : '20px'}; --button-before-top: ${size === 'sm' ? '0.15em' : '0.12em'}; --button-before-left: ${size === 'sm' ? '0.2em' : '0.2em'}`}
+>
+  <button
+    role="switch"
+    aria-checked={checked}
+    aria-labelledby={`switch-${uniqueID}`}
+    on:click={handleClick}
+    style={`width: ${size === 'md' ? '40px' : '36px'}; height: ${size === 'md' ? '24px' : '20px'}`}
+  ></button>
   {#if errorMessage}
     <p class="nsuk-error-message">{errorMessage}</p>
   {/if}
@@ -62,10 +72,8 @@
   }
 
   .nsuk-s--slider button {
-    width: 40px;
-    height: 24px;
     position: relative;
-    margin: 0 0 0 0.5em !important;
+    margin: 0 0 0 0.5em;
     padding: 0 !important;
     background: var(--gray);
     border: none;
@@ -74,11 +82,11 @@
   .nsuk-s--slider button::before {
     content: '';
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: var(--button-before-width, 20px);
+    height: var(--button-before-height, 20px);
     background: #fff;
-    top: 0.12em;
-    left: 0.2em;
+    top: var(--button-before-top, 0.12em);
+    left: var(--button-before-left, 0.2em);
     transition: transform 0.3s;
   }
 
