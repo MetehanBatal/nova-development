@@ -8,25 +8,36 @@
     export let width
     export let height
     export let colors
+    export let margin
+    export let rowHovered
 
-    let processedData = JSON.parse(JSON.stringify(data.current))
-
-    console.log(processedData);
-
+    let processedData
+    let arcs
     let radius = width / 2
     let innerRadius = radius - 70
 
-    const pieFunc = pie()//.padAngle(0.03)
+    const processedDatafunc = () => {
+        if(rowHovered == ""){
+            processedData = JSON.parse(JSON.stringify(data.current[Object.keys(data.current)[0]]))
+        } else {
+            processedData = JSON.parse(JSON.stringify(data.current[rowHovered]))
+        }
+
+    }
+
+    processedDatafunc()
+
+    const pieFunc = pie()
 		.value((d) => d.value);
 
-    const arcs = pieFunc(processedData);
+    $:rowHovered, processedDatafunc()
+    $:processedData,  arcs = pieFunc(processedData);
 
-    console.log(arcs);
 
 </script>
 
 <svg width = {width + "px"} height = {height + "px"}>
-    <g class="doughnut-chart-g" style = {`transform: translate(${width/2}px, ${height/2}px)`}>
+    <g class="doughnut-chart-g" style = {`transform: translate(${width/2}px, ${200}px)`}>
         {#each arcs as d, i}
             <path
                 fill = {colors[i] || "#333"}

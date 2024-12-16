@@ -458,12 +458,12 @@ const session = [
     {
         index: 3,
         id: "gender",
-        name: "Gender",
+        name: "gender",
     },
     {
         index: 4,
         id: "amount",
-        name: "Amount",
+        name: "amount",
     },
     {
         index: 5,

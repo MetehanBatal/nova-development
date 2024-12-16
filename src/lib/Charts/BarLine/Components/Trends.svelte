@@ -9,23 +9,29 @@
 	export let dataProperty;
 	export let hasComparison
 	export let isTimeScale
+	export let firstCurrent
+	export let extentFlat
+	export let checked
 
 	import { select, selectAll, easeLinear } from "d3";
 	import { onMount } from 'svelte';
-
-	$: xLoc = isTimeScale ? xScale(data.current[selected].key) : selected * xScale.step()
-	$: yLocPast = hasComparison && yScale(data.comparison[selected].value);
-	$: yLocPresent = yScale(data.current[selected].value);
+	let xLoc
 	let strokeWidth = 1.5;
 	let r = 3;
 	let justMounted = false
+
+	const handlexLoc = () => {
+		xLoc = isTimeScale ? xScale(data.current[firstCurrent][selected].key) : selected * xScale.step()
+	}
+
+	$:selected, handlexLoc()
 
 	onMount(() => {
 		justMounted = true
 	})
 
 	const g = select(".g-" + dataProperty);
-
+	
 	$: xLoc,
 		g
 			.selectAll(".trends-" + dataProperty)
@@ -41,42 +47,46 @@
 			.ease(easeLinear)
 			.attr("x1", xLoc)
 			.attr("x2", xLoc);
-
-	$: xLoc,
-		yLocPresent,
+		
+	$: checked, checked.length !=0 && checked.map((d) => {
 		g
-			.selectAll(".c1-" + dataProperty)
-			.data([null], (d) => d)
+			.selectAll(`.c1${dataProperty}${d.name.replaceAll(".", "").replaceAll(":", "")}`.replaceAll("-", ""))
+			.data([null], (dd) => dd)
 			.join("circle")
-			.attr("class", "c1-" + dataProperty)
-			.attr("stroke", strokeColor1)
+			.attr("class", `c1${dataProperty}${d.name.replaceAll(".", "").replaceAll(":", "")}`.replaceAll("-", ""))
+			.attr("stroke", d.color)
 			.attr("stroke-width", strokeWidth)
 			.attr("r", r)
-			.attr("cy", yLocPresent - 1)
+			.attr("cy", yScale(data.current[d.name][selected].value) - 1)
 			.attr('opacity', 1)
+			.attr('fill', "#060b13")
 			.style("pointer-events", "none")
 			.transition(500)
 			.delay(10)
 			.ease(easeLinear)
 			.attr("cx", xLoc)
-			.attr("cy", yLocPresent);
+			.attr("cy", yScale(data.current[d.name][selected].value));
 
-	$: xLoc,
-		yLocPast,
-		hasComparison && g
-			.selectAll(".c2-" + dataProperty)
-			.data([null], (d) => d)
-			.join("circle")
-			.attr("class", "c2-" + dataProperty)
-			.attr("stroke", strokeColor2)
-			.attr("stroke-width", strokeWidth)
-			.attr("r", r)
-			.attr("cy", yLocPast - 1)
-			.style("pointer-events", "none")
-			.attr('opacity', 1)
-			.transition(500)
-			.delay(10)
-			.ease(easeLinear)
-			.attr("cx", xLoc)
-			.attr("cy", yLocPast);
+		if(hasComparison && data.comparison?.[d.name]?.[selected]){
+			g
+				.selectAll(`.c2${dataProperty}${d.name.replaceAll(".", "").replaceAll(":", "")}`.replaceAll("-", ""))
+				.data([null], (dd) => dd)
+				.join("circle")
+					.attr("class", `c2${dataProperty}${d.name.replaceAll(".", "").replaceAll(":", "")}`.replaceAll("-", ""))
+					.attr("stroke", d.color)
+					.attr("stroke-width", 2)
+					.attr("r", r)
+					.attr("cy", yScale(data.comparison[d.name][selected].value) - 1)
+					.attr('opacity', 1)
+					.attr('fill', "#060b13")
+					.attr('stroke-dasharray', "1, 1")
+					.style("pointer-events", "none")
+					.transition(500)
+					.delay(10)
+					.ease(easeLinear)
+					.attr("cx", xLoc)
+					.attr("cy", yScale(data.comparison[d.name][selected].value));
+			}
+	})
+		
 </script>

@@ -203,16 +203,17 @@
         </div>
 
         <!-- <Chart
-            headline=""
-            showLegend = {true}
-            dataOptions = {{
-                displayOptions: {
-                    "chartType": "pie",
-                },
-                event : "PageView",
-                breakdownValue: [{value : "browserLocales.deviceType"}],
-                measurementType : "unique",
-                accuracyUnit: "month"
+            dataBody = {'{"event":"PageView","displayOptions":{"chartType":"pie"},"breakdown":[{"value":"browserLocales.deviceType"}],"accuracy":{"unit":"month"},"measurement":{"type":"unique"}}'}
+            otherParams = {{
+                "accuracy": "day",
+                "daySelection": 7,
+                "selectedDayIndexes": 2,
+                "hasDataSync": false,
+                "hasComparison": false,
+                "hasRangeSelector": false,
+                "showLegend": true,
+                "headline": "",
+                "isTimeScale": false
             }}
         /> -->
     </div>

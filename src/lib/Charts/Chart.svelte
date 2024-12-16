@@ -18,7 +18,7 @@
     let relatedBar
     let type = ""
     let chartType = dataOptions?.displayOptions?.chartType || ""
-    let minBarWidth = 150
+    let minBarWidth = 50
     let height
 
     // let isMounted = false
@@ -57,7 +57,7 @@
             top: 50,
             right: 5,
             bottom: 55,
-            left: 45,
+            left: 30,
         }
 
     let strokeColor1 = "#645b94"
@@ -107,26 +107,6 @@
         if(otherParams.hasComparison) dataOptions.comparisonStartTimestamp = dateRangeComparison
         dataOptions["accuracy"]["unit"] = accuracy
 
-        // if (dataOptions.event) body["event"] = dataOptions.event
-        // if (hasRangeSelector) body["dateRange"] = dateRangeObject
-        // if (hasComparison) body["comparisonStartTimestamp"] = dateRangeComparison
-        // if (dataOptions.filters) body["filters"] = dataOptions.filters
-        // if (dataOptions.valueCalculation) body["valueCalculation"] = dataOptions.valueCalculation
-        // if (dataOptions.traitCalculations) body["traitCalculations"] = dataOptions.traitCalculations
-        // if (dataOptions.traits) body["traits"] = dataOptions.traits
-        // if (dataOptions.displayOptions) body["displayOptions"] = dataOptions.displayOptions
-        // if (dataOptions.sort) body["sort"] = dataOptions.sort
-        // if (dataOptions.steps) body["displayOptions"]["steps"] = dataOptions.steps
-        // if (dataOptions.breakdownValue)  body["breakdown"] = dataOptions.breakdownValue
-        // if (dataOptions.accuracyUnit) {
-        //     body["accuracy"] = {}
-        //     body["accuracy"]["unit"] = accuracy
-        // }
-        // if (dataOptions.measurementType) {
-        //     body["measurement"] = {}
-        //     body["measurement"]["type"] = dataOptions.measurementType
-        // }
-
         const raw = JSON.stringify(dataOptions);
 
         const requestOptions = {
@@ -152,16 +132,16 @@
         }
         if(!width){
             width = type == "multiline" || type == "dropOff"
-                ?  windowWidth - 500
+                ?  windowWidth - 470
                 :  type == "radial"
                 ?  200
                 :  windowWidth - 160
         }
-        height =  type == "multiline"
-            ?  580
-            :  type == "radial"
+        height = type == "radial"
             ?  200
-            :  470
+            :  type == "dropOff"
+            ?  400
+            :  450
 
         try {
             const req = await fetch(ENDPOINT, fetchData())
@@ -312,6 +292,7 @@
                 {width}
                 {height}
                 {colors}
+                {margin}
             />
         {:else}
             <!-- else content here -->
@@ -326,7 +307,7 @@
 		display: flex;
 		align-items: center;
         margin: 2rem 0px 3rem;
-        padding-inline: 1.5rem;
+        /* padding-inline: 1.5rem; */
 	}
 
 	.chart-header h3 {

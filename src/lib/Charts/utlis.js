@@ -1,3 +1,6 @@
+
+import {timeFormat} from 'd3';
+
 const kiloConverter = (value) => {
     let temp = value / 1000
    
@@ -6,4 +9,6 @@ const kiloConverter = (value) => {
         : value
 }
 
-export {kiloConverter}
+const dateFormat = timeFormat("%b %d - %I %p");
+
+export {kiloConverter, dateFormat}

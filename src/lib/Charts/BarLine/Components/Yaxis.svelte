@@ -4,10 +4,11 @@
     export let yScale
     export let dataProperty
     export let type
+    export let margin
 
     import { range } from 'd3';
     let stroke = "#3b3d42"
-    let x = -35
+    let x = -30
     let dy = "0.32em" // default
     let min 
     let max
@@ -19,9 +20,11 @@
         max = yScale.domain()[1]
         step = (max - min) / 4
         ticks = range(min, max, step)
+
+        console.log(ticks);
     }
 
-    $:type, handleTicks()
+    $:type, yScale, handleTicks()
 
 </script>
     <g>

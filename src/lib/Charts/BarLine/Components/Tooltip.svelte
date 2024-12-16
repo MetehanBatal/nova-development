@@ -1,41 +1,46 @@
 <script>
-	export let tooltipTitle;
-	export let strokeColor1;
-	export let strokeColor2;
-	export let data
-	export let selected;
-	export let xScale;
-	export let yScale;
 	export let bottom;
 	export let width
 	export let margin
+	export let data
+	export let xScale
+	export let yScale
+	export let selected
 	export let hasComparison
+	export let breakdown
+	export let extentFlat
 	export let isTimeScale
 	
 	import { timeFormat } from "d3";
-  import { colors } from "../../../../stores/colors";
 	let dateFormat = timeFormat("%a %b %d, %Y %I:%M%p");
-	let pastValue
+
+	let left
+	let y
+
 	let presentValue
 	let dateValue
 	let presentTraits
-	let pastTraits
+	let pastValue
 	let datePastValue
-	let left
-	let y
+	let pastTraits
 	let percentRate
+	let show
 
+	const handleV = () => {
+		let v = Object.values(extentFlat.current)
+		show = v[v.findIndex((d) => d.checked)].name
+	}
+	handleV()
 	const handleUpdate = () => {
-		presentValue = +data.current[selected].value;
-		dateValue = data.current[selected].key;
-		presentTraits = data.current[selected].traits
+		presentValue = +data.current[show][selected].value;
+		dateValue = data.current[show][selected].key;
+		presentTraits = data.current[show][selected].traits
 		left = xScale(dateValue);
 
-		if(hasComparison){
-			pastValue  = +data.comparison[selected].value;
-			datePastValue = data.comparison[selected].key;
-			pastTraits = data.comparison[selected].traits;
-
+		if(hasComparison && data?.comparison?.[show]?.[selected]){
+			pastValue  = +data.comparison[[show]][selected].value;
+			datePastValue = data.comparison[show][selected].key;
+			pastTraits = data.comparison[show][selected].traits;
 			percentRate = !pastValue ? "100.0" : (((presentValue - pastValue) / pastValue) * 100).toFixed(1);
 		}
 
@@ -43,8 +48,39 @@
 
 	}
 
+	const handleBreakdownName  = () => {
+		let temp = show.split("_")
+		let i = breakdown.findIndex((d) => d.value == "timestamp")
+		if(i != -1 && i != breakdown.length - 1){
+			temp[i] = dateFormat(new Date(temp[i]))
+		}
+
+		if(breakdown[breakdown.length - 1].value == "timestamp"){
+			temp.push(dateFormat(data.current[show][selected].key))
+		} else {
+			temp.push(data.current[show][selected].key)
+		}
+
+		return temp.join(" | ")
+	}
+
+	const handleValue = (p, q) => {
+		if(q && q != 0 && p > q){
+			return +((p / q) * 100)
+		} else if (q && p != 0 && p < q){
+			return -((q / p) * 100)
+		} else if(p == 0 && q == 0){
+			return +0
+		} else if (p == 0 && q) {
+			return -(100 * q)
+		} else {
+			return +(100 * p)
+		}
+	}
+
 	$: selected, handleUpdate()
-  
+
+	$: extentFlat, handleV()
   </script>
 
   <div
@@ -52,138 +88,120 @@
 	style="top:{y + bottom}px; 
 		  left:{
 			  left > width / 2
-				  ? left - 280 + margin.left - 15
-				  : left + margin.left + 15
+				  ? left - 280 + margin.left - 20
+				  : left + margin.left + 20
 		  }px"
   >
-	  <div class="title">{tooltipTitle}</div>
-	  <div class="row row-1">
-		<div class="content">
-			<div class = "title-row">
-				<div class="indicator" style="border-color:{strokeColor1};"></div>
-				<div class="color-gray">{isTimeScale ? dateFormat(dateValue) : dateValue}</div>
-			</div>
-		  <div class="view">
-			{#if hasComparison}
-				<div class = "value">
-					<div class = "indicator indicator-box" style={`background-color: ${colors[0]}`}></div>
-					<span style="color: {percentRate > 0 ? '#0ca978' : 'red'}">{percentRate}%</span>
-				</div>
-			{/if}
-			<div class = "value">
-				<div class = "indicator indicator-box" style={`background-color: ${colors[1]}`}></div>
-				<span>{presentValue.toFixed(2)}</span>
-			</div>
-			{#if presentTraits}
-				{#each Object.keys(presentTraits) as k, i}
-				<div class = "value">
-					<div class = "indicator indicator-box" style={`background-color: ${colors[i + 2]}`}></div>
-					<span>{presentTraits[k]}</span>
-				</div>
-				{/each}
-			{/if}
-		  </div>
+<div class="upper flex">
+		<div class="left">
+			<div class="indicator" style={`border-color: ${extentFlat.current[show].color}`}></div>
 		</div>
-	  </div>
-	  {#if pastValue != undefined}
-		  <div class="row row-2">
-			  <div class="content">
-				<div class = "title-row">
-					<div class="indicator" style="border-color:{strokeColor2};"></div>
-					<div class="color-gray">{isTimeScale ? dateFormat(datePastValue) : datePastValue}</div>
-				</div>
-				<div class="view">
-					<!-- <div class = "value">
-						<div class = "indicator" style="background-color: transparent"></div>
-						<span></span>
-					</div> -->
-				<div class = "value">
-					<div class = "indicator indicator-box" style={`background-color: ${colors[1]}`}></div>
-					<span>{pastValue.toFixed(2)}</span>
-				</div>
-					{#if pastTraits}
-						{#each Object.keys(pastTraits) as k, i}
-						<div class = "value">
-							<div class = "indicator indicator-box" style={`background-color: ${colors[i + 2]}`}></div>
-							<span>{pastTraits[k]}</span>
-						</div>
-						{/each}
+		<div class="right">
+			<span class="breakdown gray block line-height">{handleBreakdownName()}</span>
+			<div>
+				<span class="breakdown">{data.current[show][selected].value} </span>
+				<span class="gray"> events </span>
+				{#if hasComparison}
+					<span class={`${handleValue(data?.current?.[show]?.[selected]?.value, data?.comparison?.[show]?.[selected]?.value) >= 0 ? "green" : "red" }`}>
+						{`${handleValue(data?.current?.[show]?.[selected]?.value ,data?.comparison?.[show]?.[selected]?.value) >= 0 ? "+" : ""}${handleValue(data?.current?.[show]?.[selected]?.value ,data?.comparison?.[show]?.[selected]?.value).toFixed(2)}%`}
+					</span>
+				{/if}
+			</div>
+			{#each Object.keys(data.current[show][selected].traits) as k}
+				<div>
+					<span> {k}: </span>
+					<span class="breakdown gray">{data.current[show][selected].traits[k]} </span>
+					{#if hasComparison}
+						<span class={`${handleValue(data.current?.[show]?.[selected]?.traits?.[k], data.comparison?.[show]?.[selected]?.traits?.[k]) >= 0 ? "green" : "red" }`}>
+							{`${handleValue(data.current?.[show]?.[selected]?.traits?.[k], data.comparison?.[show]?.[selected]?.traits?.[k]) >= 0 ? "+" : ""}${handleValue(data.current?.[show]?.[selected]?.traits?.[k], data.comparison?.[show]?.[selected]?.traits?.[k]).toFixed(2)}%`}
+						</span>
 					{/if}
 				</div>
-			  </div>
-		  </div>
-	  {/if}
+			{/each}
+		</div>
+	</div>
+	{#if data?.comparison?.[show]?.[selected]}
+	<div class="lower flex">
+		<div class="left">
+			<div class="indicator dotted" style={`border-color: ${extentFlat.current[show].color}`}></div>
+
+		</div>
+		<div class="right">
+			<span class="breakdown gray block line-height">{handleBreakdownName()}</span>
+			<div>
+				<span class="breakdown">{data.comparison[show][selected].value} </span>
+				<span class="gray"> events </span>
+			</div>
+			{#each Object.keys(data.comparison[show][selected].traits) as k}
+				<div>
+					<span> {k}: </span>
+					<span class="breakdown gray">{data.comparison[show][selected].traits[k]} </span>
+				</div>
+			{/each}
+		</div>
+	</div>
+	{/if}
   </div>
   
   <style>
+	.line-height {
+		line-height: 1.5;
+	}
+	.green {
+		color: #0CB47F
+	}
+	.red {
+		color:#F37261
+	}
+	.block {
+		display: block;
+		margin-bottom: 0.8rem;
+	}
+	.indicator{
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		border: 2px solid #ccc;
+	}
+	.dotted{
+		border: 2px dotted #ccc;
+	}
 	.tooltip {
 	  position: absolute;
 	  background-color: #060b13;
-	  padding: 15px 20px;
+	  padding: 1rem;
 	  border: 1px solid #131921;
 	  border-radius: 7px;
 	  pointer-events: none;
 	  width: 280px;
-	  font-size: 12px;
-	  transition: left 0.5s ease, top 0.4s ease
-	}
-	.title {
-	  font-weight: 600;
-	  font-size: 13px;
-	  display: block;
-	  color: #aaacae;
-	  margin-bottom: 0px;
+	  font-size: 1.1rem;
+	  transition: left 0.5s ease, top 0.4s ease;
+	  line-height: 1;
+	  display: flex;
+	  flex-direction: column;
+	  gap: 2rem;
 	}
 
-	.title-row {
+	.flex {
+		display:  flex;
+		gap: 1rem;
+		align-items: top;
+	}
+	.upper {
+		margin-bottom: 1rem;
+	}
+
+	.flex .right {
 		width: 100%;
+	}
+	.gray {
+		color: #88888A;
+	}
+
+	.right{
 		display: flex;
-	}
-
-  
-	.row-1 {
-	  margin-top: 15px;
-	}
-  
-	.row {
-	  display: flex;
-	}
-  
- 	.view {
-	  margin: 5px 0px 10px 15px;
-	  display: flex;
-	  flex-wrap: wrap;
-	  column-gap: 10px;
-	  row-gap: 3px;
-	}
-
-	.view .value{
-		width: 65px;
-		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-	}
-  
-	.color-gray {
-	  color: #4a4b4f;
-	}
-  
-	.indicator {
-	  width: 9px;
-	  height: 9px;
-	  border-radius: 50%;
-	  border: 2px solid;
-	  margin-top: 3px;
-	  margin-right: 7px;
-	}
-
-	.indicator-box {
-		border-radius: 1px;
-		border: 1px solid #060b13;
-		margin-top: 0px;
-		width: 10px;
-		border-radius: 2px;
-		height: 10px
+		flex-direction: column;
+		gap: 0.5rem;
 	}
 
   </style>
