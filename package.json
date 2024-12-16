@@ -1,6 +1,9 @@
 {
 	"name": "nova-development",
 	"version": "0.0.1",
+	"engines": {
+	  "node": ">=16 <21"
+	},
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",

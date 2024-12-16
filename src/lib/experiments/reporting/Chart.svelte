@@ -319,7 +319,7 @@
 		try {
 			console.time("reportingFetch");
 			const reportsReq = await fetch(
-				`https://mve.novus.studio/prod/experiments/reporting_n?type=${components[selectedComponentIndex].id}&experimentId=${$page.params.slug}&event=${selectedComponentIndex === 1 ? "PageView" : metrics[selectedMetricIndex].id}&breakdown=${ breakdownSelected != "" ? breakdownSelected : breakdowns[selectedBreakdownIndexes[0].id].id}&startDate=${tempDateRange.start}&endDate=${tempDateRange.end}&accuracy=${accuracies[selectedAccuracyIndex].id}`,
+				`https://preconvert.novus.studio/prod/mExperiments/reporting_n?type=${components[selectedComponentIndex].id}&experimentId=${$page.params.slug}&event=${selectedComponentIndex === 1 ? "PageView" : metrics[selectedMetricIndex].id}&breakdown=${ breakdownSelected != "" ? breakdownSelected : breakdowns[selectedBreakdownIndexes[0].id].id}&startDate=${tempDateRange.start}&endDate=${tempDateRange.end}&accuracy=${accuracies[selectedAccuracyIndex].id}`,
 			);
 			const reportsRes = await reportsReq.json();
 			reportsData = JSON.parse(JSON.stringify(reportsRes.reporting));

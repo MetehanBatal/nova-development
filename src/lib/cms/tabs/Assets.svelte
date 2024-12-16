@@ -31,8 +31,6 @@
     function alterImgContent() {
         if ($selectedInstance.nodeName === 'IMG') {
             $assets = $assets.filter((asset) => asset.mimetype.includes('image'));
-        } else if ($selectedInstance.nodeName === 'VIDEO') {
-            $assets = $assets.filter((asset) => asset.mimetype.includes('video'));
         } else {
             $assets = JSON.parse(JSON.stringify(archivedAssets));
         }
@@ -44,6 +42,14 @@
 
         if ($selectedInstance.nodeName === 'IMG' && asset.mimetype.includes('image')) {
             alterAttribute('src', asset.url);
+        }
+
+        if ($selectedInstance.nodeName === 'VIDEO' && asset.mimetype.includes('video')) {
+            alterAttribute('src', asset.url);
+        }
+
+        if ($selectedInstance.nodeName === 'VIDEO' && asset.mimetype.includes('image')) {
+            alterAttribute('poster', asset.url);
         }
     }
 

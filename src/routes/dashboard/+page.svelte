@@ -1,3 +1,4 @@
+
 <script>
 	import Insights from "$lib/dashboard/Insights.svelte";
 	import Overview from "$lib/dashboard/Overview.svelte";

@@ -6,7 +6,7 @@
 	let routes = [];
 	async function fetchPages() {
 		try {
-			const response = await fetch('http://localhost:3030/staging/pages/view?limit=100&offset=0');
+			const response = await fetch('https://preconvert.novus.studio/staging/pages/view?limit=100&offset=0');
 			
 			if (!response.ok) {
 				throw new Error(`HTTP error! Status: ${response.status}`);

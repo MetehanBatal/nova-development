@@ -58,6 +58,10 @@
     }
 
     .switch-option.active {
-        background-color: var(--color-dark);
+        background-color: #212830;
+    }
+
+    .switch-option.active p {
+        color: #fff;
     }
 </style>

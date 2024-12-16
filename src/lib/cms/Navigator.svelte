@@ -12,6 +12,7 @@
     import Assets from "$lib/cms/tabs/Assets.svelte";
     import Events from "$lib/cms/tabs/Events.svelte";
     import PageSettingsTab from "$lib/cms/PageSettings.svelte";
+    import EventSettingsTab from "$lib/cms/EventSettings.svelte";
     import ContextMenu from "$lib/toolkit/ContextMenu.svelte";
     
     export let elementsTabRevealed;
@@ -23,6 +24,7 @@
     let initialCMSMode = JSON.stringify($cmsMode);
 
     let revealedSettingsId = '';
+    let revealedEventsId = '';
     let contextPosX = 0;
     let contextPosY = 0;
 
@@ -128,6 +130,39 @@
                 contextPosX = left;
                 contextPosY = (top - 64) + height; // Note: removed the height of the navbar (64px)
             }
+            else if ($selectedCMSTabIndex === 4){
+                dropdownOptions = [
+                    {
+                        name: 'Add New Event',
+                        icon:
+                            `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="white" xmlns="http://www.w3.org/2000/svg"><path d="M9.02551 9.5107C8.99847 9.44287 8.99191 9.3686 9.00664 9.29708C9.02136 9.22556 9.05673 9.15993 9.10836 9.1083C9.15999 9.05666 9.22563 9.0213 9.29714 9.00657C9.36866 8.99185 9.44293 8.99841 9.51076 9.02545L16.2608 11.6504C16.3331 11.6787 16.3949 11.7288 16.4376 11.7937C16.4803 11.8586 16.5018 11.9352 16.499 12.0128C16.4963 12.0905 16.4696 12.1654 16.4224 12.2272C16.3753 12.2889 16.3102 12.3345 16.236 12.3577L13.653 13.1587C13.5365 13.1947 13.4305 13.2586 13.3442 13.3449C13.258 13.4312 13.194 13.5372 13.158 13.6537L12.3578 16.2359C12.3346 16.3101 12.289 16.3753 12.2272 16.4224C12.1654 16.4695 12.0906 16.4963 12.0129 16.499C11.9353 16.5017 11.8587 16.4802 11.7938 16.4376C11.7288 16.3949 11.6788 16.3331 11.6505 16.2607L9.02551 9.5107Z" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15.75 8.25V3.75C15.75 3.35218 15.592 2.97064 15.3107 2.68934C15.0294 2.40804 14.6478 2.25 14.25 2.25H3.75C3.35218 2.25 2.97064 2.40804 2.68934 2.68934C2.40804 2.97064 2.25 3.35218 2.25 3.75V14.25C2.25 14.6478 2.40804 15.0294 2.68934 15.3107C2.97064 15.592 3.35218 15.75 3.75 15.75H8.25" stroke-linecap="round" stroke-linejoin="round"></path></svg>`,
+                        action: () => {
+                            handleEventCreation();
+
+                            handleAppendAction();
+                        }
+                    },
+                    {
+                        name: 'Add New Interaction',
+                        selectable: false,
+                        icon: 
+                        `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_39_5)"><path d="M8 6V2H8.66667V6H11.6667C12.2189 6 12.6667 6.44771 12.6667 7V9.33333H12V7C12 6.81593 11.8507 6.66667 11.6667 6.66667H5C4.81591 6.66667 4.66667 6.81593 4.66667 7V9.33333H4V7C4 6.44771 4.44771 6 5 6H8Z" fill="white"/><path d="M10.9024 13.5691L12.3333 12.1381L13.7642 13.5691L14.2357 13.0976L12.8047 11.6667L14.2357 10.2357L13.7642 9.76428L12.3333 11.1953L10.9024 9.76428L10.4309 10.2357L11.8619 11.6667L10.4309 13.0976L10.9024 13.5691Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4.33329 13.3333C5.25377 13.3333 5.99996 12.5871 5.99996 11.6667C5.99996 10.7462 5.25377 10 4.33329 10C3.41282 10 2.66663 10.7462 2.66663 11.6667C2.66663 12.5871 3.41282 13.3333 4.33329 13.3333ZM5.33329 11.6667C5.33329 12.2189 4.88558 12.6667 4.33329 12.6667C3.78101 12.6667 3.33329 12.2189 3.33329 11.6667C3.33329 11.1144 3.78101 10.6667 4.33329 10.6667C4.88558 10.6667 5.33329 11.1144 5.33329 11.6667Z" fill="white"/><mask id="path-4-inside-1_39_5" fill="white"><path d="M16 7.11111V1.77778C16 1.30629 15.8127 0.854092 15.4793 0.520699C15.146 0.187307 14.6937 0 14.2222 0H1.77778C1.30629 0 0.854092 0.187307 0.520699 0.520699C0.187307 0.854092 0 1.30629 0 1.77778V14.2222C0 14.6937 0.187307 15.146 0.520699 15.4793C0.854092 15.8127 1.30629 16 1.77778 16H7.11111"/></mask><path d="M17 7.11111V1.77778H15V7.11111H17ZM17 1.77778C17 1.04114 16.7074 0.33457 16.1865 -0.186407L14.7722 1.22781C14.9181 1.37361 15 1.57144 15 1.77778H17ZM16.1865 -0.186407C15.6655 -0.707361 14.9589 -1 14.2222 -1V1C14.4285 1 14.6264 1.08197 14.7722 1.22781L16.1865 -0.186407ZM14.2222 -1H1.77778V1H14.2222V-1ZM1.77778 -1C1.04107 -1 0.334521 -0.707335 -0.186407 -0.186407L1.22781 1.22781C1.37366 1.08195 1.57151 1 1.77778 1V-1ZM-0.186407 -0.186407C-0.707335 0.334521 -1 1.04107 -1 1.77778H1C1 1.57151 1.08195 1.37366 1.22781 1.22781L-0.186407 -0.186407ZM-1 1.77778V14.2222H1V1.77778H-1ZM-1 14.2222C-1 14.9589 -0.707361 15.6655 -0.186407 16.1865L1.22781 14.7722C1.08197 14.6264 1 14.4285 1 14.2222H-1ZM-0.186407 16.1865C0.33457 16.7074 1.04114 17 1.77778 17V15C1.57144 15 1.37361 14.9181 1.22781 14.7722L-0.186407 16.1865ZM1.77778 17H7.11111V15H1.77778V17Z" fill="white" mask="url(#path-4-inside-1_39_5)"/></g><defs><clipPath id="clip0_39_5"><rect width="16" height="16" fill="white"/></clipPath></defs></svg>`,
+                        action: () => {
+                            return;
+                            console.log('Create new interaction');
+
+                            handleAppendAction();
+                        }
+                    }
+                ];
+
+                const buttonRect = event.target.closest('button').getBoundingClientRect();
+
+                const { top, left, width, height } = buttonRect;
+
+                contextPosX = left;
+                contextPosY = (top - 64) + height; // Note: removed the height of the navbar (64px)
+            }
         } else {
             dropdownOptions = [];
         }
@@ -144,7 +179,8 @@
         if (!file) return;
 
         // Optional: Validate file type and size here
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/mov', 'video/avi', 'video/quicktime'];
+        console.log('FILE TYPE: ', file.type);
+        const allowedTypes = ['image/jpeg', 'image/svg+xml', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/mov', 'video/avi', 'video/quicktime'];
         if (!allowedTypes.includes(file.type)) {
             // trigger toast error message
             $toastMessage.type = "error";
@@ -168,7 +204,7 @@
         formData.append('altText', ''); // You can collect this from user input if needed
 
         try {
-            const response = await fetch('http://localhost:3030/prod/upload', {
+            const response = await fetch('https://preconvert.novus.studio/prod/upload', {
                 method: 'POST',
                 body: formData,
             });
@@ -200,10 +236,15 @@
         $cmsMode = initialCMSMode;
 
         revealedSettingsId = '';
+        revealedEventsId = '';
     }
 
     function handleNewPageCreation() {
         revealedSettingsId = 'new-page'
+    }
+
+    function handleEventCreation() {
+        revealedEventsId = 'new-event'
     }
 </script>
 
@@ -243,6 +284,10 @@
 
 {#if revealedSettingsId.length > 0}
     <PageSettingsTab bind:revealedSettingsId={revealedSettingsId} />
+{/if}
+
+{#if revealedEventsId.length > 0}
+    <EventSettingsTab bind:revealedEventsId={revealedEventsId} />
 {/if}
 
 <style>
@@ -361,7 +406,7 @@
 
         position: relative;
 
-        padding: .4rem 2.4rem;
+        padding: .65rem 2.4rem;
 
         cursor: pointer;
 
@@ -381,7 +426,7 @@
         justify-content: center;
         align-items: center;
 
-        width: 1.6rem;
+        min-width: 1.6rem;
         height: 1.6rem;
 
         padding: 0;
@@ -392,17 +437,19 @@
         line-height: 1.8rem;
         text-transform: capitalize;
         transform: translateY(.05rem);
+        white-space: nowrap;
     }
 
     :global(.depth) {
         position: relative;
 
-        width: 2rem;
+        min-width: 2rem;
+        height: 1.8rem;
     }
 
     :global(.depth::after) {
         position: absolute;
-        top: -.4rem;
+        top: -.65rem;
         bottom: 0;
         left: 35%;
 
@@ -412,7 +459,7 @@
         opacity: 0;
 
         width: .1rem;
-        height: calc(100% + .8rem);
+        height: calc(100% + 1.3rem);
         
         background: rgba( 230, 230, 230, .2 );
     }

@@ -71,8 +71,6 @@
 
     function selectPage(id) {
         $pages.selectedPageIndex = $pages.pages.findIndex((p) => p.pageId === id);
-
-        console.log('page index changed: ', $pages);
     }
 </script>
 

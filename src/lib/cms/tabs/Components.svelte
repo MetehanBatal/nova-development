@@ -1,4 +1,5 @@
 <script>
+    import DragDropList from '$lib/cms/DragDropList.svelte';
     import { selectedInstance } from '../../../stores/cms/selectedInstance';
     import { components } from '../../../stores/cms/components';
     import { variants } from '../../../stores/cms/variants';
@@ -7,11 +8,9 @@
     import { styleSheet } from '../../../stores/cms/styleSheet';
     import { nodeTags } from '../../../stores/cms/nodeTags';
     import { visibleIds } from '../../../stores/cms/visibleIds';
-    import { changeSelection, toggleExpand, postMessage, computeOrders, drawInstances } from '../../../stores/cms/functions';
+    import { changeSelection, toggleExpand, postMessage, initLayers, focusOnComponent } from '../../../stores/cms/functions';
+    
     import { onMount } from 'svelte';
-
-    let selectedComponent = {};
-    let layerInitReady = false;
 
     onMount(async() => {
         // Fetch components
@@ -20,106 +19,136 @@
             const componentsReq = await fetch(`https://preconvert.novus.studio/staging/components/view?limit=100&offset=0`);
             const componentsRes = await componentsReq.json();
             
-            $components = componentsRes.data.docs;
+            $components = componentsRes.data?.docs || [];
         } catch (error) {
             console.error('Error fetching components:', error);
         }
     });
 
-    function initLayers() {
-        if (!layerInitReady) {
-            return; }
-
-        $visibleIds = drawInstances();
-        computeOrders();
-
-        postMessage('initialization', {page: {pageId: 'component'}, components: [selectedComponent], instances: $instances.filter((i) => i.variantId === $variants.selectedVariantId), styleSheet: $styleSheet});
-    }
-
-    async function focusOnComponent(component) {
-        console.log($cmsMode);
-
-        try {
-            const compInstancesReq = await fetch(`http://localhost:3030/staging/instances/view?componentId=${component.componentId}`);
-            const compInstancesRes = await compInstancesReq.json();
-
-            const compVariantsReq = await fetch(`http://localhost:3030/staging/variants/view?componentId=${component.componentId}`);
-            const compVariantsRes = await compVariantsReq.json();
-
-            console.log(compVariantsRes);
-            
-            selectedComponent = component;
-            $instances = compInstancesRes.data.instances;
-            $variants = {
-                selectedVariantId: compVariantsRes.data[0].variantId,
-                variants: compVariantsRes.data
-            }
-            $components = [selectedComponent];
-
-            layerInitReady = true;
-
-            initLayers();
-
-            $cmsMode = 'component';
-        } catch (error) {
-            console.error('Error fetching components:', error);
-        }
-    }
-
     $: $variants.selectedVariantId, initLayers()
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 {#if $cmsMode !== 'component'}
-<ul class="components-holder">
-    {#each $components as component (component.componentId)}
-    <li class="component" on:click={() => focusOnComponent(component)}>
-        <div class="bg-overlay">
-            <img src={`/assets/images/components/${component.componentId}.jpg`} alt={component.name} />
+<div class="components-group">
+    <div class="components-header">
+        <h3>Custom Components</h3>
+    </div>
 
-            <div></div>
-        </div>
+    {#if $components.filter((c) => c.type === 'custom').length > 0}
+    <ul class="components-holder">
+        {#each $components.filter((c) => c.type === 'custom') as component (component.componentId)}
+        <li class="component" on:click={() => focusOnComponent(component.componentId)}>
+            <div class="bg-overlay">
+                <img src={`/assets/images/components/${component.componentId}.jpg`} alt={component.name} />
 
-        <div class="content">
-            <div class="tag">
-                <span>{component.occurrences?.length || 1} variants</span>
+                <div></div>
             </div>
 
-            <p>{component.name}</p>
-        </div>
-    </li>
-    {/each}
-</ul>
-{:else}
-<ul>
-    {#each $instances.filter((i) => i.variantId === $variants.selectedVariantId) as instance (instance.instanceId)}
-        <!-- svelte-ignore missing-declaration -->
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-        <li
-            style={`order: ${instance.order}; display: ${$visibleIds.includes(instance.instanceId) ? 'flex' : 'none'}`}
-            class={`cms-line ${instance.componentId ? 'component-line' : ''}`}
-            class:selected={instance.instanceId === $selectedInstance.instanceId}
-            on:click={(e) => {changeSelection(e, instance.instanceId)} }
-            data-p={instance.instanceId}
-        >
-        {#each {length: instance.depth - 1} as _, i}
-        <span class="depth"></span>
+            <div class="content">
+                <div class="tag">
+                    <span>{component.occurrences?.length || 1} variants</span>
+                </div>
+
+                <p>{component.name}</p>
+            </div>
+        </li>
         {/each}
+    </ul>
+    {:else}
+    <p>No component found</p>
+    {/if}
+</div>
 
-        <button class="cms-line-dropdown" on:click={() => {$visibleIds = toggleExpand(instance.instanceId)}} aria-label={instance.nestedInstanceIds.some(childId => $visibleIds.includes(childId)) ? 'Collapse' : 'Expand'} aria-expanded={instance.nestedInstanceIds.some(childId => $visibleIds.includes(childId)) ? 'true' : 'false'}>
-            {#if instance.nestedInstanceIds && instance.nestedInstanceIds.length > 0}
-                <svg style={`transform: rotate(${instance.nestedInstanceIds.some(childId => $visibleIds.includes(childId)) ? 0 : -90}deg);`} width="8" height="6" viewBox="0 0 8 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.2268 3.70209L7.20441 0.724487L8 1.52008L4.2268 5.29329L0.453609 1.52008L1.24919 0.724487L4.2268 3.70209Z" fill="white"/></svg>
-            {/if}
-        </button>
+<div class="components-group">
+    <div class="components-header">
+        <h3>Preset Components</h3>
+    </div>
+    
+    {#if $components.filter((c) => c.type === 'preset').length > 0}
+    <ul class="components-holder">
+        {#each $components.filter((c) => c.type === 'preset') as component (component.componentId)}
+        <li class="component" on:click={() => focusOnComponent(component.componentId)}>
+            <div class="bg-overlay">
+                <img src={`/assets/images/components/${component.componentId}.jpg`} alt={component.name} />
 
-        {@html nodeTags.find((tag) => tag.name === instance.nodeName)?.icon}
-        <p>{instance.attributes.some((attr) => attr.name === 'class') ? instance.attributes.find((attr) => attr.name === 'class').value.split(' ')[0].replace('-', ' ') : instance.nodeName}</p>
-    </li>
-    {/each}
-</ul>
+                <div></div>
+            </div>
+
+            <div class="content">
+                <div class="tag">
+                    <span>{component.occurrences?.length || 1} variants</span>
+                </div>
+
+                <p>{component.name}</p>
+            </div>
+        </li>
+        {/each}
+    </ul>
+    {:else}
+    <p>No component found</p>
+    {/if}
+</div>
+
+<div class="components-group">
+    <div class="components-header">
+        <h3>Experiment Components</h3>
+    </div>
+    
+    {#if $components.filter((c) => c.type === 'experiment').length > 0}
+    <ul class="components-holder">
+        {#each $components.filter((c) => c.type === 'experiment') as component (component.componentId)}
+        <li class="component" on:click={() => focusOnComponent(component.componentId)}>
+            <div class="bg-overlay">
+                <img src={`/assets/images/components/${component.componentId}.jpg`} alt={component.name} />
+
+                <div></div>
+            </div>
+
+            <div class="content">
+                <div class="tag">
+                    <span>{component.occurrences?.length || 1} variants</span>
+                </div>
+
+                <p>{component.name}</p>
+            </div>
+        </li>
+        {/each}
+    </ul>
+    {:else}
+    <p>No component found</p>
+    {/if}
+</div>
+{:else}
+<DragDropList 
+    items={$instances}
+    nodeTags={nodeTags}
+    on:change={({ detail }) => {
+        console.log(detail);
+        // $instances = detail.finalItems;
+        // updateElements(detail.affectedInstances, detail.movedInstance);
+        // $instances = detail.items;
+    }}
+/>
 {/if}
 
 <style>
+    .components-group {
+        margin-bottom: 3.6rem;
+    }
+
+    .components-header {
+        border-bottom: .1rem solid #2e2e2e;
+        padding-bottom: 1rem;
+        margin-bottom: 1.2rem
+    }
+
+    .components-group h3 {
+        font-size: 1.4rem;
+        padding: 0 1.6rem;
+    }
+
     .components-holder {
         display: grid;
         grid-template-columns: 1fr 1fr;

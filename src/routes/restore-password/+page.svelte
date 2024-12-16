@@ -42,7 +42,7 @@
 			redirect: 'follow'
 		};
 
-		fetch("https://mve.novus.studio/prod/users/createPassword", requestOptions)
+		fetch("https://preconvert.novus.studio/prod/users/createPassword", requestOptions)
 			.then(response => response.json())
 			.then((result) => {
 				if (result.msg === 'success') {

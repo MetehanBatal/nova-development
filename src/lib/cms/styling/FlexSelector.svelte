@@ -1,15 +1,21 @@
 <script>
     import { selectedInstance } from "../../../stores/cms/selectedInstance";
-    import { instances } from "../../../stores/cms/instances";
-    import { styleSheet } from "../../../stores/cms/styleSheet";
-    import { alterStylingProperty } from '../../../stores/cms/functions';
+    import { selectedBreakpoint } from '../../../stores/cms/selectedBreakpoint';
+    import { alterStylingProperty, getStyleValueFromCascade } from '../../../stores/cms/functions';
 
     import Switch from "$lib/toolkit/Switch.svelte";
-    import Dropdown from '$lib/toolkit/Dropdown.svelte';
     import { onMount } from "svelte";
 
     let initialized = false;
     let selectionChangeInProgress = false;
+
+    let flexState = {
+        flexDirection: '',
+        justifyContent: '',
+        alignItems: '',
+        gapRow: '',
+        gapColumn: ''
+    }
 
     onMount(() => {
         initialized = true;
@@ -34,11 +40,11 @@
     let flexDirectionOptions = [
         {
             icon: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.2929 7.00004L9.14645 3.85359L9.85355 3.14648L14.2071 7.50004L9.85355 11.8536L9.14645 11.1465L12.2929 8.00004H3V7.00004H12.2929Z" fill="currentColor"></path></svg>',
-            value: 'column'
+            value: 'row'
         },
         {
             icon: '<svg  width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.00001 12.2929L4.85356 9.14645L4.14645 9.85355L8.50001 14.2071L12.8536 9.85355L12.1465 9.14645L9.00001 12.2929L9.00001 3H8.00001L8.00001 12.2929Z" fill="currentColor"></path></svg>',
-            value: 'row'
+            value: 'column'
         }
     ];
     let selectedFlexDirectionIndex = 0;
@@ -98,52 +104,45 @@
     let gapRowValue = '';
     let gapColumnValue = '';
 
-    function getProperties() {
-        selectionChangeInProgress = true;
-        selectedFlexDirectionIndex = $selectedInstance.styling?.['flex-direction'] ? flexDirectionOptions.findIndex((opt) => opt.value === $selectedInstance.styling['flex-direction']) : 0;
-        selectedJustifyContentOptionIndex = $selectedInstance.styling?.['justify-content'] ? justifyContentOptions.findIndex((opt) => opt.value === $selectedInstance.styling['justify-content']) : 0;
-        selectedAlignItemsOptionIndex = $selectedInstance.styling?.['align-items'] ? alignItemsOptions.findIndex((opt) => opt.value === $selectedInstance.styling['align-items']) : 0;
-        gapRowValue = $selectedInstance.styling?.['gap-row'] ? $selectedInstance.styling['gap-row'] : '';
-        gapColumnValue = $selectedInstance.styling?.['gap-column'] ? $selectedInstance.styling['gap-column'] : '';
+    function updateState(breakpoint, styling) {
+        const getValueWithFallback = (property) => getStyleValueFromCascade(styling, property, breakpoint) || '';
+
+        flexState = {
+            flexDirection: getValueWithFallback('flex-direction'),
+            justifyContent: getValueWithFallback('justify-content'),
+            alignItems: getValueWithFallback('align-items'),
+            gapRow: getValueWithFallback('row-gap'),
+            gapColumn: getValueWithFallback('column-gap')
+        };
         
-        setTimeout(() =>{
+        // Update all indices based on the new state
+        selectedFlexDirectionIndex = flexState.flexDirection ? flexDirectionOptions.findIndex((opt) => opt.value === flexState.flexDirection) : 0;
+        selectedJustifyContentOptionIndex = flexState.justifyContent ? justifyContentOptions.findIndex((opt) => opt.value === flexState.justifyContent) : 0;
+        selectedAlignItemsOptionIndex = flexState.alignItems ? alignItemsOptions.findIndex((opt) => opt.value === flexState.alignItems) : 0;
+
+        gapRowValue = flexState.gapRow;
+        gapColumnValue = flexState.gapColumn;
+    }
+
+    function handleInstanceChange() {
+        selectionChangeInProgress = true;
+        updateState($selectedBreakpoint, $selectedInstance.styling);
+        setTimeout(() => {
             selectionChangeInProgress = false;
         }, 120);
     }
 
-    function handleDirectionChange() {
+    function handleStylingChange(prop, value) {
         if (initialized && !selectionChangeInProgress) {
-            $selectedInstance.styling['flex-direction'] = flexDirectionOptions[selectedFlexDirectionIndex];
-
-            alterStylingProperty('flex-direction', flexDirectionOptions[selectedFlexDirectionIndex].value);
+            alterStylingProperty(prop, value);
         }
     }
 
-    function handleXAlignChanges() {
-        if (initialized && !selectionChangeInProgress) {
-            $selectedInstance.styling['justify-content'] = justifyContentOptions[selectedJustifyContentOptionIndex];
+    $: $selectedInstance.instanceId, handleInstanceChange();
 
-            alterStylingProperty('justify-content', justifyContentOptions[selectedJustifyContentOptionIndex].value);
-        }
-    }
-
-    function handleYAlignChanges() {
-        if (initialized && !selectionChangeInProgress) {
-            $selectedInstance.styling['align-items'] = alignItemsOptions[selectedAlignItemsOptionIndex];
-
-            alterStylingProperty('align-items', alignItemsOptions[selectedAlignItemsOptionIndex].value);
-        }
-    }
-
-    function handleGapChange(target) {
-        alterStylingProperty(target.getAttribute('name'), target.value);
-    }
-    
-
-    $: $selectedInstance.instanceId, getProperties();
-    $: selectedFlexDirectionIndex, handleDirectionChange();
-    $: selectedJustifyContentOptionIndex, handleXAlignChanges();
-    $: selectedAlignItemsOptionIndex, handleYAlignChanges();
+    $: selectedFlexDirectionIndex, handleStylingChange('flex-direction', flexDirectionOptions[selectedFlexDirectionIndex].value);
+    $: selectedJustifyContentOptionIndex, handleStylingChange('justify-content', justifyContentOptions[selectedJustifyContentOptionIndex].value);
+    $: selectedAlignItemsOptionIndex, handleStylingChange('align-items', alignItemsOptions[selectedAlignItemsOptionIndex].value);
 </script>
 
 <div class="options directions">
@@ -165,10 +164,10 @@
 
     <div class="flex">
         <div class="input-holder">
-            <input type="text" name="row-gap" bind:value={gapRowValue} on:blur={(e) => {handleGapChange(e.target)}} />
+            <input type="text" name="row-gap" bind:value={gapRowValue} on:blur={(e) => {alterStylingProperty(e.target.getAttribute('name'), e.target.value)}} />
 
             <!-- <Dropdown options={measurementOptions} bind:selectedStatusIndex={selectedMeasurementIndex} position="right" /> -->
         </div>        
-        <input type="text" name="column-gap" bind:value={gapColumnValue} on:blur={(e) => {handleGapChange(e.target)}} />
+        <input type="text" name="column-gap" bind:value={gapColumnValue} on:blur={(e) => {alterStylingProperty(e.target.getAttribute('name'), e.target.value)}} />
     </div>
 </div>

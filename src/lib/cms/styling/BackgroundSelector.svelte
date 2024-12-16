@@ -1,28 +1,43 @@
 <script>
     import { selectedInstance } from "../../../stores/cms/selectedInstance";
-    import { alterStylingProperty } from "../../../stores/cms/functions";
+    import { selectedBreakpoint } from "../../../stores/cms/selectedBreakpoint";
+    import { alterStylingProperty, getStyleValueFromCascade } from "../../../stores/cms/functions";
     import { onMount } from "svelte";
 
     let dropdownExpanded = false;
     let initialized = false;
     let selectionChangeInProgress = false;
 
+    let backgroundColorState = {
+        backgroundColor: ''
+    }
+
     onMount(() => {
         initialized = true;
     });
 
     let backgroundColorValue = '';
+    
+    function updateTypographyState(breakpoint, styling) {
+        const getValueWithFallback = (property) => getStyleValueFromCascade(styling, property, breakpoint) || '';
 
-    function getProperties() {
+        backgroundColorState = {
+            backgroundColor: getValueWithFallback('background-color')
+        }
+
+        backgroundColorValue = backgroundColorState.backgroundColor;
+    }
+
+
+    function handleInstanceChange() {
         selectionChangeInProgress = true;
-        backgroundColorValue = $selectedInstance.styling?.['background-color'] ? $selectedInstance.styling['background-color'] : '';
-        
-        setTimeout(() =>{
+        updateTypographyState($selectedBreakpoint, $selectedInstance.styling);
+        setTimeout(() => {
             selectionChangeInProgress = false;
         }, 120);
     }
 
-    $: $selectedInstance.instanceId, getProperties();
+    $: $selectedInstance.instanceId, handleInstanceChange();
 </script>
 
 <div class="styling-group">
@@ -47,20 +62,6 @@
 </div>
 
 <style>
-    .styling-group {
-        padding: 1rem;
-
-        border-bottom: .1rem solid #2e2e2e;
-    }
-
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        font-size: 1.4rem;
-    }
-
     .options {
         width: 100%;
         display: flex;

@@ -28,6 +28,11 @@ export const nodeTags = [
         icon: '<svg data-wf-icon="ElementImageIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 7C6.55228 7 7 6.55228 7 6C7 5.44772 6.55228 5 6 5C5.44772 5 5 5.44772 5 6C5 6.55228 5.44772 7 6 7Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M2 3C2 2.44772 2.44772 2 3 2H13C13.5523 2 14 2.44772 14 3V13C14 13.5523 13.5523 14 13 14H3C2.44772 14 2 13.5523 2 13V3ZM13 3L3 3V12.2929L8 7.29289L13 12.2929V3ZM8 8.70711L12.2929 13H3.70711L8 8.70711Z" fill="currentColor"></path></svg>'
     },
 
+    {
+        name: 'CUSTOM',
+        icon: '<svg data-wf-icon="ElementEmbedIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 3C2 2.44772 2.44772 2 3 2H13C13.5523 2 14 2.44772 14 3V13C14 13.5523 13.5523 14 13 14H3C2.44772 14 2 13.5523 2 13V3ZM3 13V3H13V13H3ZM8.26565 4.5H9.29004L7.73458 11.5H6.71018L8.26565 4.5ZM5.20711 8L6.35355 6.85355L5.64645 6.14645L4.14645 7.64645L3.79289 8L4.14645 8.35355L5.64645 9.85355L6.35355 9.14645L5.20711 8ZM10.3536 6.14645L11.8536 7.64645L12.2071 8L11.8536 8.35355L10.3536 9.85355L9.64645 9.14645L10.7929 8L9.64645 6.85355L10.3536 6.14645Z" fill="currentColor"></path></svg>'
+    },
+
     // Typography
     {
         name: 'H1',
@@ -62,6 +67,10 @@ export const nodeTags = [
         icon: '<svg data-wf-icon="ElementVideoIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 3.41905C4 2.63812 4.8551 2.15855 5.52145 2.56577L13.0626 7.17424C13.7007 7.56417 13.7007 8.49087 13.0626 8.8808L5.52145 13.4893C4.8551 13.8965 4 13.4169 4 12.636V3.41905ZM12.5411 8.02752L5 3.41905V12.636L12.5411 8.02752Z" fill="currentColor"></path></svg>'
     },
     {
+        name: 'SOURCE',
+        icon: '<svg data-wf-icon="ElementVideoIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 3.41905C4 2.63812 4.8551 2.15855 5.52145 2.56577L13.0626 7.17424C13.7007 7.56417 13.7007 8.49087 13.0626 8.8808L5.52145 13.4893C4.8551 13.8965 4 13.4169 4 12.636V3.41905ZM12.5411 8.02752L5 3.41905V12.636L12.5411 8.02752Z" fill="currentColor"></path></svg>'
+    },
+    {
         name: 'FORM',
         icon: '<svg data-wf-icon="ElementFormBlockIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 5H2V4H14V5Z" fill="currentColor"></path><path d="M14 8H2V7H14V8Z" fill="currentColor"></path><path d="M2.5 11C2.22386 11 2 11.2239 2 11.5V12.5C2 12.7761 2.22386 13 2.5 13H7.5C7.77614 13 8 12.7761 8 12.5V11.5C8 11.2239 7.77614 11 7.5 11H2.5Z" fill="currentColor"></path></svg>'
     },
@@ -84,5 +93,16 @@ export const nodeTags = [
     {
         name: 'LI',
         icon: '<svg data-wf-icon="ElementListItemIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path opacity="0.4" d="M6 3.5H14" stroke="currentColor"></path><path d="M6 7.5H14" stroke="currentColor"></path><path opacity="0.4" d="M6 11.5H14" stroke="currentColor"></path><rect opacity="0.4" x="2.5" y="10.5" width="2" height="2" rx="0.5" fill="currentColor"></rect><rect x="2.5" y="6.5" width="2" height="2" rx="0.5" fill="currentColor"></rect><rect opacity="0.4" x="2.5" y="2.5" width="2" height="2" rx="0.5" fill="currentColor"></rect></svg>'
+    },
+
+    // FORM
+    {
+        name: 'LABEL',
+        icon: '<svg data-wf-icon="ElementSpanIcon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.5 5H11.5V4H4.5V5H7.5V12H8.5V5Z" fill="currentColor"></path></svg>'
+    },
+
+    {
+        name: 'COMPONENT',
+        icon: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="s-8d1-x3ARTLd2"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.47885 1.69144C8.18037 1.52863 7.81963 1.52863 7.52115 1.69144L2.52115 4.41871C2.19989 4.59395 2 4.93066 2 5.29661V10.703C2 11.0689 2.19989 11.4056 2.52115 11.5809L7.52115 14.3081C7.81963 14.471 8.18037 14.471 8.47885 14.3081L8.5 14.2966V13.1575V11.5V8.29661L13 5.84206V8H14V5.29661C14 4.93066 13.8001 4.59395 13.4789 4.41871L8.47885 1.69144ZM3.54416 4.99979L8 2.56934L12.4558 4.99979L8 7.43025L3.54416 4.99979ZM3 5.84206L3 10.703L7.5 13.1575V8.29661L3 5.84206ZM13 9V11H15V12H13V14H12V12H10V11H12V9H13Z" fill="currentColor" class="s-8d1-x3ARTLd2"></path></svg>'
     }
 ]

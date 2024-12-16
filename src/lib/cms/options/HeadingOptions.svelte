@@ -43,10 +43,11 @@
 
     function getProperties() {
         selectionChangeInProgress = true;
-        selectedTagIndex = tagOptions.findIndex((opt) => opt.value === $selectedInstance.nodeName);
-        content = $selectedInstance.content || '';
         
         setTimeout(() =>{
+            selectedTagIndex = tagOptions.findIndex((opt) => opt.value === $selectedInstance.nodeName);
+            content = $selectedInstance.content || '';
+            
             selectionChangeInProgress = false;
         }, 120);
     }

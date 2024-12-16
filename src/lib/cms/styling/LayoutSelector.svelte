@@ -1,16 +1,14 @@
 <script>   
     import { selectedInstance } from "../../../stores/cms/selectedInstance";
-    import { styleSheet } from '../../../stores/cms/styleSheet';
-    import { alterStylingProperty } from '../../../stores/cms/functions';
-    
+    import { selectedBreakpoint } from '../../../stores/cms/selectedBreakpoint';
+    import { alterStylingProperty, getStyleValueFromCascade } from '../../../stores/cms/functions';
 
     import Switch from "$lib/toolkit/Switch.svelte";
     import FlexSelector from "$lib/cms/styling/FlexSelector.svelte";
     import GridSelector from "$lib/cms/styling/GridSelector.svelte";
     import { onMount } from "svelte";
-    import { instances } from "../../../stores/cms/instances";
 
-    let dropdownExpanded = true;
+    let dropdownExpanded = false;
 
     let layoutOptions = [
         {
@@ -41,23 +39,29 @@
         initialized = true;
     });
 
-    function getProperties() {
+    function updateState(breakpoint, styling) {
+        const getValueWithFallback = (property) => getStyleValueFromCascade(styling, property, breakpoint) || '';
+
+        selectedLayoutIndex = getValueWithFallback('display') ? layoutOptions.findIndex((opt) => opt.value === getValueWithFallback('display')) : 0;
+    }
+
+    function handleInstanceChange() {
         selectionChangeInProgress = true;
-        selectedLayoutIndex = $selectedInstance.styling?.['display'] ? layoutOptions.findIndex((opt) => opt.value === $selectedInstance.styling['display']) : 0;
-        
-        setTimeout(() =>{
+        updateState($selectedBreakpoint, $selectedInstance.styling);
+        setTimeout(() => {
             selectionChangeInProgress = false;
         }, 120);
     }
 
-    function handleDisplayChange() {
+    function handleStylingChange(prop, value) {
         if (initialized && !selectionChangeInProgress) {
-            alterStylingProperty('display', layoutOptions[selectedLayoutIndex].value);
+            alterStylingProperty(prop, value);
         }
     }
 
-    $: $selectedInstance.instanceId, getProperties();
-    $: selectedLayoutIndex, handleDisplayChange();
+    $: $selectedInstance.instanceId, handleInstanceChange();
+
+    $: selectedLayoutIndex, handleStylingChange('display', layoutOptions[selectedLayoutIndex].value);
 </script>
 
 <div class="styling-group layout-selector">
@@ -83,20 +87,6 @@
 </div>
 
 <style>
-    .styling-group {
-        padding: 1rem;
-
-        border-bottom: .1rem solid #2e2e2e;
-    }
-
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        font-size: 1.4rem;
-    }
-
     :global(.options .flex) {
         display: grid;
         grid-auto-flow: column;

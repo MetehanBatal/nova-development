@@ -278,7 +278,7 @@
 				redirect: "follow"
 			};
 			
-			fetch("http://localhost:3030/prod/experiments/update", requestOptions)
+			fetch("https://preconvert.novus.studio/prod/mExperiments/update", requestOptions)
 				.then((response) => response.json())
 				.then((result) => {
 					if (result.err && result.err.length > 0) {
@@ -661,7 +661,7 @@
 								<input  type="number"
 										style={`color: ${allocationsOpened.includes(variant.id) ? '#ffffff' : '#6d6d6e'}`}
 										readonly={!allocationsOpened.includes(variant.id)}
-										bind:value={experimentData.variants[eventsData[variant.id].id].allocation}
+										bind:value={experimentData.variants[experimentData.variants.findIndex((v) => v.id === variant.id)].allocation}
 										on:change={(e) => handleAllocationChange(variant)}
 									>
 
@@ -705,7 +705,7 @@
 
 						<!-- Remove static banner experiment ID -->
 						<div class="table-cell xsm">
-							<a class="redirect-link" target="_blank" href={`${experimentData.baseURLs[0]}?forceVariant=${eventsData[_index].id}`} >
+							<a class="redirect-link" target="_blank" href={`${experimentData.baseURLs[0]}?forceVariant=${eventsData[_index]?.id}`} >
 								<img width="14" height="14" src="/assets/icons/preview.svg" alt="Open Variant in New Tab">
 							</a>
 						</div>

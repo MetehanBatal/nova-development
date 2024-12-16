@@ -11,7 +11,7 @@
 	let componentStructure = '';
 	async function fetchComponents() {
 		try {
-			const response = await fetch('http://localhost:3030/staging/components/view?limit=100&offset=0');
+			const response = await fetch('https://preconvert.novus.studio/staging/components/view?limit=100&offset=0');
 			
 			if (!response.ok) {
 				throw new Error(`HTTP error! Status: ${response.status}`);

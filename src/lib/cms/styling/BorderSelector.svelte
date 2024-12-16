@@ -1,6 +1,7 @@
 <script>
     import { selectedInstance } from "../../../stores/cms/selectedInstance";
-    import { alterStylingProperty } from "../../../stores/cms/functions";
+    import { selectedBreakpoint } from '../../../stores/cms/selectedBreakpoint';
+    import { alterStylingProperty, getStyleValueFromCascade } from "../../../stores/cms/functions";
 
     import Switch from "$lib/toolkit/Switch.svelte";
     import { onMount } from "svelte";
@@ -105,18 +106,101 @@
 
     let radiusValue = '';
 
-    function getProperties() {
-        selectionChangeInProgress = true;
-        radiusValue = $selectedInstance.styling?.['border-radius'] ? $selectedInstance.styling['border-radius'] : '';
-        radiusPositions.forEach((pos) => { pos.radiusValue = $selectedInstance.styling?.[pos.value] ? $selectedInstance.styling[pos.value] : ''})
+    // State object for border styling
+    let borderState = {
+        borderRadius: '',
+        borderTopLeftRadius: '',
+        borderTopRightRadius: '',
+        borderBottomLeftRadius: '',
+        borderBottomRightRadius: '',
+        borderWidth: '',
+        borderTopWidth: '',
+        borderRightWidth: '',
+        borderBottomWidth: '',
+        borderLeftWidth: '',
+        borderColor: '',
+        borderTopColor: '',
+        borderRightColor: '',
+        borderBottomColor: '',
+        borderLeftColor: '',
+        borderStyle: '',
+        borderTopStyle: '',
+        borderRightStyle: '',
+        borderBottomStyle: '',
+        borderLeftStyle: ''
+    };
 
-        
-        setTimeout(() =>{
+    function updateState(breakpoint, styling) {
+        const getValueWithFallback = (property) => getStyleValueFromCascade(styling, property, breakpoint) || '';
+
+        borderState = {
+            borderRadius: getValueWithFallback('border-radius'),
+            borderTopLeftRadius: getValueWithFallback('border-top-left-radius'),
+            borderTopRightRadius: getValueWithFallback('border-top-right-radius'),
+            borderBottomLeftRadius: getValueWithFallback('border-bottom-left-radius'),
+            borderBottomRightRadius: getValueWithFallback('border-bottom-right-radius'),
+            borderWidth: getValueWithFallback('border-width'),
+            borderTopWidth: getValueWithFallback('border-top-width'),
+            borderRightWidth: getValueWithFallback('border-right-width'),
+            borderBottomWidth: getValueWithFallback('border-bottom-width'),
+            borderLeftWidth: getValueWithFallback('border-left-width'),
+            borderColor: getValueWithFallback('border-color'),
+            borderTopColor: getValueWithFallback('border-top-color'),
+            borderRightColor: getValueWithFallback('border-right-color'),
+            borderBottomColor: getValueWithFallback('border-bottom-color'),
+            borderLeftColor: getValueWithFallback('border-left-color'),
+            borderStyle: getValueWithFallback('border-style'),
+            borderTopStyle: getValueWithFallback('border-top-style'),
+            borderRightStyle: getValueWithFallback('border-right-style'),
+            borderBottomStyle: getValueWithFallback('border-bottom-style'),
+            borderLeftStyle: getValueWithFallback('border-left-style')
+        };
+
+        // Update radius values
+        radiusValue = borderState.borderRadius;
+        radiusPositions.forEach(pos => {
+            pos.radiusValue = getValueWithFallback(pos.value);
+        });
+
+        // Update border values
+        borderPositions.forEach(pos => {
+            if (pos.id === 'border') {
+                pos.widthValue = borderState.borderWidth;
+                pos.colorValue = borderState.borderColor;
+            } else {
+                pos.widthValue = borderState[`border${pos.id.charAt(0).toUpperCase() + pos.id.slice(1)}Width`];
+                pos.colorValue = borderState[`border${pos.id.charAt(0).toUpperCase() + pos.id.slice(1)}Color`];
+            }
+        });
+
+        // Set border style index
+        const currentStyle = borderState.borderStyle || 'none';
+        borderStyleIndex = borderStyleOptions.findIndex(opt => opt.value === currentStyle);
+        if (borderStyleIndex === -1) borderStyleIndex = 0;
+    }
+
+    function handleInstanceChange() {
+        selectionChangeInProgress = true;
+        updateState($selectedBreakpoint, $selectedInstance.styling);
+        setTimeout(() => {
             selectionChangeInProgress = false;
         }, 120);
     }
 
-    $: $selectedInstance.instanceId, getProperties();
+    function handleBorderChange(prop, value) {
+        if (initialized && !selectionChangeInProgress) {
+            alterStylingProperty(prop, value);
+        }
+    }
+
+    $: $selectedInstance.instanceId, handleInstanceChange();
+
+    $: borderStyleIndex, handleBorderChange(
+        borderPositionIndex !== 2 ? 
+            `border-${borderPositions[borderPositionIndex].id}-style` : 
+            'border-style',
+        borderStyleOptions[borderStyleIndex]?.value
+    );
 </script>
 
 <div class="styling-group border">
@@ -134,20 +218,34 @@
             
             <div class="flex">
                 {#if radiusTypeIndex === 0}
-                    <input type="text" name="borderRadius" bind:value={radiusValue} />
+                    <input 
+                        type="text" 
+                        name="border-radius" 
+                        bind:value={radiusValue}
+                        on:blur={(e) => handleBorderChange(e.target.name, e.target.value)}
+                    />
                 {:else}
                     <div class="radius-selection-options">
                         {#each radiusPositions as selectOption}
                             <div class="radius-selection-option">
                                 {@html selectOption.icon}
                                 
-                                <input type="text" name={selectOption.value} bind:value={selectOption.radiusValue} on:blur={(e) => {alterStylingProperty(selectOption.value, e.target.value)}} />
+                                <input 
+                                    type="text" 
+                                    name={selectOption.value} 
+                                    bind:value={selectOption.radiusValue}
+                                    on:blur={(e) => handleBorderChange(e.target.name, e.target.value)}
+                                />
                             </div>
                         {/each}
                     </div>        
                 {/if}
 
-                <Switch options={radiusTypeSelection} bind:selectedIndex={radiusTypeIndex} gap="0" />
+                <Switch 
+                    options={radiusTypeSelection} 
+                    bind:selectedIndex={radiusTypeIndex} 
+                    gap="0" 
+                />
             </div>
         </div>
         
@@ -199,12 +297,6 @@
 </div>
 
 <style>
-    .styling-group {
-        padding: 1rem;
-
-        border-bottom: .1rem solid #2e2e2e;
-    }
-
     .header {
         display: flex;
         justify-content: space-between;

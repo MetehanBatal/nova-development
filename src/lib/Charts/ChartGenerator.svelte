@@ -1,5 +1,5 @@
 <script>
-    import Layer from "./Layer.svelte"
+    import Layer from "$lib/Charts/Layer.svelte"
     import {
         measurementType,
         events,
@@ -14,16 +14,17 @@
     import Radial from '$lib/Charts/Radial/Radial.svelte';
     import Legend from '$lib/Charts/components/Legend.svelte';
     import ChartGeneratorTable from "./ChartGeneratorTable.svelte"
-    import DropdownType2 from "./DropdownType2.svelte"
     import {parsePeriod, selectableDays} from '../../stores/functions';
     import { colors } from "../../stores/colors";
+
     import {sum, descending, extent, max, ascending} from 'd3'
+    import DropdownType2 from "$lib/Charts/DropdownType2.svelte"
     import { onMount } from "svelte";
     import { toastMessage } from '../../stores/toast';
     export let handleModalClose
     const spinner = `<div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>`;
 
-    const ENDPOINT = `https://mve.novus.studio/prod/analytics/test`
+    const ENDPOINT = `https://preconvert.novus.studio/prod/mAnalytics/test`
     const now = new Date().getTime() - (60 * 24 * 60 * 60 * 1000)
 
     const {

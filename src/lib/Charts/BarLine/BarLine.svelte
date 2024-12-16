@@ -1,14 +1,14 @@
 <script>
 
-    import Yaxis from './components/Yaxis.svelte'
-	import Xaxis from './components/Xaxis.svelte'
-	import Path from './components/Path.svelte'
-	import Trends from './components/Trends.svelte'
-	import Overlay from './components/Overlay.svelte'
-	import Tooltip from './components/Tooltip.svelte'
-    import Bars from './components/Bars.svelte'
-	import { scaleTime, scalePoint, scaleLinear, extent, pointer, bisector, scaleBand, select, max, selectAll } from 'd3'
-    import { colors } from '../../../stores/colors'
+    import Yaxis from '$lib/Charts/BarLine/components/Yaxis.svelte'
+	import Xaxis from '$lib/Charts/BarLine/components/Xaxis.svelte'
+	import Path from '$lib/Charts/BarLine/components/Path.svelte'
+	import Trends from '$lib/Charts/BarLine/components/Trends.svelte'
+	import Overlay from '$lib/Charts/BarLine/components/Overlay.svelte'
+	import Tooltip from '$lib/Charts/BarLine/components/Tooltip.svelte'
+    import Bars from '$lib/Charts/BarLine/components/Bars.svelte'
+	import { scaleTime, scalePoint, scaleLinear, extent, pointer, bisector, scaleBand, select } from 'd3'
+  import { colors } from '../../../stores/colors'
 
     export let data
     export let strokeColor1

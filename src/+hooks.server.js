@@ -13,7 +13,7 @@ export async function handle({ event, resolve }) {
         event.locals.userDetails['loggedIn'] = true;
         
         // Fetch user details from the Nova API
-        const userReq = await fetch(`https://mve.novus.studio/prod/users/view?emailAddress=${emailAddress}`);
+        const userReq = await fetch(`https://preconvert.novus.studio/prod/users/view?emailAddress=${emailAddress}`);
         const userRes = await userReq.json();
         event.locals.userDetails['user'] = userRes.msg;
     };

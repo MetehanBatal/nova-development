@@ -1,6 +1,7 @@
 <script>
-    import { selectedInstance } from "../../../stores/cms/selectedInstance";
-	import { alterStylingProperty } from '../../../stores/cms/functions';
+	import { selectedInstance } from "../../../stores/cms/selectedInstance";
+	import { selectedBreakpoint } from '../../../stores/cms/selectedBreakpoint';
+	import { alterStylingProperty, getStyleValueFromCascade } from '../../../stores/cms/functions';
 
 	import { onMount } from "svelte";
 
@@ -22,28 +23,34 @@
 	let paddingRightValue = '';
 	let paddingBottomValue = '';
 
+	function updateState(breakpoint, styling) {
+		const getValueWithFallback = (property) => getStyleValueFromCascade(styling, property, breakpoint) || '';
 
-    function getProperties() {
+		marginTopValue = getValueWithFallback('margin-top');
+		marginLeftValue = getValueWithFallback('margin-left');
+		marginRightValue = getValueWithFallback('margin-right');
+		marginBottomValue = getValueWithFallback('margin-bottom');
+		paddingTopValue = getValueWithFallback('padding-top');
+		paddingLeftValue = getValueWithFallback('padding-left');
+		paddingRightValue = getValueWithFallback('padding-right');
+		paddingBottomValue = getValueWithFallback('padding-bottom');
+	}
+
+	function handleStylingChange(prop, value) {
+        if (initialized && !selectionChangeInProgress) {
+            alterStylingProperty(prop, value);
+        }
+    }
+
+	function handleInstanceChange() {
         selectionChangeInProgress = true;
-        marginTopValue = $selectedInstance.styling?.['margin-top'] ? $selectedInstance.styling['margin-top'] : '';
-		marginLeftValue = $selectedInstance.styling?.['margin-left'] ? $selectedInstance.styling['margin-left'] : '';
-		marginRightValue = $selectedInstance.styling?.['margin-right'] ? $selectedInstance.styling['margin-right'] : '';
-		marginBottomValue = $selectedInstance.styling?.['margin-bottom'] ? $selectedInstance.styling['margin-bottom'] : '';
-		paddingTopValue = $selectedInstance.styling?.['padding-top'] ? $selectedInstance.styling['padding-top'] : '';
-		paddingLeftValue = $selectedInstance.styling?.['padding-left'] ? $selectedInstance.styling['padding-left'] : '';
-		paddingRightValue = $selectedInstance.styling?.['padding-right'] ? $selectedInstance.styling['padding-right'] : '';
-		paddingBottomValue = $selectedInstance.styling?.['padding-bottom'] ? $selectedInstance.styling['padding-bottom'] : '';
-        
-        setTimeout(() =>{
+        updateState($selectedBreakpoint, $selectedInstance.styling);
+        setTimeout(() => {
             selectionChangeInProgress = false;
         }, 120);
     }
 
-	function handleStylingChange(target) {
-        alterStylingProperty(target.getAttribute('name'), target.value);
-    }
-
-	$: $selectedInstance.instanceId, getProperties();
+	$: $selectedInstance.instanceId, handleInstanceChange();
 </script>
 
 <div class="styling-group">
@@ -61,22 +68,22 @@
         <div class="spacing-items">
             <div>
               <label for="margin-top">Top</label>
-              <input type="text" name="margin-top" bind:value={marginTopValue} on:blur={(e) => { handleStylingChange(e.target)}} />
+              <input type="text" name="margin-top" bind:value={marginTopValue} on:blur={(e) => { handleStylingChange(e.target.getAttribute('name'), e.target.value)}} />
             </div>
             
             <div>
               <label for="margin-left">Left</label>
-              <input type="text" name="margin-left" bind:value={marginLeftValue} on:blur={(e) => { handleStylingChange(e.target)}} />
+              <input type="text" name="margin-left" bind:value={marginLeftValue} on:blur={(e) => { handleStylingChange(e.target.getAttribute('name'), e.target.value)}} />
             </div>
 
             <div>
               <label for="margin-right">Right</label>
-              <input type="text" name="margin-right" bind:value={marginRightValue} on:blur={(e) => { handleStylingChange(e.target)}} />
+              <input type="text" name="margin-right" bind:value={marginRightValue} on:blur={(e) => { handleStylingChange(e.target.getAttribute('name'), e.target.value)}} />
             </div>
 
             <div>
               <label for="margin-bottom">Bottom</label>
-              <input type="text" name="margin-bottom" bind:value={marginBottomValue} on:blur={(e) => { handleStylingChange(e.target)}} />
+              <input type="text" name="margin-bottom" bind:value={marginBottomValue} on:blur={(e) => { handleStylingChange(e.target.getAttribute('name'), e.target.value)}} />
             </div>
         </div>
 
@@ -84,22 +91,22 @@
         <div class="spacing-items">
             <div>
               <label for="padding-top">Top</label>
-              <input type="text" name="padding-top" bind:value={paddingTopValue} on:blur={(e) => { handleStylingChange(e.target)}} />
+              <input type="text" name="padding-top" bind:value={paddingTopValue} on:blur={(e) => { handleStylingChange(e.target.getAttribute('name'), e.target.value)}} />
             </div>
             
             <div>
               <label for="padding-left">Left</label>
-              <input type="text" name="padding-left" bind:value={paddingLeftValue} on:blur={(e) => { handleStylingChange(e.target)}} />
+              <input type="text" name="padding-left" bind:value={paddingLeftValue} on:blur={(e) => { handleStylingChange(e.target.getAttribute('name'), e.target.value)}} />
             </div>
 
             <div>
               <label for="padding-right">Right</label>
-              <input type="text" name="padding-right" bind:value={paddingRightValue} on:blur={(e) => { handleStylingChange(e.target)}} />
+              <input type="text" name="padding-right" bind:value={paddingRightValue} on:blur={(e) => { handleStylingChange(e.target.getAttribute('name'), e.target.value)}} />
             </div>
 
             <div>
               <label for="padding-bottom">Bottom</label>
-              <input type="text" name="padding-bottom" bind:value={paddingBottomValue} on:blur={(e) => { handleStylingChange(e.target)}} />
+              <input type="text" name="padding-bottom" bind:value={paddingBottomValue} on:blur={(e) => { handleStylingChange(e.target.getAttribute('name'), e.target.value)}} />
             </div>
         </div>
     </div>
@@ -107,12 +114,6 @@
 </div>
 
 <style>
-    .styling-group {
-        padding: 1rem;
-
-        border-bottom: .1rem solid #2e2e2e;
-    }
-
     .header {
         display: flex;
         justify-content: space-between;

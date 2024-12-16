@@ -6,7 +6,7 @@
     import { styleSheet } from '../../stores/cms/styleSheet';
     import { selectedBreakpoint } from '../../stores/cms/selectedBreakpoint';
     import { cmsMode } from '../../stores/cms/cmsMode';
-    import { generateRandomString, generateRandomNumber, dbActions } from '../../stores/cms/functions';
+    import { generateRandomString, generateRandomNumber, dbActions, focusOnComponent } from '../../stores/cms/functions';
 
     import Dropdown from '$lib/toolkit/Dropdown.svelte';
     import Switch from '$lib/toolkit/Switch.svelte';
@@ -65,7 +65,7 @@
 
     async function triggerPublish(environment) {
         try {
-            const publishReq = await fetch(`http://localhost:3030/${environment}/publish`);
+            const publishReq = await fetch(`https://preconvert.novus.studio/${environment}/publish`);
             const publishRes = await publishReq.json();
 
             if (publishRes.success) {
@@ -106,37 +106,45 @@
     }
 
     async function handleNewVariantCreation(event) {
-        let newInstanceId = generateRandomString();
         let newVariantId = `v-${generateRandomString()}`;
-
-        console.log('Instances before variant creation: ', JSON.parse(JSON.stringify($instances)));
+        
+        // Create a mapping of old instanceIds to new instanceIds
+        const instanceIdMap = $instances.reduce((map, inst) => {
+            map[inst.instanceId] = generateRandomString();
+            return map;
+        }, {});
 
         let newInstances = $instances.map(inst => {
-            const { instanceId, variantId, id, ...rest } = inst;
-
+            const { instanceId, variantId, parentInstanceId, id, ...rest } = inst;
+            
+            const newInstanceId = instanceIdMap[instanceId];
+            
             return {
                 ...rest,
                 instanceId: newInstanceId,
                 id: newInstanceId,
-                variantId: newVariantId
+                variantId: newVariantId,
+                parentInstanceId: parentInstanceId ? instanceIdMap[parentInstanceId] : null
             }
         });
 
         let newVariantSchema = {
             componentId: $instances[0].componentId,
             name: `New Variant ${generateRandomNumber(4)}`,
-            nestedInstanceIds: newInstances.map(instance => instance.instanceId),
             variantId: newVariantId
         }
-
-        $instances = [...$instances, ...newInstances];
-
-        console.log('Instances after variant creation: ', JSON.parse(JSON.stringify(instances)));
 
         let updatedInstances = await dbActions(newInstances, 'instances', 'upsert');
         let updatedVariant = await dbActions(newVariantSchema, 'variants', 'upsert');
 
         $variants.variants = [...$variants.variants, newVariantSchema];
+
+        $toastMessage = {
+            type: 'success',
+            content: 'New variant created!'
+        }
+
+        console.log(newInstances, $variants);
     }
 
     function handleVariantSwitch() {
@@ -145,6 +153,9 @@
 
         $variants.selectedVariantId = $variants.variants[selectedVariantIndex].variantId;
 
+        console.log('VARs: ', JSON.stringify($variants.selectedVariantId));
+        
+        focusOnComponent($variants.variants[0].componentId, { selectedVariantId: $variants.selectedVariantId })
     }
 
     function handleNameChange(event) {
@@ -153,9 +164,6 @@
 
     $: selectedBreakpointIndex, alterBreakpoint();
     $: designMode, $cmsMode = designMode ? 'design' : 'edit';
-    $: $components, console.log('Comps: ', $components);
-    $: $instances, console.log('Ins: ', $instances);
-    $: $variants, console.log('Vars: ', $variants);
     $: selectedVariantIndex, handleVariantSwitch();
 </script>
 

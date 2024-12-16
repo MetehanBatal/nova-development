@@ -59,7 +59,7 @@
 			redirect: "follow"
 		};
 
-		fetch("https://mve.novus.studio/prod/audiences/create", requestOptions)
+		fetch("https://preconvert.novus.studio/prod/audiences/create", requestOptions)
 			.then((response) => response.text())
 			.then((result) => {
 				inProgress = false;

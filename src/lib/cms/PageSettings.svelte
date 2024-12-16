@@ -7,7 +7,7 @@
     import SEO from '$lib/cms/pageSettings/SEO.svelte';
     import Tracking from '$lib/cms/pageSettings/Tracking.svelte';
     import CustomCodes from '$lib/cms/pageSettings/CustomCodes.svelte';
-  import { toastMessage } from '../../stores/toast';
+    import { toastMessage } from '../../stores/toast';
 
     export let revealedSettingsId;
 
@@ -27,6 +27,8 @@
         },
         folder: "",
         pageName: "Untitled",
+        pageType: "lander",
+        productType: "sheets",
         seoSettings: {
             title: "",
             metaDescription: "",
@@ -37,6 +39,18 @@
     };
 
     let selectedPage;
+
+    let topInstanceSchema = {
+        instanceId: generateRandomString(),
+        pageId: newPageId,
+        componentId: "",
+        nodeName: "BODY",
+        prevInstanceId: "",
+        attributes: [],
+        content: null,
+        order: 0,
+        depth: 0
+    };
 
     $: {
         selectedPage = revealedSettingsId === 'new-page' ? emptyPageSchema : $pages.pages.find((page) => page.pageId === revealedSettingsId);
@@ -76,31 +90,24 @@
                 ...instance,
                 instanceId: newId,
                 pageId: selectedPage.pageId,
-                nextInstanceId: idMap.get(instance.nextInstanceId) || instance.nextInstanceId,
-                prevInstanceId: idMap.get(instance.prevInstanceId) || instance.prevInstanceId,
-                parentInstanceId: idMap.get(instance.parentInstanceId) || instance.parentInstanceId,
-                nestedInstanceIds: instance.nestedInstanceIds.map(id => idMap.get(id) || id)
+                parentInstanceId: idMap.get(instance.parentInstanceId) || instance.parentInstanceId
             };
         });
     }
 
     async function handleSave() {
         let pageUpdate = await dbActions(selectedPage, 'pages', 'upsert');
-
-        console.log(pageUpdate, selectedPage);
+        let instanceUpdate = await dbActions(topInstanceSchema, 'instances', 'upsert');
 
         if (pageUpdate.status === 200) {
+            revealedSettingsId = '';
+            
             $pages.pages = [...$pages.pages, selectedPage];
-
-            console.log($pages);
             
             if (duplicatedPage) {
                 let duplicatedArray = duplicateInstanceArray($instances);
-                console.log(duplicatedArray, $instances);
 
                 let updatedInstances = await dbActions(duplicatedArray, 'instances', 'upsert');
-
-                console.log(updatedInstances);
 
                 if (updatedInstances.status === 200) {
                     $toastMessage = {
@@ -110,13 +117,9 @@
                 }
             }
         }
-
-        revealedSettingsId = '';
     }
 
     function duplicatePage() {
-        console.log(selectedPage);
-
         selectedPage.pageName += ' Copy';
         selectedPage.slug += '-copy';
         selectedPage.pageId = generateRandomString();

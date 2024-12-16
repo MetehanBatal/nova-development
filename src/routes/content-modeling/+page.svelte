@@ -10,7 +10,7 @@
     import { cmsMode } from '../../stores/cms/cmsMode';
 
     import { nodeTags } from '../../stores/cms/nodeTags';
-    import { handleElementAppend, handleKeyDown, postMessage, dbActions } from '../../stores/cms/functions';
+    import { handleElementAppend, handleKeyDown, postMessage, dbActions, toggleInstances } from '../../stores/cms/functions';
 
     import NavbarModule from '$lib/cms/Navbar.svelte';
     import Navigator from '$lib/cms/Navigator.svelte';
@@ -26,8 +26,10 @@
     const settingsAvailableTags = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P', 'A', 'BUTTON', 'FORM', 'IMG', 'VIDEO']
 
     $pages.pages = data.pagesRes.data.docs || [];
-    let components = data.componentsRes.data.docs || [];
-    $styleSheet = data.stylesRes.data.docs || [];
+    let components = data.componentsRes.data?.docs || [];
+    $styleSheet = data.stylesRes.data?.docs || [];
+
+    console.log('PAGE DATA: ', data);
 
     let innerWidth;
     let innerHeight;
@@ -36,9 +38,7 @@
     let canvasWidth;
     let canvasHeight = null;
 
-    console.log('STYLESHEET: ', $styleSheet);
-
-    let baseFrameURL = dev ? 'http://localhost:5174' : 'https://preview-preconvert.vercel.app';
+    let baseFrameURL = dev ? 'http://localhost:5174' : 'https://miracle-rebuild.vercel.app';
 
     $pages.selectedPageIndex = 0;
 
@@ -61,8 +61,10 @@
         }
 
         window.addEventListener('message', async (message) => {
-            if (message.origin !== 'https://preconvert.vercel.app' && message.origin !== 'http://localhost:5174') {
+            if (message.origin !== 'https://miracle-rebuild.vercel.app' && message.origin !== 'http://localhost:5174') {
                 return; }
+
+            console.log('Message receivedd');
 
             if (!message.data) {
                 return; }
@@ -96,8 +98,16 @@
                     $selectedInstance.componentId = instance.componentId;
                     $selectedInstance.pageId = instance.pageId;
                     $selectedInstance.class = instance.attributes.find((attr) => attr.name === 'class')?.value || '';
-                    $selectedInstance.styling = $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === $selectedBreakpoint)?.attributes || {};
+                    $selectedInstance.styling = {
+                        "xxl": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'xxl')?.attributes || {},
+                        "xl": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'xl')?.attributes || {},
+                        "desktop": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'desktop')?.attributes || {},
+                        "tablet": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'tablet')?.attributes || {},
+                        "mobile": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'mobile')?.attributes || {},
+                        "landscape": $styleSheet.find((attr) => attr.name === $selectedInstance.class && attr.breakpoint === 'landscape')?.attributes || {},
+                    },
                     $selectedInstance.content = instance.content;
+                    toggleInstances(selectedElementDetails.id);
                 }
             }
 
@@ -131,20 +141,14 @@
         };
     })
 
-    function iframeLoaded() {
-        initialized = true;
-
-        postMessage('initialization', {page: $pages.pages[$pages.selectedPageIndex], components, instances: $instances, styleSheet: $styleSheet});
-    }
-
     function checkInstanceDetails() {
+        console.log('SELECTED INSTANCE: ', $selectedInstance, $styleSheet);
         if (initialized && $selectedInstance.instanceId.length < 1) {
             selectedElementDetails = {};
         }
     }
 
     $: $selectedInstance, checkInstanceDetails();
-    $: $cmsMode, console.log('CMS M: ', $cmsMode);
 </script>
 
 <svelte:window bind:innerWidth={innerWidth} bind:innerHeight={innerHeight}></svelte:window>
@@ -164,17 +168,17 @@
         <iframe
             bind:this={canvas}
             style={`height: ${$cmsMode === 'component' ? canvasHeight ? `${canvasHeight}px` : 'auto' : `${innerHeight - 64}px`}; width: ${$selectedBreakpoint === 'tablet' ? '768px' : $selectedBreakpoint === 'mobile' ? '468px' : '100%'}`}
-            src={`${baseFrameURL}/preview?editMode=true`}
+            src={`${baseFrameURL}/preview?editMode=true&pageId=${$pages.pages[$pages.selectedPageIndex].pageId}`}
             frameborder="0"
             title="Main frame"
         ></iframe>
     </div>
 
-    <div class="iframe-controller" style={`height: ${$cmsMode === 'component' ? 'auto' : `${innerHeight - 64}px`}; left: ${canvas?.offsetLeft}px; width: ${canvasWidth}px; top: ${canvas?.offsetTop}px;`}>
+    <div class="iframe-controller" class:component={$selectedInstance.componentId?.length > 0} style={`height: ${`${innerHeight - 64}px`}; left: ${canvas?.offsetLeft}px; width: ${canvasWidth}px; top: ${canvas?.offsetTop}px;`}>
         {#if selectedElementDetails.id}
         <div class="element-outliner" style={`width: ${selectedElementDetails.width}px; height: ${selectedElementDetails.height}px; transform: translate3d(${selectedElementDetails.offsetLeft}px, ${selectedElementDetails.offsetTop}px, 0); z-index: 2;`}>
             <div class="breadcrumb active" style={`transform: translateY(${selectedElementDetails.offsetTop < 26 ? '0%' : '-100%'})`}>
-                {@html nodeTags.find((tag) => tag.name === $instances.find((i) => i.instanceId === selectedElementDetails.id)?.nodeName)?.icon}
+                {@html nodeTags.find((tag) => tag.name === ($selectedInstance.componentId?.length > 0 ? 'COMPONENT' : $instances.find((i) => i.instanceId === selectedElementDetails.id)?.nodeName))?.icon}
 
                 <p>{$instances.find((i) => i.instanceId === selectedElementDetails.id)?.attributes.some((attr) => attr.name === 'class') ? $instances.find((i) => i.instanceId === selectedElementDetails.id)?.attributes.find((attr) => attr.name === 'class').value.replace('-', ' ') : $instances.find((i) => i.instanceId === selectedElementDetails.id)?.nodeName}</p>
 
@@ -190,9 +194,9 @@
         {#if hoveredElementDetails.id}
         <div class="element-outliner" style={`width: ${hoveredElementDetails.width}px; height: ${hoveredElementDetails.height}px; transform: translate3d(${hoveredElementDetails.offsetLeft}px, ${hoveredElementDetails.offsetTop}px, 0)`}>
             <div class="breadcrumb">
-                {@html nodeTags.find((tag) => tag.name === $instances.find((i) => i.instanceId === hoveredElementDetails.id).nodeName)?.icon}
+                {@html nodeTags.find((tag) => tag.name === $instances.find((i) => i.instanceId === hoveredElementDetails.id)?.nodeName)?.icon}
 
-                <p>{$instances.find((i) => i.instanceId === hoveredElementDetails.id).attributes.some((attr) => attr.name === 'class') ? $instances.find((i) => i.instanceId === hoveredElementDetails.id).attributes.find((attr) => attr.name === 'class').value.replace('-', ' ') : $instances.find((i) => i.instanceId === hoveredElementDetails.id).nodeName}</p>
+                <p>{$instances.find((i) => i.instanceId === hoveredElementDetails.id)?.attributes?.some((attr) => attr.name === 'class') ? $instances.find((i) => i.instanceId === hoveredElementDetails.id).attributes.find((attr) => attr.name === 'class').value.replace('-', ' ') : $instances.find((i) => i.instanceId === hoveredElementDetails.id)?.nodeName}</p>
             </div>
         </div>
         {/if}
@@ -256,6 +260,8 @@
     .iframe-controller {
         position: absolute;
 
+        overflow: hidden;
+
         pointer-events: none;
     }
 
@@ -281,6 +287,10 @@
         border-top-left-radius: .4rem;
     }
 
+    .iframe-controller.component .breadcrumb.active {
+        background-color: rgb(41, 199, 94);
+    }
+
     .breadcrumb p {
         white-space: nowrap;
     }
@@ -291,6 +301,10 @@
         left: 0;
 
         border: .1rem solid #947AF0;
+    }
+
+    .iframe-controller.component .element-outliner {
+        border-color: rgba(27, 223, 93, 1)
     }
 
     .settings-icon-holder {
