@@ -108,7 +108,7 @@
             {
                 y :  (i) => {
                     if(data?.comparison?.[key]){
-                       return data?.comparison?.[key]?.[i].value > 100 ? 100 : data?.comparison?.[key]?.[i].value
+                       return data?.comparison?.[key]?.[i]?.value > 100 ? 100 : data?.comparison?.[key]?.[i]?.value
                     } else {
                         return 0.5
                     }
@@ -121,7 +121,7 @@
             {
                 y : (i) => {
                     if(data?.comparison?.[key]){
-                       return data?.comparison?.[key]?.[i].value > 100 ? 100 : data?.comparison?.[key]?.[i].value
+                       return data?.comparison?.[key]?.[i]?.value > 100 ? 100 : data?.comparison?.[key]?.[i]?.value
                     } else {
                         return 0.5
                     }
@@ -169,18 +169,18 @@
     //     return yScale(max([temp, d.value ])) - indictorHeight * 0.25
     // }
 
-    // const handleTranslate = (key, i) => {
-    //     if(chartType != "funnel"){
-    //         return mainSubXscale(key)
-    //     } else {
-    //         return mainSubXscale(`${i}. ${key}`)
-    //     }
-    // }
+    const handleTranslate = (key, i) => {
+        if(chartType != "funnel"){
+            return xScale(key)
+        } else {
+            return xScale(`${i + 1}. ${key}`)
+        }
+    }
 
     $:xScale, console.log(subXScale.bandwidth(), mainSubXscale.bandwidth(), xScale.bandwidth());
 </script>
     {#each data.current[firstCurrent].map((k) => k.key ) as d, i}
-        <g class="bar-group" transform={"translate(" + xScale(d) + ", 0)"}>
+        <g class="bar-group" transform={"translate(" + handleTranslate(d, i) + ", 0)"}>
             {#each Object.keys(data.current) as h, j}
                 {#if extentFlat.current[h].checked}
                     <g class="bar-group" transform={"translate(" + mainSubXscale(h) + ", 0)"}>
@@ -238,9 +238,9 @@
                                 ></rect>
 
                                 {#each data?.[e]?.[h]?.[j]?.traits && Object.keys(data?.[e]?.[h]?.[j]?.traits) as k, m}
-                                <text 
+                                <text
                                     dy= {15 * (m + 1)}
-                                        x={ hasComparison ? subXScale.bandwidth()/2 : mainSubXscale.bandwidth() / 2} 
+                                        x={ hasComparison ? subXScale.bandwidth()/2 : mainSubXscale.bandwidth() / 2}
                                         text-anchor="middle"
                                         on:mouseover = {(event) => handleMoveBarIndicator(event, k, data[e][h][i].traits[k])}
                                     >

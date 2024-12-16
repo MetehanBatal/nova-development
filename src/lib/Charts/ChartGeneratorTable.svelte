@@ -12,13 +12,13 @@
     export let numberChecked
     export let maxNumberOfitemToCheck
     export let rowHovered
+    export let chartType
 
     let depth = 0
     let fixedDom = 0
     let dynamicTableContent = {}
-    let breakdown = body.breakdown.slice(0, body.breakdown.length - 1)
+    let breakdown = body?.breakdown ? body.breakdown.slice(0, body.breakdown.length - 1) : []
     let tempParse = parsePeriod[accuracy]
-
 
     let t = `<div>`
     let bClass = ""
@@ -53,18 +53,9 @@
         if(breakdown.length > 1) {
             t = `${t} <div>`
         } else {
-           // bClass = `${bClass}_${d}`
-            // t = `${t}   <div class = "cell checked-cell ${bClass}">
-            //                 <div class="report-checkbox active" style="--checkbox-color: gray"></div>
-            //             </div>
-            //             <div class = "cell border no-bg">
-            //                 <div>${mean(tempData, k => k.value).toFixed(2)}</div>
-            //             </div>
-            //     `
             dynamicTableContent[bClass] = tempData
             
             bClass = prefix
-            // dynamicTableContent.push(tempData)
             return 
         }
         for (let i = 0; i < Object.keys(tempData).length; i++) {
@@ -75,20 +66,8 @@
             if(typeof tempData === 'object' && !Array.isArray(tempData)){
                 if(Array.isArray(tempData[d])){
                     bClass = `${bClass}_${d}`
-                    // t = `${t}<div class = "cell checked-cell ${bClass}">
-                    //             <div class="report-checkbox active" style="--checkbox-color: gray"></div>
-                    //         </div>
-                    //         <div class = "cell border no-bg">
-                    //             <div>${mean(tempData[d], k => k.value).toFixed(2)}</div>
-                    //         </div>
-                    //     </div>`
                     t = `${t} </div>`
                     dynamicTableContent[bClass] = tempData[d]
-
-             
-                    //dynamicTableContent.push(tempData[d])
-                    
-
                 } else {
                     bClass = `${bClass}_${d}`
                     handleTableString2(tempData[d], bClass)
@@ -112,6 +91,7 @@
         }
     }
     const handleValue = (key, useTimeScale) => {
+        console.log(key, useTimeScale);
         
         if(useTimeScale) key = dateFormat(tempParse(key))
         if(key.length > 15){
@@ -143,13 +123,16 @@
         <div class="table-dynamic" style={`margin-left: ${0}px`}>
             <div class="row header">
                 <div class="body-fix" style={`left : ${breakdown.length * 121}px`}>
-                    <div class="cell w40-content">
-                        <div class="report-checkbox" class:active={true} style={`--checkbox-color: gray`}></div>
-                    </div>
+                    {#if chartType != "doughnut" && chartType != "funnel"}
+                        <div class="cell w40-content">
+                            <div class="report-checkbox" class:active={true} style={`--checkbox-color: gray`}></div>
+                        </div>
+                    {/if}
+                  
                     <div class="cell">Average</div>
                 </div>
-                {#each Object.values(dynamicTableContent)[0] as r}
-                    <div class="cell">{handleValue(r.key,  isTimeScale ? true : false)}</div>
+                {#each Object.values(dynamicTableContent)[0] as r,i}
+                    <div class="cell">{`${chartType == "funnel" ? i + 1 + ". " : ""}${handleValue(r.key,  isTimeScale ? true : false)}`}</div>
                 {/each}
             </div>
             <div class = "body">
@@ -158,23 +141,25 @@
                 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
                 <div class="row" on:mouseover={() => rowHovered = d} on:mouseout = {() => rowHovered = ""}>
                     <div class="body-fix" style={`left : ${breakdown.length * 121}px`}>
-                        <div class = "w40-content">
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                <!-- svelte-ignore missing-declaration -->
-                                <!-- svelte-ignore a11y-no-static-element-interactions -->
-                                <div class = "cell checked-cell" on:click={() => handleChecked(d)}>
-                                    <div 
-                                        class={`report-checkbox ${extentFlat?.current?.[d]?.checked && "active"}`} 
-                                        style={`--checkbox-color: ${extentFlat?.current?.[d]?.color}`}
-                                    ></div>
-                                </div>
-                        </div>
+                        {#if chartType != "doughnut" && chartType != "funnel"}
+                            <div class = "w40-content">
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                    <!-- svelte-ignore missing-declaration -->
+                                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                    <div class = "cell checked-cell" on:click={() => handleChecked(d)}>
+                                        <div 
+                                            class={`report-checkbox ${extentFlat?.current?.[d]?.checked && "active"}`} 
+                                            style={`--checkbox-color: ${extentFlat?.current?.[d]?.color}`}
+                                        ></div>
+                                    </div>
+                            </div>
+                        {/if}
                         <div class = "cell">
                             <div>{mean(dynamicTableContent[d], k => k.value).toFixed(2)}</div>
                         </div>
                     </div>
                     {#each dynamicTableContent[d] as {value}}
-                        <div class="cell">{value}</div>
+                        <div class="cell">{value.toFixed(2)}</div>
                     {/each}
                 </div>
 

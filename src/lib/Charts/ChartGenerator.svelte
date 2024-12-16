@@ -105,11 +105,18 @@
         current: {},
         comparison: {}
     }
+
+    let extentFlatFunnel = {
+        current: {},
+        comparison: {}
+    }
+
     let extentLen = 0
     let rowHovered = ""
     let numberChecked
     let maxNumberOfitemToCheck = 10
     let dataFlatKey
+    let checked = []
 
     let dataBody = {
         filters: [],
@@ -165,13 +172,19 @@
         isMounted = true
     })
 
+
+    const handleChecking = () => {
+        checked = []
+        Object.values(extentFlat.current).map((d) => {if(d.checked) checked.push(d)})
+    }
+
     const handleTableCheck = (d) => {
         console.log(d);
     }
     const handleNestedTimeParse = (tempData = data, key) => {
         if(key == 'current') extentLen = 0
        // console.log(prevBody);
-        if(JSON.parse(prevBody).breakdown.length == 1){
+        if(tabSelected == "funnels" || JSON.parse(prevBody).breakdown.length == 1){
             dataFlatKey = "0"
             handleNestedTimeParse2(tempData, key, "0")
         } else {
@@ -197,12 +210,22 @@
                             }
                         }
                         dataFlat[key][dataFlatKey] = tempData
-                        extentFlat[key][dataFlatKey] = {
-                            max : max(tempData, d => +d.value),
-                            name: dataFlatKey,
-                            checked: extentLen > maxNumberOfitemToCheck ? false : true,
-                            color: colors[extentLen]
+                        if(chartType == "funnel"){
+                            extentFlatFunnel[key][dataFlatKey] = {
+                                max : max(tempData, d => +d.value),
+                                name: dataFlatKey,
+                                checked: extentLen > maxNumberOfitemToCheck ? false : true,
+                                color: colors[extentLen]
+                            }
+                        } else {
+                            extentFlat[key][dataFlatKey] = {
+                                max : max(tempData, d => +d.value),
+                                name: dataFlatKey,
+                                checked: extentLen > maxNumberOfitemToCheck ? false : true,
+                                color: colors[extentLen]
+                            }
                         }
+                        
                     }
                     dataFlatKey = prefix
                 })
@@ -215,12 +238,22 @@
                     }
                 }
                 dataFlat[key][dataFlatKey] = tempData
-                extentFlat[key][dataFlatKey] = {
-                            max : max(tempData, d => +d.value),
-                            name: dataFlatKey,
-                            checked: extentLen > maxNumberOfitemToCheck ? false : true,
-                            color: colors[extentLen]
-                        }
+                if(chartType == "funnel"){
+                    extentFlatFunnel[key][dataFlatKey] = {
+                        max : max(tempData, d => +d.value),
+                        name: dataFlatKey,
+                        checked: extentLen > maxNumberOfitemToCheck ? false : true,
+                        color: colors[extentLen]
+                    }
+                } else {
+                    extentFlat[key][dataFlatKey] = {
+                        max : max(tempData, d => +d.value),
+                        name: dataFlatKey,
+                        checked: extentLen > maxNumberOfitemToCheck ? false : true,
+                        color: colors[extentLen]
+                    }
+                }
+                
                 dataFlatKey = prefix
             }
     }
@@ -325,24 +358,28 @@
             if(propData){
                 let x = 1
                 let v = 1
-                //if(typeof propData === 'object' && !Array.isArray(propData)){
-                    x = sum(Object.values(extentFlat.current), d => +d.checked) //Object.keys(propData).length > 10 ? 10 : Object.keys(propData).length
+                    x = tabSelected == "funnels" ? sum(Object.values(extentFlatFunnel.current), d => +d.checked) : sum(Object.values(extentFlat.current), d => +d.checked) //Object.keys(propData).length > 10 ? 10 : Object.keys(propData).length
                     v = propData[Object.keys(propData)[0]].length
                 // } else{
                 //     v = propData.length
                 // }
                 console.log(x);
                 temp = minBarWidth * multiplier * x * v
-            } else if(tabSelected == "insights" && data?.current){
-                // 10 is the number of data that can be checked at once
-                let index = sum(Object.values(extentFlat.current), d => +d.checked) //Object.keys(data.current).length > 10 ? 10 : Object.keys(data.current).length
+            } else {
+                 //Object.keys(data.current).length > 10 ? 10 : Object.keys(data.current).length
 
-                temp = minBarWidth * multiplier * index  * data.current[Object.keys(data.current)[0]].length
-            } else if (tabSelected == "funnels" && dataFunnel?.current) {
-                temp = minBarWidth * multiplier * dataFunnel.current.length
+                if(tabSelected == "insights" && data?.current){
+                    let index = sum(Object.values(extentFlat.current), d => +d.checked)
+                    temp = minBarWidth * multiplier * index  * data.current[Object.keys(data.current)[0]].length
+                } else if (tabSelected == "funnels" && dataFunnel?.current) {
+                    let index = sum(Object.values(extentFlatFunnel.current), d => +d.checked)
+                    temp = minBarWidth * multiplier * index  * dataFunnel.current[Object.keys(dataFunnel.current)[0]].length
+                    console.log(temp, minBarWidth, multiplier, index, dataFunnel.current[Object.keys(dataFunnel.current)[0]].length);
+                    
+                }
             }
             width = clientWidth > temp ? clientWidth : temp
-            width = width - margin.right - margin.left
+            width = width - margin.right - margin.left            
             
         }
 
@@ -352,12 +389,21 @@
         if(tabSelected == "funnels"){
             daySelection = otherParamsFunnels["daySelection"]
             accuracy = otherParamsFunnels["accuracy"]
+            if(dataFunnel?.current) firstCurrent = Object.keys(dataFunnel.current)[0]
+            
+            //firstComparison = Object.keys(dataFunnel.comparison)[0]
         } else{
             daySelection = otherParams["daySelection"]
             accuracy = otherParams["accuracy"]
+            
+            if(data?.current) firstCurrent = Object.keys(data.current)[0]
+            //firstComparison = Object.keys(data.comparison)[0]
         }
         handleSetChartType(propData)
         prevSelectedChart = chartType
+
+        console.log(dataFlat, firstCurrent);
+        
     }
 
     const fetchData =  () => {
@@ -513,14 +559,14 @@
                 body["breakdown"] = temp
             } else {
                 body["breakdown"] =  [
-                    {"value": "country"},
                     {"value": "timestamp"},
                 ]
             }
         }
-        if(hasComparison && hasDataSync && (body.breakdown[body.breakdown.length - 1].value != "timestamp")) body["displayOptions"]["dataSyncronization"] = hasDataSync
-
-        if(chartTypeObj[tempBody.displayOptions.chartType].id != "funnels"){
+        //&& (body.breakdown[body.breakdown.length - 1].value != "timestamp")
+        if(hasComparison && hasDataSync ) body["displayOptions"]["dataSyncronization"] = hasDataSync
+        
+        if(chartTypeObj[tempBody.displayOptions.chartType].id != "funnel"){
             body["sort"] = [{
                      "key": body.breakdown[body.breakdown.length - 1].value,
                      "direction": "asc"
@@ -530,6 +576,7 @@
         body["accuracy"] = {
             "unit": accuracy
         }
+
         if(tabSelected == "insights"){
             body["measurement"] = {}
             body["measurement"]["type"] = measurementType[tempBody.measurementType].id
@@ -586,7 +633,6 @@
 
     const processData = async () => {
         // FETCH DATA
-        isFetching = true
         handleSetChartType()
 
         if(prevTabSelected != tabSelected){
@@ -610,68 +656,91 @@
                 }
             }
         }
+        
+        if(
+            (allowRefetch && (!postBody || (tabSelected == "insights" && dataBody.eventName == null))) 
+            || ((allowFetch && tabSelected == "funnels") 
+                && ((!postBody || JSON.parse(prevBodyFunnel)?.["displayOptions"]?.["steps"] && JSON.parse(prevBodyFunnel)?.["displayOptions"]?.["steps"].length < 2) 
+                   || !JSON.parse(prevBodyFunnel)?.["displayOptions"]?.["steps"]
+                )
+            )
+        ) {
+            console.log(7);
+            
+            return
+        }
 
-        if(allowRefetch && (!postBody || (tabSelected == "insights" && dataBody.eventName == null))) return
         let tempMainData = {}
 
         try {
             if(allowRefetch){
+                isFetching = true
+
                 req = await fetch(ENDPOINT, postBody)
                 res = await req.json()
 
                 if(tabSelected == "funnels"){
                     reqFunnel = JSON.parse(JSON.stringify(req))
                     resFunnel = JSON.parse(JSON.stringify(res))
+                    extentFlatFunnel = {
+                        current: {},
+                        comparison: {}
+                    }
                 } else {
                     reqInsight = JSON.parse(JSON.stringify(req))
                     resInsight = JSON.parse(JSON.stringify(res))
+                    extentFlat = {
+                        current: {},
+                        comparison: {}
+                    }
                 }
-            } else {
-                if(tabSelected == "funnels"){
-                    req = reqFunnel
-                    res = resFunnel
-                } else {
-                    req = reqInsight
-                    res = resInsight
-                }
-            }
-            legendData = {}
 
-            if(allowRefetch){
-                extentFlat = {
-                    current: {},
-                    comparison: {}
-                }
                 dataFlat = {
                     current: {},
                     comparison: {}
                 }
-
+                
                 handleNestedTimeParse(res.result.current, "current")
                 handleNestedTimeParse(res.result.comparison, "comparison")
-                numberChecked = extentLen  == 11 ? extentLen - 1 : extentLen                
-            }
-            handleChartType(dataFlat.current)
+                numberChecked = extentLen  == 11 ? extentLen - 1 : extentLen
+                
+                } else {
+                    if(tabSelected == "funnels"){
+                        req = reqFunnel
+                        res = resFunnel
+                    } else {
+                        req = reqInsight
+                        res = resInsight
+                    }
+                }
+                legendData = {}
 
+                handleChartType(dataFlat.current)
 
-            firstCurrent = Object.keys(dataFlat.current)[0]
-            firstComparison = Object.keys(dataFlat.comparison)[0]
-            if(!firstCurrent) {
-                isFetching = false
-                return
-            }// no data for the selection.
-            if(type == "multiline"){
-                tempMainData = JSON.parse(JSON.stringify(dataFlat))
-                tempParse = parsePeriod[accuracy]
-                let temp = JSON.parse(JSON.stringify(dataFlat.current))
-                    if(tempParse(temp[firstCurrent][0].key) == null){
+                firstCurrent = Object.keys(dataFlat.current)[0]
+                firstComparison = Object.keys(dataFlat.comparison)[0]
+
+                if(!firstCurrent) {
+                    isFetching = false
+                    return
+                }// no data for the selection.
+                if(tabSelected == "insights"){
+                    tempParse = parsePeriod[accuracy]
+                    if(tempParse(dataFlat.current[firstCurrent][0].key) == null){
                         isTimeScale = false
                     } else {
+                        isTimeScale = true
+                    }
+                }
+
+            if(type == "multiline"){
+                tempMainData = JSON.parse(JSON.stringify(dataFlat))
+                let temp = JSON.parse(JSON.stringify(dataFlat.current))
+                    if(isTimeScale){
                         Object.values(temp).map((f) => {
                             f.map((d) => d.key =  tempParse(d.key))
                             f.sort((a, b) => ascending(a.key, b.key))
                         })
-                        isTimeScale = true
                     }
 
                 tempMainData.current = temp
@@ -739,7 +808,7 @@
             isFetching = false
 
         } catch (error) {
-            console.warn(error);
+            console.error(error);
         }
     }
 
@@ -774,9 +843,10 @@
         sessionStorage.setItem("customCharts", JSON.stringify(currentData));
     }
 
-    $: tabSelected, numberChecked, handleChartType()
-    $: dateRange, (dateRange?.start && dateRange?.end) && handleCustomDateRange()
-    $: dataBody, dataBodyFunnel,  selectedDayIndexes, selectedComparisonIndexes, processData()
+    $:tabSelected, numberChecked, handleChartType()
+    $:dateRange, (dateRange?.start && dateRange?.end) && handleCustomDateRange()
+    $:dataBody, dataBodyFunnel,  selectedDayIndexes, selectedComparisonIndexes, processData()
+    $:extentFlat, handleChecking()
 
 
 </script>
@@ -1111,10 +1181,10 @@
                                 {/if}
                             {#if type.includes("line") || type.includes("drop")}
                                 <BarLine
+                                    {checked}
                                     {data}
                                     bind:extentFlat
                                     {firstCurrent}
-                                    {firstComparison}
                                     {type}
                                     {width}
                                     {height}
@@ -1128,6 +1198,7 @@
                                     {relatedBar}
                                     {numberChecked}
                                     {rowHovered}
+                                    body = {JSON.parse(prevBody)}
                                 />
                             {:else if  type.includes("radial")}
                             <Radial
@@ -1158,22 +1229,28 @@
                     {/if}
 
                     {#if tabSelected == "funnels"}
-                        {#if dataFunnel && Object.keys(dataFunnel).length > 0 }
-                                <BarLine
-                                    data = {dataFunnel}
-                                    {type}
-                                    {chartType}
-                                    {width}
-                                    {height}
-                                    {strokeColor1}
-                                    {strokeColor2}
-                                    dataProperty = {Date.now()}
-                                    headline = ""
-                                    {margin}
-                                    {hasComparison}
-                                    {relatedBar}
-                                />
-                                {:else if  resFunnel && allowFetch}
+                        {#if resFunnel && !isFetching }
+                                
+                            <BarLine
+                                data = {dataFunnel}
+                                {type}
+                                {chartType}
+                                bind:extentFlat = {extentFlatFunnel}
+                                isTimeScale = {false}
+                                {firstCurrent}
+                                {width}
+                                {height}
+                                {strokeColor1}
+                                {strokeColor2}
+                                dataProperty = {Date.now()}
+                                headline = ""
+                                {margin}
+                                {hasComparison}
+                                {relatedBar}
+                                {numberChecked}
+                                {rowHovered}
+                            />
+                        {:else if  resFunnel}
                             <div class="spinner">
                                 {@html spinner}
                             </div>
@@ -1196,17 +1273,34 @@
                 </div>
                 {#if (tabSelected == "funnels" && Object.keys(dataFunnel).length > 0) || (tabSelected == "insights" && Object.keys(data).length > 0)}
                     <div class="p">
-                        <ChartGeneratorTable
-                            data = {tabSelected == "funnels" ? dataFunnelTable : dataTable}
-                            body = {tabSelected == "funnels" ? JSON.parse(prevBodyFunnel) : JSON.parse(prevBody)}
-                            {isTimeScale}
-                            {accuracy}
-                            {handleTableCheck}
-                            bind:extentFlat
-                            bind:numberChecked
-                            bind:rowHovered
-                            {maxNumberOfitemToCheck}
-                    />
+                        {#if tabSelected == "funnels"}
+                            <ChartGeneratorTable
+                                data = {dataFunnelTable}
+                                body = {JSON.parse(prevBodyFunnel)}
+                                isTimeScale = {false}
+                                {accuracy}
+                                {handleTableCheck}
+                                bind:extentFlat
+                                bind:numberChecked
+                                bind:rowHovered
+                                {maxNumberOfitemToCheck}
+                                {chartType}
+                            />
+                        {:else}
+                            <ChartGeneratorTable
+                                data = {dataTable}
+                                body = {JSON.parse(prevBody)}
+                                {isTimeScale}
+                                {accuracy}
+                                {handleTableCheck}
+                                bind:extentFlat
+                                bind:numberChecked
+                                bind:rowHovered
+                                {maxNumberOfitemToCheck}
+                                {chartType}
+                            />
+                        {/if}
+                        
                     </div>
                 {/if}
             </div>

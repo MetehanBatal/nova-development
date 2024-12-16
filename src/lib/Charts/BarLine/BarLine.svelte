@@ -25,9 +25,11 @@
     export let isTimeScale
     export let extentFlat
     export let firstCurrent
-    export let firstComparison
+    //export let firstComparison
     export let numberChecked
     export let rowHovered
+    export let checked
+    export let body
 
 	let innerWidth
     let innerHeight
@@ -44,12 +46,14 @@
 	let selected = 0
 	let isShowTrends = false
 
+
     const comparisonParentKeys = [... new Set(Object.keys(data.comparison).map((k) => k.split("_").slice(0, -1).join("_")))]
     const currentParentKeys = [... new Set(Object.keys(data.current).map((k) => k.split("_")[0]))]
     const currentParentKeys2 = [... new Set(Object.keys(data.current).map((k) => k.split("_").slice(0, -1).join("_")))]
 
+    console.log(data, extentFlat);
+
     const handleXScale = () => {
-        //let tempX
         if(type == "multiline"){
             if(isTimeScale){
                 xScale = scaleTime(
@@ -66,18 +70,13 @@
             }
 
         }  else {
-            if(chartType != "funnel"){
                 let t = [];
-                Object.keys(data.current).map((k) => {
-                    if(extentFlat.current[k].checked) {
-                        t.push(k)
-                    }
-                })
+                chartType != "funnel" ? checked.map((k) => t.push(k.name)) : t = Object.keys(data.current)
 
                 xScale =  scaleBand(
                     data.current[firstCurrent].map((d, i) => {
                         if(chartType == "funnel"){
-                            return `${i}. ${d.key}`
+                            return `${i + 1}. ${d.key}`
                         }
                         return d.key
                     }),
@@ -93,53 +92,9 @@
                     ["current", "comparison"],
                     [0, mainSubXscale.bandwidth()]
                 ).paddingInner([0.02])
-            }
-
-        //     xScale =  scaleBand(
-        //         t,
-        //         [0, innerWidth]
-        //     ).paddingInner([0.05]).align(0)
-        //     if(type == "dropOff") mainSubXscale = scaleBand(
-        //         data.current[firstCurrent].map((d, i) => {
-        //             if(chartType == "funnel"){
-        //                 return `${i}. ${d.key}`
-        //             }
-        //             return d.key
-        //         }),
-        //         [0, xScale.bandwidth()]
-        //     ).paddingInner([0.09])
-
-        //    if(type == "dropOff") subXScale = scaleBand(
-        //         ["current", "comparison"],
-        //         [0, mainSubXscale.bandwidth()]
-        //     ).paddingInner([0.05])
 
         }
-
-        //return tempX
     }
-
-    // const handleMainSubXScale = () => {
-    //     return scaleBand(
-    //             data.current[firstCurrent].map((d, i) => {
-    //                 if(chartType == "funnel"){
-    //                     return `${i}. ${d.key}`
-    //                 }
-    //                 return d.key
-    //             }),
-    //             [0, xScale.bandwidth()]
-    //         )//.paddingInner([0.09])
-    // }
-
-    // const handleSubXScale = () => {
-    //     let tempX
-    //     tempX = scaleBand(
-    //         ["current", "comparison"],
-    //         [0, mainSubXscale.bandwidth()]
-    //     )//.paddingInner([0.05])
-
-    //     return tempX
-    // }
      const handleYscale = () => {
         innerHeight = height - margin.top - margin.bottom
         if(type == "multiline"){
@@ -153,13 +108,13 @@
             ?    scaleLinear(
                     [0, max([
                         max(Object.values(extentFlat["comparison"]), d => (Object.keys(extentFlat["current"]).includes(d.name) && extentFlat["current"][d.name].checked) && d.max),
-                        max(Object.values(extentFlat["current"]), d => d.checked &&  d.max),
+                        max(checked, d => d.max),
                     ])],
                     [innerHeight, 0]
                 )
                 .nice()
             :   scaleLinear(
-                    [0, max(Object.values(extentFlat["current"]), d =>  d.checked && d.max)],
+                    [0, max(checked, d => d.max)],
                     [innerHeight, 0]
                 )
                 .nice()
@@ -183,8 +138,6 @@
 
     $:width, innerWidth = width - margin.left - margin.right
     $:data, extentFlat, innerWidth, handleXScale()
-    //$:xScale, mainSubXscale = type == "dropOff" && handleMainSubXScale()
-    //$:mainSubXscale, subXScale = type == "dropOff" && handleSubXScale()
     $:data, innerWidth, extentFlat, yScale = handleYscale()
     $:handleSpace()
 
@@ -208,8 +161,10 @@
 	function handleMouseLeave (event) {
 		isShowTrends = false;
         select(`.trends-${dataProperty}`).attr('opacity', 0)
-        selectAll(`.c1-${dataProperty}`).attr('opacity', 0)
-        selectAll(`.c2-${dataProperty}`).attr('opacity', 0)
+        checked.map((d) => {
+            select(`.c1${dataProperty}${d.name.replaceAll(".", "").replaceAll(":", "")}`.replaceAll("-", "")).attr('opacity', 0)
+            select(`.c2${dataProperty}${d.name.replaceAll(".", "").replaceAll(":", "")}`.replaceAll("-", "")).attr('opacity', 0)
+        })
 	}
 
 </script>
@@ -246,7 +201,6 @@
                     {innerHeight}
                     {hasComparison}
                     {firstCurrent}
-                    {firstComparison}
                     {extentFlat}
                     {currentParentKeys}
                     {comparisonParentKeys}
@@ -268,6 +222,7 @@
                                 {isTimeScale}
                                 {firstCurrent}
                                 {extentFlat}
+                                {checked}
                             />
                         </g>
                     <!-- {/if} -->
@@ -310,7 +265,7 @@
             {/if}
         </g>
     </svg>
-    {#if isShowTrends && type == "multiline" && data.current.length > 1}
+    {#if isShowTrends && type == "multiline"}
         <Tooltip 
             tooltipTitle = {headline}
             {strokeColor1} 
@@ -324,6 +279,9 @@
             {hasComparison}
             bottom = {margin.bottom}
             {isTimeScale}
+            {extentFlat}
+            breakdown = {body.breakdown}
+            {checked}
         />
     {/if}
 

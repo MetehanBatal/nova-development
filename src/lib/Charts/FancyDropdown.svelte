@@ -19,6 +19,7 @@
             class={`formula-item ${type}`} 
             on:click={() => {
                 selectedOption = item?.icon ? item.icon : item.name
+
                 data = []
                 allowFocusOut = true
             }}
