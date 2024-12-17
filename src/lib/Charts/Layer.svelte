@@ -89,22 +89,23 @@
         
         const [value, index, subIndex] = key.split("-")
         if(value == "filters"){
-            dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(domTop[i].value))
+            dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(domTop[i].value.toLowerCase()))
             return
         }
         if(value == "breakdown"){
-            dataBodyTracker[main.name][index].data = session.filter((f) => f.name.toLowerCase().includes(domTop[i].value))
+            dataBodyTracker[main.name][index].data = session.filter((f) => f.name.toLowerCase().includes(domTop[i].value.toLowerCase()))
             return
         }
         if(value == "traits"){
-            dataBodyTracker[main.name][index].data = events_session.filter((f) => f.name.toLowerCase().includes(domTop[i].value))
+            dataBodyTracker[main.name][index].data = events_session.filter((f) => f.name.toLowerCase().includes(domTop[i].value.toLowerCase()))
         }
 
         if(value == "steps"){
             if(!subIndex){
-                dataBodyTracker[main.name][index].dataEvent = events.filter((f) => f.name.toLowerCase().includes(domStep[i].value))
+                dataBodyTracker[main.name][index].dataEvent = events.filter((f) => f.name.toLowerCase().includes(domStep[i].value.toLowerCase()))
+
             } else {
-                dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(domStepFilter[i].value))
+                dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(domStepFilter[i].value.toLowerCase()))
             }
         }
         
