@@ -31,9 +31,9 @@
     let traitsData = []
     let dom
     let domInputFilter
-    let domTop
-    let domStep
-    let domStepFilter
+    let domTop = {}
+    let domStep = {}
+    let domStepFilter = {}
 
     const handleSideMenuOver = () => {
         selectedSideMenuLayerClose = []
@@ -85,25 +85,26 @@
        }
     }
 
-    const handleKeyup = (key) => {
+    const handleKeyup = (key, i = null) => {
+        
         const [value, index, subIndex] = key.split("-")
         if(value == "filters"){
-            dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(domTop.value))
+            dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(domTop[i].value))
             return
         }
         if(value == "breakdown"){
-            dataBodyTracker[main.name][index].data = session.filter((f) => f.name.toLowerCase().includes(domTop.value))
+            dataBodyTracker[main.name][index].data = session.filter((f) => f.name.toLowerCase().includes(domTop[i].value))
             return
         }
         if(value == "traits"){
-            dataBodyTracker[main.name][index].data = events_session.filter((f) => f.name.toLowerCase().includes(domTop.value))
+            dataBodyTracker[main.name][index].data = events_session.filter((f) => f.name.toLowerCase().includes(domTop[i].value))
         }
 
         if(value == "steps"){
             if(!subIndex){
-                dataBodyTracker[main.name][index].dataEvent = events.filter((f) => f.name.toLowerCase().includes(domStep.value))
+                dataBodyTracker[main.name][index].dataEvent = events.filter((f) => f.name.toLowerCase().includes(domStep[i].value))
             } else {
-                dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(domStepFilter.value))
+                dataBodyTracker[main.name][index].data = fValue.filter((f) => f.name.toLowerCase().includes(domStepFilter[i].value))
             }
         }
         
@@ -156,7 +157,6 @@
 
 
         if(action == "changeType"){
-            console.log(selectedSideMenuLayer);
             if(selectedSideMenuLayer[0] == "filters"){
                 dataBody[selectedSideMenuLayer[0]][selectedSideMenuLayer[1]].valueArray = []
             }
@@ -335,13 +335,13 @@
                                     </div>
                                     <div class="relative count-indicator-input">
                                         <input
-                                            bind:this={domStep}
+                                            bind:this={domStep[i]}
                                             type="text"
                                             value={dataBody[main.name][i].value}
-                                            on:keyup={() =>  handleKeyup(`${main.name}-${i}`)}
-                                            on:focus = {() => handleKeyup(`${main.name}-${i}`)}
+                                            on:keyup={() =>  handleKeyup(`${main.name}-${i}`, i)}
+                                            on:focus = {() => handleKeyup(`${main.name}-${i}`, i)}
                                             on:focusout = {() => {
-                                                dataBody[main.name][i].value = domStep.value
+                                                dataBody[main.name][i].value = domStep[i].value
                                                 if(dataBodyTracker[main.name][i].allowFocusOutEvent) dataBodyTracker[main.name][i].dataEvent = []
                                             }}
                                         />
@@ -393,13 +393,13 @@
                                     </div>
                                     <div class="relative w-100 small-gap align-center bg-090e16 border-radius">
                                         <input
-                                            bind:this={domStepFilter}
+                                            bind:this={domStepFilter[i]}
                                             type="text"
                                             value={dataBody[main.name][i].filters[0].value}
-                                            on:keyup={() =>  handleKeyup(`${main.name}-${i}-2`)}
-                                            on:focus = {() => handleKeyup(`${main.name}-${i}-2`)}
+                                            on:keyup={() =>  handleKeyup(`${main.name}-${i}-2`, i)}
+                                            on:focus = {() => handleKeyup(`${main.name}-${i}-2`, i)}
                                             on:focusout = {() => {
-                                                dataBody[main.name][i].filters[0].value = domStepFilter.value
+                                                dataBody[main.name][i].filters[0].value = domStepFilter[i].value
                                                 if(dataBodyTracker[main.name][i].allowFocusOut) dataBodyTracker[main.name][i].data = []
                                             }}
                                         />
@@ -466,13 +466,13 @@
                                     </div>
                                     <div class="relative w-100">
                                         <input
-                                            bind:this = {domTop}
+                                            bind:this = {domTop[i]}
                                             type="text"
                                             value={dataBody[main.name][i].value}
-                                            on:keyup={() =>  handleKeyup(`${main.name}-${i}`)}
-                                            on:focus = {() => handleKeyup(`${main.name}-${i}`)}
+                                            on:keyup={() =>  handleKeyup(`${main.name}-${i}`, i)}
+                                            on:focus = {() => handleKeyup(`${main.name}-${i}`, i)}
                                             on:focusout = {() => {
-                                                dataBody[main.name][i].value = domTop.value
+                                                dataBody[main.name][i].value = domTop[i].value
                                                 if(dataBodyTracker[main.name][i].allowFocusOut) dataBodyTracker[main.name][i].data = []
                                             }}
                                             on:change = {() => dataBody[main.name][i].valueArray = []}

@@ -179,11 +179,10 @@
     }
 
     const handleTableCheck = (d) => {
-        console.log(d);
     }
+
     const handleNestedTimeParse = (tempData = data, key) => {
         if(key == 'current') extentLen = 0
-       // console.log(prevBody);
         if(tabSelected == "funnels" || JSON.parse(prevBody).breakdown.length == 1){
             dataFlatKey = "0"
             handleNestedTimeParse2(tempData, key, "0")
@@ -358,29 +357,20 @@
             if(propData){
                 let x = 1
                 let v = 1
-                    x = tabSelected == "funnels" ? sum(Object.values(extentFlatFunnel.current), d => +d.checked) : sum(Object.values(extentFlat.current), d => +d.checked) //Object.keys(propData).length > 10 ? 10 : Object.keys(propData).length
+                    x = tabSelected == "funnels" ? sum(Object.values(extentFlatFunnel.current), d => +d.checked) : sum(Object.values(extentFlat.current), d => +d.checked) //Object.
                     v = propData[Object.keys(propData)[0]].length
-                // } else{
-                //     v = propData.length
-                // }
-                console.log(x);
                 temp = minBarWidth * multiplier * x * v
             } else {
-                 //Object.keys(data.current).length > 10 ? 10 : Object.keys(data.current).length
-
                 if(tabSelected == "insights" && data?.current){
                     let index = sum(Object.values(extentFlat.current), d => +d.checked)
                     temp = minBarWidth * multiplier * index  * data.current[Object.keys(data.current)[0]].length
                 } else if (tabSelected == "funnels" && dataFunnel?.current) {
                     let index = sum(Object.values(extentFlatFunnel.current), d => +d.checked)
                     temp = minBarWidth * multiplier * index  * dataFunnel.current[Object.keys(dataFunnel.current)[0]].length
-                    console.log(temp, minBarWidth, multiplier, index, dataFunnel.current[Object.keys(dataFunnel.current)[0]].length);
-                    
                 }
             }
             width = clientWidth > temp ? clientWidth : temp
             width = width - margin.right - margin.left            
-            
         }
 
     }
@@ -395,15 +385,11 @@
         } else{
             daySelection = otherParams["daySelection"]
             accuracy = otherParams["accuracy"]
-            
             if(data?.current) firstCurrent = Object.keys(data.current)[0]
             //firstComparison = Object.keys(data.comparison)[0]
         }
         handleSetChartType(propData)
         prevSelectedChart = chartType
-
-        console.log(dataFlat, firstCurrent);
-        
     }
 
     const fetchData =  () => {
@@ -664,9 +650,7 @@
                    || !JSON.parse(prevBodyFunnel)?.["displayOptions"]?.["steps"]
                 )
             )
-        ) {
-            console.log(7);
-            
+        ) { 
             return
         }
 
@@ -694,17 +678,8 @@
                         comparison: {}
                     }
                 }
-
-                dataFlat = {
-                    current: {},
-                    comparison: {}
-                }
                 
-                handleNestedTimeParse(res.result.current, "current")
-                handleNestedTimeParse(res.result.comparison, "comparison")
-                numberChecked = extentLen  == 11 ? extentLen - 1 : extentLen
-                
-                } else {
+            } else {
                     if(tabSelected == "funnels"){
                         req = reqFunnel
                         res = resFunnel
@@ -714,6 +689,26 @@
                     }
                 }
                 legendData = {}
+                if(tabSelected == "funnels"){
+                    extentFlatFunnel = {
+                        current: {},
+                        comparison: {}
+                    }
+                } else {
+                    extentFlat = {
+                        current: {},
+                        comparison: {}
+                    }
+                }
+
+                dataFlat = {
+                    current: {},
+                    comparison: {}
+                }
+
+                handleNestedTimeParse(res.result.current, "current")
+                handleNestedTimeParse(res.result.comparison, "comparison")
+                numberChecked = extentLen  == 11 ? extentLen - 1 : extentLen
 
                 handleChartType(dataFlat.current)
 
@@ -767,7 +762,6 @@
                     }
                     tempMainData.comparison = tempPast
                 }
-                //console.log(tempMainData);
             }
 
             if(type == "dropOff"){

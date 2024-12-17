@@ -11,7 +11,7 @@
 	export let comparisonParentKeys
 	export let rowHovered
 	import {line, area, curveBumpX, selectAll} from 'd3'
-
+	
 	let lineGenerator = line()
 		.curve(curveBumpX)
 		.x((d, i) => xScale(data.current[firstCurrent][i].key))

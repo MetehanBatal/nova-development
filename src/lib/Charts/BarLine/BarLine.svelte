@@ -51,8 +51,6 @@
     const currentParentKeys = [... new Set(Object.keys(data.current).map((k) => k.split("_")[0]))]
     const currentParentKeys2 = [... new Set(Object.keys(data.current).map((k) => k.split("_").slice(0, -1).join("_")))]
 
-    console.log(data, extentFlat);
-
     const handleXScale = () => {
         if(type == "multiline"){
             if(isTimeScale){
@@ -296,7 +294,7 @@
                 top: ${height}px
             `}
         >
-            {(`${hoveredBreakdown} : ${mainSubXscale.domain()[hoveredIndex]}`).toUpperCase()}
+            {(`${hoveredBreakdown} : ${xScale.domain()[hoveredIndex]}`).toUpperCase()}
         </div>
     {/if}
 

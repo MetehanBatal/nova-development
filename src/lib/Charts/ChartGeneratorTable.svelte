@@ -91,8 +91,6 @@
         }
     }
     const handleValue = (key, useTimeScale) => {
-        console.log(key, useTimeScale);
-        
         if(useTimeScale) key = dateFormat(tempParse(key))
         if(key.length > 15){
             return `${key.replaceAll("/>", "").replaceAll("<", " ").slice(0, 15)}...`
@@ -159,7 +157,7 @@
                         </div>
                     </div>
                     {#each dynamicTableContent[d] as {value}}
-                        <div class="cell">{value.toFixed(2)}</div>
+                        <div class="cell">{(+value).toFixed(2)}</div>
                     {/each}
                 </div>
 

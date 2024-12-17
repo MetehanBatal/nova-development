@@ -176,8 +176,7 @@
             return xScale(`${i + 1}. ${key}`)
         }
     }
-
-    $:xScale, console.log(subXScale.bandwidth(), mainSubXscale.bandwidth(), xScale.bandwidth());
+    
 </script>
     {#each data.current[firstCurrent].map((k) => k.key ) as d, i}
         <g class="bar-group" transform={"translate(" + handleTranslate(d, i) + ", 0)"}>
